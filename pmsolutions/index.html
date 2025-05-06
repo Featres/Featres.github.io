@@ -1,97 +1,195 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>QuantSolv | Quantitative Computing Solutions</title>
-  <style>
-    :root {
-      --primary: #1e3a8a;
-      --secondary: #3b82f6;
-      --text: #1f2937;
-      --bg: #f9fafb;
-    }
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>QuantSolv | Modern Quantitative Computing</title>
+        <style>
+            :root {
+                --gradient: linear-gradient(135deg, #1e3a8a, #3b82f6);
+                --primary: #1e3a8a;
+                --text: #1f2937;
+                --bg: #f9fafb;
+                --accent: #10b981;
+            }
 
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      background-color: var(--bg);
-      color: var(--text);
-      line-height: 1.6;
-    }
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
 
-    header {
-      background-color: var(--primary);
-      color: white;
-      padding: 2rem 1.5rem;
-      text-align: center;
-    }
+            body {
+                font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                background: var(--bg);
+                color: var(--text);
+                line-height: 1.6;
+                overflow-x: hidden;
+            }
 
-    header h1 {
-      margin: 0;
-      font-size: 2.5rem;
-    }
+            header {
+                background: var(--gradient);
+                color: white;
+                padding: 4rem 2rem;
+                text-align: center;
+                position: relative;
+            }
 
-    header p {
-      font-size: 1.2rem;
-      opacity: 0.9;
-    }
+            header h1 {
+                font-size: 3rem;
+                animation: fadeInDown 1s ease-out;
+            }
 
-    main {
-      max-width: 800px;
-      margin: 3rem auto;
-      padding: 0 1.5rem;
-    }
+            header p {
+                font-size: 1.25rem;
+                margin-top: 1rem;
+                animation: fadeInUp 1.5s ease-out;
+                opacity: 0.9;
+            }
 
-    section {
-      margin-bottom: 2.5rem;
-    }
+            @keyframes fadeInDown {
+                from {
+                    opacity: 0;
+                    transform: translateY(-20px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
 
-    h2 {
-      font-size: 1.75rem;
-      margin-bottom: 0.5rem;
-      color: var(--primary);
-    }
+            @keyframes fadeInUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(20px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
 
-    p {
-      margin: 0.5rem 0;
-    }
+            main {
+                max-width: 1000px;
+                margin: 4rem auto;
+                padding: 0 2rem;
+            }
 
-    footer {
-      text-align: center;
-      font-size: 0.9rem;
-      color: #6b7280;
-      padding: 2rem 1.5rem;
-    }
-  </style>
-</head>
-<body>
-  <header>
-    <h1>QuantSolv</h1>
-    <p>Precision-Driven Quantitative Computing Solutions</p>
-  </header>
+            section {
+                margin-bottom: 4rem;
+            }
 
-  <main>
-    <section>
-      <h2>About Us</h2>
-      <p>QuantSolv is a boutique quantitative computing firm specializing in data-driven modeling, algorithmic strategy development, and bespoke analytical tools for finance, science, and engineering sectors.</p>
-    </section>
+            h2 {
+                font-size: 2rem;
+                margin-bottom: 1rem;
+                position: relative;
+                display: inline-block;
+            }
 
-    <section>
-      <h2>Our Services</h2>
-      <p><strong>Quantitative Modeling:</strong> Custom statistical models tailored to high-frequency and long-horizon data structures.</p>
-      <p><strong>Computational Strategy:</strong> Optimization, simulation, and automation of decision processes using cutting-edge computational methods.</p>
-      <p><strong>Research & Advisory:</strong> Technical consulting for teams looking to scale their in-house quantitative capabilities.</p>
-    </section>
+            h2::after {
+                content: "";
+                display: block;
+                width: 50px;
+                height: 4px;
+                background: var(--accent);
+                margin-top: 0.5rem;
+                border-radius: 2px;
+            }
 
-    <section>
-      <h2>Contact</h2>
-      <p>For inquiries, collaborations, or a free consultation, reach out to us at <a href="mailto:info@quant-solv.com">info@quant-solv.com</a>.</p>
-    </section>
-  </main>
+            p {
+                font-size: 1.1rem;
+                margin: 0.75rem 0;
+                color: #374151;
+            }
 
-  <footer>
-    &copy; 2025 QuantSolv. All rights reserved.
-  </footer>
-</body>
+            a {
+                color: var(--accent);
+                text-decoration: none;
+            }
+
+            a:hover {
+                text-decoration: underline;
+            }
+
+            footer {
+                text-align: center;
+                padding: 3rem 2rem;
+                background-color: #111827;
+                color: #d1d5db;
+                font-size: 0.95rem;
+            }
+
+            .button {
+                display: inline-block;
+                margin-top: 1.5rem;
+                background-color: var(--accent);
+                color: white;
+                padding: 0.75rem 1.5rem;
+                border-radius: 9999px;
+                font-weight: 600;
+                text-decoration: none;
+                transition: background 0.3s;
+            }
+
+            .button:hover {
+                background-color: #059669;
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <h1>QuantSolv</h1>
+            <p>
+                Empowering industries with cutting-edge quantitative computing.
+            </p>
+        </header>
+
+        <main>
+            <section>
+                <h2>Who We Are</h2>
+                <p>
+                    QuantSolv delivers high-performance computational solutions
+                    for finance, research, and engineering. Our mission is to
+                    bridge complex data science with real-world strategy through
+                    intelligent automation, robust modeling, and precise
+                    analytics.
+                </p>
+            </section>
+
+            <section>
+                <h2>What We Do</h2>
+                <p>
+                    <strong>High-Frequency Algorithms:</strong> We engineer
+                    low-latency, data-agnostic trading models for rapidly
+                    evolving markets.
+                </p>
+                <p>
+                    <strong>Simulation & Forecasting:</strong> From Monte Carlo
+                    to ML-based forecasts, we help clients model the future with
+                    confidence.
+                </p>
+                <p>
+                    <strong>Advisory & Custom Solutions:</strong> Whether you’re
+                    scaling R&D or launching new analytics products, we partner
+                    with you every step.
+                </p>
+            </section>
+
+            <section>
+                <h2>Let's Collaborate</h2>
+                <p>
+                    Want to explore how QuantSolv can support your data and
+                    strategy goals?
+                </p>
+                <a href="mailto:info@quant-solv.com" class="button"
+                    >Get in Touch</a
+                >
+            </section>
+        </main>
+
+        <footer>
+            &copy; 2025 QuantSolv. Built for precision. Designed for
+            performance.
+        </footer>
+    </body>
 </html>
