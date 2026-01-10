@@ -52,6 +52,7 @@ label {
 }
 
 input[type="range"] { width: 220px; }
+input[type="number"] { width: 90px; }
 
 .mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;

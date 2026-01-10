@@ -12,9 +12,25 @@
   const rateVal = document.getElementById("rateVal");
   const noiseVal = document.getElementById("noiseVal");
   const statsEl = document.getElementById("stats");
+  const trueAEl = document.getElementById("trueA");
+  const trueBEl = document.getElementById("trueB");
 
   rateEl.addEventListener("input", () => (rateVal.textContent = rateEl.value));
   noiseEl.addEventListener("input", () => (noiseVal.textContent = Number(noiseEl.value).toFixed(2)));
+  trueAEl.addEventListener("input", () => {
+    const next = Number(trueAEl.value);
+    if (Number.isFinite(next)) {
+      trueM = next;
+      draw();
+    }
+  });
+  trueBEl.addEventListener("input", () => {
+    const next = Number(trueBEl.value);
+    if (Number.isFinite(next)) {
+      trueB = next;
+      draw();
+    }
+  });
 
   // --- Plot world coordinates ---
   const xMin = 0, xMax = 10;
@@ -46,9 +62,12 @@
     points = [];
     n = 0; sumX = 0; sumY = 0; sumXX = 0; sumXY = 0;
 
-    // Randomize the "ground truth" on reset
-    trueM = 0.5 + Math.random() * 1.8;
-    trueB = -0.2 + Math.random() * 2.0;
+    const nextA = Number(trueAEl.value);
+    const nextB = Number(trueBEl.value);
+    if (Number.isFinite(nextA)) trueM = nextA;
+    if (Number.isFinite(nextB)) trueB = nextB;
+    trueAEl.value = String(trueM);
+    trueBEl.value = String(trueB);
 
     draw();
   }
