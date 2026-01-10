@@ -124,3 +124,5 @@ canvas {
 .dot-pts  { background: rgba(0, 0, 0, 0.75); }
 .dot-est-a { background: rgba(20, 150, 90, 0.85); }
 .dot-est-b { background: rgba(230, 150, 30, 0.9); }
+.dot-true-a { background: rgba(20, 150, 90, 0.25); border: 1px solid rgba(20, 150, 90, 0.9); }
+.dot-true-b { background: rgba(230, 150, 30, 0.25); border: 1px solid rgba(230, 150, 30, 0.9); }

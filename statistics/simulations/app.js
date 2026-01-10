@@ -246,18 +246,24 @@
     // True a/b reference lines
     fitCtx.save();
     fitCtx.setLineDash([5, 5]);
-    fitCtx.strokeStyle = "rgba(0, 120, 255, 0.55)";
-    fitCtx.lineWidth = 2;
     const yTrueA = syF(trueM);
     const yTrueB = syF(trueB);
+    fitCtx.lineWidth = 2.5;
+    fitCtx.strokeStyle = "rgba(20, 150, 90, 0.75)";
     fitCtx.beginPath();
     fitCtx.moveTo(padF, yTrueA);
     fitCtx.lineTo(WF - padF, yTrueA);
     fitCtx.stroke();
+    fitCtx.strokeStyle = "rgba(230, 150, 30, 0.8)";
     fitCtx.beginPath();
     fitCtx.moveTo(padF, yTrueB);
     fitCtx.lineTo(WF - padF, yTrueB);
     fitCtx.stroke();
+    fitCtx.setLineDash([]);
+    fitCtx.fillStyle = "#666";
+    fitCtx.font = "12px system-ui";
+    fitCtx.fillText("true a", padF + 4, yTrueA - 6);
+    fitCtx.fillText("true b", padF + 4, yTrueB - 6);
     fitCtx.restore();
 
     if (paramHistory.length < 2) return;
