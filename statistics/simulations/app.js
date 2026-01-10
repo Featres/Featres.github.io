@@ -14,7 +14,6 @@
   const statsEl = document.getElementById("stats");
   const trueAEl = document.getElementById("trueA");
   const trueBEl = document.getElementById("trueB");
-  const epsilonEl = document.getElementById("epsilon");
   const fitCanvas = document.getElementById("fitPlot");
   const fitCtx = fitCanvas.getContext("2d");
 
@@ -78,9 +77,7 @@
   function addPoint() {
     const x = xMin + Math.random() * (xMax - xMin);
     const sigma = Number(noiseEl.value);
-    const epsilon = epsilonEl ? Number(epsilonEl.value) : 0;
-    const epsilonTerm = Number.isFinite(epsilon) ? epsilon : 0;
-    const y = trueM * x + trueB + epsilonTerm + randn() * sigma;
+    const y = trueM * x + trueB + randn() * sigma;
 
     points.push({ x, y });
 
@@ -97,8 +94,6 @@
 
   function computeYBounds() {
     const sigma = Number(noiseEl.value);
-    const epsilon = epsilonEl ? Number(epsilonEl.value) : 0;
-    const epsilonTerm = Number.isFinite(epsilon) ? epsilon : 0;
     const noisePad = Number.isFinite(sigma) ? 4 * sigma : 0;
 
     let minY = Infinity;
@@ -109,8 +104,8 @@
       if (value > maxY) maxY = value;
     };
 
-    include(trueM * xMin + trueB + epsilonTerm);
-    include(trueM * xMax + trueB + epsilonTerm);
+    include(trueM * xMin + trueB);
+    include(trueM * xMax + trueB);
 
     if (points.length) {
       for (const p of points) include(p.y);
@@ -284,10 +279,8 @@
     drawPoints();
 
     // Stats text
-    const epsilon = epsilonEl ? Number(epsilonEl.value) : 0;
-    const epsilonTerm = Number.isFinite(epsilon) ? epsilon : 0;
     statsEl.textContent =
-      `n=${n}  |  true: y=${trueM.toFixed(3)}x + ${trueB.toFixed(3)} + ${epsilonTerm.toFixed(3)}  |  ` +
+      `n=${n}  |  true: y=${trueM.toFixed(3)}x + ${trueB.toFixed(3)}  |  ` +
       `est: y=${Number.isFinite(est.m) ? est.m.toFixed(3) : "—"}x + ${Number.isFinite(est.b) ? est.b.toFixed(3) : "—"}`;
   }
 
