@@ -38,7 +38,7 @@
   // --- Data + running sums for OLS ---
   let points = [];
   let n = 0, sumX = 0, sumY = 0, sumXX = 0, sumXY = 0, sumYY = 0;
-  let r2History = [];
+  let paramHistory = [];
 
   // Standard normal via Box-Muller
   function randn() {
@@ -56,7 +56,7 @@
     if (resetData) {
       points = [];
       n = 0; sumX = 0; sumY = 0; sumXX = 0; sumXY = 0; sumYY = 0;
-      r2History = [];
+      paramHistory = [];
     }
     trueAEl.value = String(trueM);
     trueBEl.value = String(trueB);
@@ -70,7 +70,7 @@
   function reset() {
     points = [];
     n = 0; sumX = 0; sumY = 0; sumXX = 0; sumXY = 0; sumYY = 0;
-    r2History = [];
+    paramHistory = [];
     applyTrueCoefficients(false);
   }
 
@@ -88,8 +88,10 @@
     sumXY += x * y;
     sumYY += y * y;
 
-    const r2 = currentR2();
-    if (Number.isFinite(r2)) r2History.push({ n, r2 });
+    const est = currentOLS();
+    if (Number.isFinite(est.m) && Number.isFinite(est.b)) {
+      paramHistory.push({ n, a: est.m, b: est.b });
+    }
   }
 
   function computeYBounds() {
@@ -136,22 +138,6 @@
     const m = (n * sumXY - sumX * sumY) / denom;
     const b = (sumY - m * sumX) / n;
     return { m, b };
-  }
-
-  function currentR2() {
-    if (n < 2) return NaN;
-    const est = currentOLS();
-    if (!Number.isFinite(est.m) || !Number.isFinite(est.b)) return NaN;
-    const meanY = sumY / n;
-    const sst = sumYY - n * meanY * meanY;
-    if (Math.abs(sst) < 1e-12) return NaN;
-    const sse = sumYY
-      + est.m * est.m * sumXX
-      + n * est.b * est.b
-      - 2 * est.m * sumXY
-      - 2 * est.b * sumY
-      + 2 * est.m * est.b * sumX;
-    return 1 - sse / sst;
   }
 
   // --- Drawing ---
@@ -215,12 +201,23 @@
     const xMinF = 0;
     const xMaxF = Math.max(n, 10);
 
-    let minR2 = -0.1;
-    for (const item of r2History) {
-      if (item.r2 < minR2) minR2 = item.r2;
+    let minParam = Math.min(trueM, trueB);
+    let maxParam = Math.max(trueM, trueB);
+    for (const item of paramHistory) {
+      if (item.a < minParam) minParam = item.a;
+      if (item.b < minParam) minParam = item.b;
+      if (item.a > maxParam) maxParam = item.a;
+      if (item.b > maxParam) maxParam = item.b;
     }
-    const yMinF = Math.min(minR2, 0);
-    const yMaxF = 1;
+    if (!Number.isFinite(minParam) || !Number.isFinite(maxParam)) {
+      minParam = -1;
+      maxParam = 1;
+    }
+    let span = maxParam - minParam;
+    if (span < 1) span = 1;
+    const padFrac = span * 0.2;
+    const yMinF = minParam - padFrac;
+    const yMaxF = maxParam + padFrac;
 
     const sxF = x => padF + (x - xMinF) / (xMaxF - xMinF) * (WF - 2 * padF);
     const syF = y => HF - padF - (y - yMinF) / (yMaxF - yMinF) * (HF - 2 * padF);
@@ -233,27 +230,59 @@
     fitCtx.fillStyle = "#666";
     fitCtx.font = "12px system-ui";
     fitCtx.fillText("n", WF - padF - 10, HF - 10);
-    fitCtx.fillText("R²", 8, padF - 8);
+    fitCtx.fillText("a/b", 8, padF - 8);
 
     for (let x = 0; x <= xMaxF; x += Math.ceil(xMaxF / 4)) {
       fitCtx.fillText(String(x), sxF(x) - 4, HF - 12);
     }
 
-    for (let y = yMinF; y <= yMaxF + 1e-6; y += 0.5) {
-      fitCtx.fillText(y.toFixed(1), 6, syF(y) + 4);
+    const ticks = 5;
+    const step = (yMaxF - yMinF) / (ticks - 1);
+    for (let i = 0; i < ticks; i += 1) {
+      const y = yMinF + step * i;
+      fitCtx.fillText(formatTick(y, step), 6, syF(y) + 4);
     }
 
-    if (r2History.length < 2) return;
+    // True a/b reference lines
+    fitCtx.save();
+    fitCtx.setLineDash([5, 5]);
+    fitCtx.strokeStyle = "rgba(0, 120, 255, 0.55)";
+    fitCtx.lineWidth = 2;
+    const yTrueA = syF(trueM);
+    const yTrueB = syF(trueB);
+    fitCtx.beginPath();
+    fitCtx.moveTo(padF, yTrueA);
+    fitCtx.lineTo(WF - padF, yTrueA);
+    fitCtx.stroke();
+    fitCtx.beginPath();
+    fitCtx.moveTo(padF, yTrueB);
+    fitCtx.lineTo(WF - padF, yTrueB);
+    fitCtx.stroke();
+    fitCtx.restore();
+
+    if (paramHistory.length < 2) return;
 
     fitCtx.beginPath();
-    for (let i = 0; i < r2History.length; i += 1) {
-      const { n: xn, r2 } = r2History[i];
+    for (let i = 0; i < paramHistory.length; i += 1) {
+      const { n: xn, a } = paramHistory[i];
       const x = sxF(xn);
-      const y = syF(r2);
+      const y = syF(a);
       if (i === 0) fitCtx.moveTo(x, y);
       else fitCtx.lineTo(x, y);
     }
     fitCtx.strokeStyle = "rgba(20, 150, 90, 0.85)";
+    fitCtx.lineWidth = 2;
+    fitCtx.stroke();
+
+    fitCtx.beginPath();
+    for (let i = 0; i < paramHistory.length; i += 1) {
+      const { n: xn, b } = paramHistory[i];
+      const x = sxF(xn);
+      const y = syF(b);
+      if (i === 0) fitCtx.moveTo(x, y);
+      else fitCtx.lineTo(x, y);
+    }
+    fitCtx.strokeStyle = "rgba(230, 150, 30, 0.9)";
     fitCtx.lineWidth = 2;
     fitCtx.stroke();
     fitCtx.lineWidth = 1;
