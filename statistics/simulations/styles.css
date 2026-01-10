@@ -67,11 +67,26 @@ input[type="number"] { width: 90px; }
   min-height: 20px;
 }
 
+.canvasRow {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+  flex-wrap: wrap;
+}
+
 .canvasCard {
   background: #fff;
   border: 1px solid #e7e7e7;
   border-radius: 16px;
   padding: 12px;
+}
+
+.mainPlot {
+  flex: 1 1 620px;
+}
+
+.fitPlot {
+  flex: 0 1 320px;
 }
 
 canvas {
@@ -101,3 +116,4 @@ canvas {
 .dot-true { background: rgba(0, 120, 255, 0.45); }
 .dot-est  { background: rgba(220, 0, 80, 0.85); }
 .dot-pts  { background: rgba(0, 0, 0, 0.75); }
+.dot-fit  { background: rgba(20, 150, 90, 0.85); }
