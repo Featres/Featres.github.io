@@ -172,20 +172,23 @@
 
     // Zero axes (dotted)
     ctx.save();
-    ctx.setLineDash([5, 6]);
-    ctx.strokeStyle = "#b5b5b5";
+    ctx.setLineDash([4, 5]);
+    ctx.strokeStyle = "#8a8a8a";
+    ctx.lineWidth = 1.5;
     if (xMin <= 0 && xMax >= 0) {
       const x0 = sx(0);
+      const x0Adj = Math.min(Math.max(x0, pad + 1), W - pad - 1);
       ctx.beginPath();
-      ctx.moveTo(x0, pad);
-      ctx.lineTo(x0, H - pad);
+      ctx.moveTo(x0Adj, pad);
+      ctx.lineTo(x0Adj, H - pad);
       ctx.stroke();
     }
     if (yMin <= 0 && yMax >= 0) {
       const y0 = sy(0);
+      const y0Adj = Math.min(Math.max(y0, pad + 1), H - pad - 1);
       ctx.beginPath();
-      ctx.moveTo(pad, y0);
-      ctx.lineTo(W - pad, y0);
+      ctx.moveTo(pad, y0Adj);
+      ctx.lineTo(W - pad, y0Adj);
       ctx.stroke();
     }
     ctx.restore();
