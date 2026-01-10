@@ -10,7 +10,6 @@
   const rateEl = document.getElementById("rate");
   const noiseEl = document.getElementById("noise");
   const rateVal = document.getElementById("rateVal");
-  const noiseVal = document.getElementById("noiseVal");
   const statsEl = document.getElementById("stats");
   const trueAEl = document.getElementById("trueA");
   const trueBEl = document.getElementById("trueB");
@@ -18,7 +17,6 @@
   const fitCtx = fitCanvas.getContext("2d");
 
   rateEl.addEventListener("input", () => (rateVal.textContent = rateEl.value));
-  noiseEl.addEventListener("input", () => (noiseVal.textContent = Number(noiseEl.value).toFixed(2)));
 
   // --- Plot world coordinates ---
   const xMin = 0, xMax = 10;
