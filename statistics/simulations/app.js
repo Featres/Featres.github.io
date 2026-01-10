@@ -30,8 +30,8 @@
   const sy = y => H - pad - (y - yMin) / (yMax - yMin) * (H - 2 * pad);
 
   // --- True model ---
-  let trueM = 1.2;
-  let trueB = 0.5;
+  let trueM = 2;
+  let trueB = 2;
 
   // --- Data + running sums for OLS ---
   let points = [];
