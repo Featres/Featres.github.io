@@ -1,0 +1,102 @@
+:root {
+  color-scheme: light;
+}
+
+body {
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  margin: 0;
+  padding: 0;
+  background: #fafafa;
+  color: #111;
+}
+
+.wrap {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 18px 16px;
+}
+
+h1 {
+  margin: 0 0 6px 0;
+  font-size: 26px;
+}
+
+p { margin: 0; color: #333; }
+
+.controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 14px 0 8px 0;
+}
+
+button {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+button:hover { background: #f3f3f3; }
+
+label {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid #e7e7e7;
+  background: #fff;
+  padding: 8px 10px;
+  border-radius: 10px;
+}
+
+input[type="range"] { width: 220px; }
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.stats {
+  padding: 10px 12px;
+  background: #fff;
+  border: 1px solid #e7e7e7;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  min-height: 20px;
+}
+
+.canvasCard {
+  background: #fff;
+  border: 1px solid #e7e7e7;
+  border-radius: 16px;
+  padding: 12px;
+}
+
+canvas {
+  width: 100%;
+  height: auto;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+}
+
+.legend {
+  margin-top: 10px;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  color: #444;
+}
+
+.dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.dot-true { background: rgba(0, 120, 255, 0.45); }
+.dot-est  { background: rgba(220, 0, 80, 0.85); }
+.dot-pts  { background: rgba(0, 0, 0, 0.75); }
