@@ -31,7 +31,7 @@
 
   // --- True model ---
   let trueM = 2;
-  let trueB = 2;
+  let trueB = 1;
 
   // --- Data + running sums for OLS ---
   let points = [];
