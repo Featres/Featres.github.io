@@ -1,13 +1,96 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Statistics</title>
-  </head>
-  <body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Statistics</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      background-color: #f4f4f4;
+      color: #333;
+    }
+    header {
+      background: #333;
+      color: #fff;
+      padding: 20px 0;
+      text-align: center;
+    }
+    nav ul {
+      list-style: none;
+      display: flex;
+      justify-content: center;
+      background: #444;
+    }
+    nav ul li {
+      margin: 0 15px;
+    }
+    nav ul li a {
+      color: #fff;
+      text-decoration: none;
+      padding: 14px 20px;
+      display: block;
+    }
+    nav ul li a:hover {
+      background: #555;
+    }
+    section {
+      padding: 40px 20px;
+      max-width: 1000px;
+      margin: auto;
+    }
+    footer {
+      text-align: center;
+      padding: 20px;
+      background: #333;
+      color: #fff;
+    }
+    .button {
+      background: #333;
+      color: #fff;
+      padding: 10px 20px;
+      text-decoration: none;
+      display: inline-block;
+      margin-top: 10px;
+    }
+    .button:hover {
+      background: #555;
+    }
+  </style>
+</head>
+<body>
+  <nav>
     <ul>
-      <li><a href="https://piotr-marciniak.com/statistics/simulations">Simulations</a></li>
+      <li><a href="https://piotr-marciniak.com/#about">About</a></li>
+      <li><a href="https://piotr-marciniak.com/#projects">Projects</a></li>
+      <li><a href="https://piotr-marciniak.com/#contact">Contact</a></li>
     </ul>
-  </body>
+  </nav>
+
+  <section id="projects">
+    <h2>Projects</h2>
+    <p>Here are a few projects I've worked on recently:</p>
+    <ul>
+      <li><a href="simulations">Simulations</a></li>
+    </ul>
+  </section>
+
+  <footer>
+    <p>&copy; 2026 Piotr Marciniak. All rights reserved.</p>
+  </footer>
+
+  <script>
+    document.getElementById('contactForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+      document.getElementById('responseMessage').textContent = 'Thank you for reaching out!';
+      this.reset();
+    });
+  </script>
+</body>
 </html>
