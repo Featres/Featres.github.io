@@ -14,6 +14,7 @@
   const statsEl = document.getElementById("stats");
   const trueAEl = document.getElementById("trueA");
   const trueBEl = document.getElementById("trueB");
+  const epsilonEl = document.getElementById("epsilon");
 
   rateEl.addEventListener("input", () => (rateVal.textContent = rateEl.value));
   noiseEl.addEventListener("input", () => (noiseVal.textContent = Number(noiseEl.value).toFixed(2)));
@@ -71,7 +72,9 @@
   function addPoint() {
     const x = xMin + Math.random() * (xMax - xMin);
     const sigma = Number(noiseEl.value);
-    const y = trueM * x + trueB + randn() * sigma;
+    const epsilon = epsilonEl ? Number(epsilonEl.value) : 0;
+    const epsilonTerm = Number.isFinite(epsilon) ? epsilon : 0;
+    const y = trueM * x + trueB + epsilonTerm + randn() * sigma;
 
     points.push({ x, y });
 
@@ -84,25 +87,39 @@
 
   function computeYBounds() {
     const sigma = Number(noiseEl.value);
-    const epsilon = Number(epsilonEl.value);
+    const epsilon = epsilonEl ? Number(epsilonEl.value) : 0;
     const epsilonTerm = Number.isFinite(epsilon) ? epsilon : 0;
-    const noisePad = Number.isFinite(sigma) ? 3 * sigma : 0;
+    const noisePad = Number.isFinite(sigma) ? 4 * sigma : 0;
 
-    const y1 = trueM * xMin + trueB + epsilonTerm;
-    const y2 = trueM * xMax + trueB + epsilonTerm;
-    let minY = Math.min(y1, y2) - noisePad;
-    let maxY = Math.max(y1, y2) + noisePad;
+    let minY = Infinity;
+    let maxY = -Infinity;
+    const include = value => {
+      if (!Number.isFinite(value)) return;
+      if (value < minY) minY = value;
+      if (value > maxY) maxY = value;
+    };
+
+    include(trueM * xMin + trueB + epsilonTerm);
+    include(trueM * xMax + trueB + epsilonTerm);
 
     if (points.length) {
-      for (const p of points) {
-        if (p.y < minY) minY = p.y;
-        if (p.y > maxY) maxY = p.y;
-      }
+      for (const p of points) include(p.y);
     }
 
-    const span = Math.max(maxY - minY, 1);
-    const padFrac = span * 0.12;
-    return { min: minY - padFrac, max: maxY + padFrac };
+    const est = currentOLS();
+    if (Number.isFinite(est.m) && Number.isFinite(est.b)) {
+      include(est.m * xMin + est.b);
+      include(est.m * xMax + est.b);
+    }
+
+    if (!Number.isFinite(minY) || !Number.isFinite(maxY)) {
+      return { min: -2, max: 12 };
+    }
+
+    let span = maxY - minY;
+    if (span < 1) span = 1;
+    const padFrac = span * 0.15;
+    return { min: minY - noisePad - padFrac, max: maxY + noisePad + padFrac };
   }
 
   function currentOLS() {
@@ -189,8 +206,10 @@
     drawPoints();
 
     // Stats text
+    const epsilon = epsilonEl ? Number(epsilonEl.value) : 0;
+    const epsilonTerm = Number.isFinite(epsilon) ? epsilon : 0;
     statsEl.textContent =
-      `n=${n}  |  true: y=${trueM.toFixed(3)}x + ${trueB.toFixed(3)}  |  ` +
+      `n=${n}  |  true: y=${trueM.toFixed(3)}x + ${trueB.toFixed(3)} + ${epsilonTerm.toFixed(3)}  |  ` +
       `est: y=${Number.isFinite(est.m) ? est.m.toFixed(3) : "—"}x + ${Number.isFinite(est.b) ? est.b.toFixed(3) : "—"}`;
   }
 
