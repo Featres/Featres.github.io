@@ -170,6 +170,26 @@
     ctx.strokeStyle = "#c9c9c9";
     ctx.stroke();
 
+    // Zero axes (dotted)
+    ctx.save();
+    ctx.setLineDash([5, 6]);
+    ctx.strokeStyle = "#b5b5b5";
+    if (xMin <= 0 && xMax >= 0) {
+      const x0 = sx(0);
+      ctx.beginPath();
+      ctx.moveTo(x0, pad);
+      ctx.lineTo(x0, H - pad);
+      ctx.stroke();
+    }
+    if (yMin <= 0 && yMax >= 0) {
+      const y0 = sy(0);
+      ctx.beginPath();
+      ctx.moveTo(pad, y0);
+      ctx.lineTo(W - pad, y0);
+      ctx.stroke();
+    }
+    ctx.restore();
+
     // Simple ticks
     ctx.fillStyle = "#666";
     ctx.font = "12px system-ui";
