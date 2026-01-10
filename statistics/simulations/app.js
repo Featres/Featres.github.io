@@ -20,7 +20,7 @@
 
   // --- Plot world coordinates ---
   const xMin = 0, xMax = 10;
-  const yMin = -2, yMax = 12;
+  let yMin = -2, yMax = 12;
 
   const pad = 38;
   const W = canvas.width, H = canvas.height;
@@ -82,6 +82,29 @@
     sumXY += x * y;
   }
 
+  function computeYBounds() {
+    const sigma = Number(noiseEl.value);
+    const epsilon = Number(epsilonEl.value);
+    const epsilonTerm = Number.isFinite(epsilon) ? epsilon : 0;
+    const noisePad = Number.isFinite(sigma) ? 3 * sigma : 0;
+
+    const y1 = trueM * xMin + trueB + epsilonTerm;
+    const y2 = trueM * xMax + trueB + epsilonTerm;
+    let minY = Math.min(y1, y2) - noisePad;
+    let maxY = Math.max(y1, y2) + noisePad;
+
+    if (points.length) {
+      for (const p of points) {
+        if (p.y < minY) minY = p.y;
+        if (p.y > maxY) maxY = p.y;
+      }
+    }
+
+    const span = Math.max(maxY - minY, 1);
+    const padFrac = span * 0.12;
+    return { min: minY - padFrac, max: maxY + padFrac };
+  }
+
   function currentOLS() {
     if (n < 2) return { m: NaN, b: NaN };
 
@@ -94,6 +117,12 @@
   }
 
   // --- Drawing ---
+  function formatTick(value, step) {
+    if (step < 0.1) return value.toFixed(2);
+    if (step < 1) return value.toFixed(1);
+    return value.toFixed(0);
+  }
+
   function drawAxes() {
     ctx.clearRect(0, 0, W, H);
 
@@ -110,8 +139,11 @@
     for (let x = 0; x <= 10; x += 2) {
       ctx.fillText(String(x), sx(x) - 4, H - 12);
     }
-    for (let y = -2; y <= 12; y += 2) {
-      ctx.fillText(String(y), 10, sy(y) + 4);
+    const ticks = 6;
+    const step = (yMax - yMin) / (ticks - 1);
+    for (let i = 0; i < ticks; i += 1) {
+      const y = yMin + step * i;
+      ctx.fillText(formatTick(y, step), 10, sy(y) + 4);
     }
   }
 
@@ -141,6 +173,9 @@
   }
 
   function draw() {
+    const bounds = computeYBounds();
+    yMin = bounds.min;
+    yMax = bounds.max;
     drawAxes();
 
     // True line (blue-ish, translucent)
