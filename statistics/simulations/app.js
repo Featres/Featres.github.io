@@ -17,20 +17,6 @@
 
   rateEl.addEventListener("input", () => (rateVal.textContent = rateEl.value));
   noiseEl.addEventListener("input", () => (noiseVal.textContent = Number(noiseEl.value).toFixed(2)));
-  trueAEl.addEventListener("input", () => {
-    const next = Number(trueAEl.value);
-    if (Number.isFinite(next)) {
-      trueM = next;
-      draw();
-    }
-  });
-  trueBEl.addEventListener("input", () => {
-    const next = Number(trueBEl.value);
-    if (Number.isFinite(next)) {
-      trueB = next;
-      draw();
-    }
-  });
 
   // --- Plot world coordinates ---
   const xMin = 0, xMax = 10;
@@ -58,18 +44,28 @@
     return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
   }
 
-  function reset() {
-    points = [];
-    n = 0; sumX = 0; sumY = 0; sumXX = 0; sumXY = 0;
-
+  function applyTrueCoefficients(resetData) {
     const nextA = Number(trueAEl.value);
     const nextB = Number(trueBEl.value);
     if (Number.isFinite(nextA)) trueM = nextA;
     if (Number.isFinite(nextB)) trueB = nextB;
+    if (resetData) {
+      points = [];
+      n = 0; sumX = 0; sumY = 0; sumXX = 0; sumXY = 0;
+    }
     trueAEl.value = String(trueM);
     trueBEl.value = String(trueB);
 
     draw();
+  }
+
+  trueAEl.addEventListener("input", () => applyTrueCoefficients(true));
+  trueBEl.addEventListener("input", () => applyTrueCoefficients(true));
+
+  function reset() {
+    points = [];
+    n = 0; sumX = 0; sumY = 0; sumXX = 0; sumXY = 0;
+    applyTrueCoefficients(false);
   }
 
   function addPoint() {
