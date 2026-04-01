@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IML – Lecture 14: Convolutional Neural Networks</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      font-size: 17px;
+      line-height: 1.75;
+      color: #1a1a2e;
+      background: #fdfdfd;
+      margin: 0;
+    }
+
+    nav ul {
+      list-style: none;
+      display: flex;
+      justify-content: center;
+      background: #444;
+      margin: 0;
+      padding: 0;
+    }
+    nav ul li {
+      margin: 0 15px;
+    }
+    nav ul li a {
+      color: #fff;
+      text-decoration: none;
+      padding: 14px 20px;
+      display: block;
+    }
+    nav ul li a:hover {
+      background: #555;
+    }
+
+    header, main {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    header {
+      margin-top: 2.5rem;
+      border-top: 3px solid #1a73e8;
+      padding-top: 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+
+    h1 {
+      font-size: 1.9rem;
+      font-weight: 700;
+      color: #16213e;
+      margin-bottom: 0.5rem;
+    }
+
+    .meta {
+      font-size: 14px;
+      color: #555;
+    }
+    .meta span + span::before {
+      content: ' · ';
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #16213e;
+      border-bottom: 1px solid #e0e0e0;
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.3rem;
+    }
+
+    h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #0f3460;
+      margin-top: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    h4 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #0f3460;
+      font-style: italic;
+      margin-top: 1rem;
+      margin-bottom: 0.3rem;
+    }
+
+    section {
+      margin-bottom: 2.5rem;
+    }
+
+    p {
+      margin-bottom: 0.75rem;
+    }
+
+    a { color: #1a73e8; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    code {
+      font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+      font-size: 15px;
+      background: #f4f4f8;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+
+    .math-block {
+      margin: 1.25rem 0;
+      margin-left: 1rem;
+      overflow-x: auto;
+    }
+
+    .callout-definition {
+      background: #eef6ff;
+      border-left: 4px solid #1a73e8;
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0;
+      border-radius: 0 6px 6px 0;
+    }
+    .callout-definition .callout-title {
+      font-weight: 700;
+      color: #1a73e8;
+      margin-bottom: 0.4rem;
+    }
+
+    .callout-example {
+      background: #f1f8f1;
+      border-left: 4px solid #2e7d32;
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0;
+      border-radius: 0 6px 6px 0;
+    }
+    .callout-example .callout-title {
+      font-weight: 700;
+      color: #2e7d32;
+      margin-bottom: 0.4rem;
+    }
+
+    .callout-warning {
+      background: #fff8e1;
+      border-left: 4px solid #f9a825;
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0;
+      border-radius: 0 6px 6px 0;
+    }
+    .callout-warning .callout-title {
+      font-weight: 700;
+      color: #e65100;
+      margin-bottom: 0.4rem;
+    }
+
+    ul, ol {
+      padding-left: 1.5rem;
+      margin-bottom: 0.75rem;
+    }
+    li {
+      margin-bottom: 0.4rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      font-size: 15px;
+    }
+    th, td {
+      border: 1px solid #d0d0da;
+      padding: 0.6rem 1rem;
+      text-align: left;
+    }
+    th {
+      background: #f4f4f8;
+      font-weight: 600;
+    }
+    tr:nth-child(even) { background: #fafafa; }
+
+    .table-wrapper {
+      overflow-x: auto;
+    }
+
+    figure {
+      margin: 1.5rem 0;
+      text-align: center;
+    }
+    figcaption {
+      font-size: 14px;
+      font-style: italic;
+      color: #555;
+      margin-top: 0.5rem;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      background: #333;
+      color: #fff;
+      margin-top: 40px;
+    }
+
+    .highlight { color: #1a73e8; font-weight: 600; }
+
+    @media (max-width: 600px) {
+      header, main { padding: 0 1rem; }
+      h1 { font-size: 1.5rem; }
+    }
+  </style>
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+<body>
+  <nav>
+    <ul>
+      <li><a href="https://piotr-marciniak.com/#about">About</a></li>
+      <li><a href="https://piotr-marciniak.com/#projects">Projects</a></li>
+      <li><a href="https://piotr-marciniak.com/#contact">Contact</a></li>
+    </ul>
+  </nav>
+
+<header>
+  <h1>Convolutional Neural Networks</h1>
+  <div class="meta">
+    <span>Course: Introduction to Machine Learning</span>
+    <span>Lecture 14</span>
+    <span>Spring 2026, Prof. Andreas Krause</span>
+  </div>
+</header>
+
+<main>
+
+<section>
+  <p>
+    This lecture introduces <strong>Convolutional Neural Networks (CNNs)</strong>, a specialized neural network architecture designed for data with spatial structure — most notably images. The core idea is deceptively simple: instead of connecting every input to every hidden unit, connect each unit only to a small local neighbourhood and <em>share</em> the same weights across all positions. This single design choice leads to massive parameter savings, natural translation equivariance, and the ability to learn hierarchical visual features. The lecture covers the motivation from image data, the mathematical definition of convolution in 1D and 2D, the role of padding and stride, and how full CNN architectures are assembled.
+  </p>
+</section>
+
+<!-- ======== SECTION 1: Motivation ======== -->
+<section>
+  <h2>1. Motivation: Why Not Just Use Fully Connected Networks?</h2>
+
+  <h3>1.1 Images as Numerical Objects</h3>
+  <p>
+    Neural networks used in computer vision take images as input. The first step is always to turn an image into numbers. A <strong>grayscale image</strong> of size $m \times n$ is represented as an $m \times n$ matrix, where each entry is the pixel's intensity (typically a value in $[0,1]$, from white to black). An <strong>RGB image</strong> has three colour channels (red, green, blue), so it becomes an $m \times n \times 3$ <strong>tensor</strong> — think of it as three matrices stacked behind each other, where each matrix records the intensity of one colour channel for every pixel.
+  </p>
+
+  <div class="callout-example">
+    <div class="callout-title">Example — A Tiny Tensor</div>
+    <p>A $5 \times 5 \times 3$ tensor represents a $5 \times 5$ RGB image. The upper-left pixel has three intensity values — one from the red channel, one from blue, one from green. Together, these three numbers determine the pixel's colour.</p>
+  </div>
+
+  <h3>1.2 The Parameter Explosion Problem</h3>
+  <p>
+    One naive approach is to flatten the image into a vector and feed it into a standard fully connected network. But this quickly becomes impractical. A modest $100 \times 100$ grayscale image has 10,000 pixel values. A single fully connected layer mapping this to 1,000 hidden units requires $10{,}000 \times 1{,}000 = 10{,}000{,}000$ parameters — and that's just <em>one</em> layer. In practice, images are much larger (e.g. $224 \times 224 \times 3$), making the parameter count astronomically high. This is both computationally wasteful and highly prone to overfitting.
+  </p>
+
+  <h3>1.3 The Key Observation</h3>
+  <p>
+    The crucial insight that motivates CNNs is that <strong>the colour of each pixel is mostly related to the colour of nearby pixels, and much less related to distant ones</strong>. A cat's ear in the top-left corner of an image is defined by the local arrangement of pixels around it — not by what's happening in the bottom-right corner. Fully connected layers completely ignore this spatial locality; they treat every pair of input-output connections as equally important. This calls for a different architecture.
+  </p>
+</section>
+
+<!-- ======== SECTION 2: The CNN Architecture Idea ======== -->
+<section>
+  <h2>2. The CNN Architecture: Local Connectivity & Weight Sharing</h2>
+
+  <p>
+    CNNs address the problems above with two principles that are baked into the architecture itself:
+  </p>
+  <ul>
+    <li><strong>Local connectivity:</strong> Each output unit is connected only to a small local region (a "patch") of the input, not to every input unit. For example, output unit $z_2$ might depend only on inputs $x_1$ and $x_2$, not on all of $x_1, x_2, \ldots, x_n$.</li>
+    <li><strong>Weight sharing:</strong> The same small set of weights is reused at every position. Instead of learning separate weights for each connection, we learn a single small <strong>filter</strong> (also called a <strong>kernel</strong>) and slide it across the entire input.</li>
+  </ul>
+
+  <p>
+    These two properties have profound consequences. Weight sharing means the number of learnable parameters in a convolutional layer depends only on the filter size — not on the image size. A layer with a $3 \times 3$ filter has only 9 weights (plus a bias), regardless of whether the image is $32 \times 32$ or $1024 \times 1024$. Compare this to the millions of parameters in a fully connected layer doing the same job.
+  </p>
+
+  <div class="callout-warning">
+    <div class="callout-title">CNNs Are Not Purely Convolutional</div>
+    <p>A CNN does not necessarily consist only of convolutional layers. It is common for the later layers (closer to the output) to be fully connected layers, which combine the high-level features extracted by the convolutional layers into a final prediction (e.g. a class label).</p>
+  </div>
+</section>
+
+<!-- ======== SECTION 3: 1D Convolution ======== -->
+<section>
+  <h2>3. One-Dimensional Convolution</h2>
+
+  <p>
+    Before tackling images (which are 2D or 3D), it's helpful to understand convolution in the simplest case: one-dimensional input. Recall that in a fully connected network, each hidden layer is related to the previous one via:
+  </p>
+  <div class="math-block">
+    $$\mathbf{v}^{(l)} = \varphi\!\left(W^{(l)}\,\mathbf{v}^{(l-1)}\right)$$
+  </div>
+  <p>
+    where $W^{(l)}$ is a full weight matrix and $\varphi$ is a nonlinear activation function applied element-wise. In the CNN architecture, this full matrix is replaced by a structured matrix that encodes local connectivity and weight sharing. Consider a small example with input $\mathbf{x} = (x_1, x_2, x_3)^T$ and filter $\mathbf{w} = (w_1, w_2)^T$. The output is:
+  </p>
+  <div class="math-block">
+    $$\begin{pmatrix} z_1 \\ z_2 \\ z_3 \\ z_4 \end{pmatrix} = \begin{pmatrix} w_1 & 0 & 0 \\ w_2 & w_1 & 0 \\ 0 & w_2 & w_1 \\ 0 & 0 & w_2 \end{pmatrix} \cdot \begin{pmatrix} x_1 \\ x_2 \\ x_3 \end{pmatrix}$$
+  </div>
+  <p>
+    Notice the special structure: the weight matrix is a <strong>Toeplitz matrix</strong> — it has the same entries along each diagonal. Each output $z_i$ depends on at most two consecutive inputs, and the same weights $w_1, w_2$ are reused everywhere. This is exactly the convolution operation.
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition — 1D Convolution</div>
+    <p>Given two vectors $\mathbf{w} \in \mathbb{R}^k$ and $\mathbf{x} \in \mathbb{R}^d$, their <strong>convolution</strong> is the vector $\mathbf{z} = \mathbf{w} * \mathbf{x} \in \mathbb{R}^{k+d-1}$ with entries:</p>
+    <div class="math-block">
+      $$z_i := \sum_{j=\max\{1,\, i-d+1\}}^{\min\{i,\, k\}} w_j \, x_{i-j+1}$$
+    </div>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Example — Computing a 1D Convolution</div>
+    <p>Let $\mathbf{w} = (w_1, w_2)^T$ and $\mathbf{x} = (x_1, x_2, x_3)^T$. Then:</p>
+    <div class="math-block">
+      $$\mathbf{w} * \mathbf{x} = \begin{pmatrix} w_1 \cdot x_1 \\ w_1 \cdot x_2 + w_2 \cdot x_1 \\ w_1 \cdot x_3 + w_2 \cdot x_2 \\ w_2 \cdot x_3 \end{pmatrix}$$
+    </div>
+    <p>Each entry is a weighted sum of a small local window of the input, with the same weights $w_1, w_2$ applied everywhere.</p>
+  </div>
+
+  <p>
+    Using this notation, the relationship between consecutive layers in a convolutional network is written compactly as:
+  </p>
+  <div class="math-block">
+    $$\mathbf{v}^{(l)} = \varphi\!\left(\mathbf{w}^{(l)} * \mathbf{v}^{(l-1)}\right)$$
+  </div>
+  <p>
+    This is the defining equation of a <strong>convolutional neural network</strong> — hence the name.
+  </p>
+</section>
+
+<!-- ======== SECTION 4: Filters as Feature Detectors ======== -->
+<section>
+  <h2>4. Filters as Feature Detectors</h2>
+
+  <p>
+    Intuitively, a filter in a CNN acts as a <strong>pattern detector</strong>. As the filter slides across the input, it produces a high output value wherever the local patch of the input "matches" the pattern encoded by the filter, and a low value where it doesn't. The output of applying a filter across all positions is called a <strong>feature map</strong>.
+  </p>
+  <p>
+    Different filters detect different things. For example, a Gaussian filter has a smoothing effect — it blurs the image by averaging nearby pixel values. An edge-detection filter highlights sharp transitions between dark and light regions. In a trained CNN, the network <em>learns</em> the filter values from data, so the filters end up detecting whatever patterns are most useful for the task at hand (edges, textures, shapes, object parts, etc.).
+  </p>
+</section>
+
+<!-- ======== SECTION 5: 2D Convolution ======== -->
+<section>
+  <h2>5. Multidimensional Convolution</h2>
+
+  <h3>5.1 2D Convolution (Grayscale Images)</h3>
+  <p>
+    Images are 2D (or 3D for colour), so we need convolution to work on matrices and tensors, not just vectors. The idea is the same: slide a small filter over the input, compute a dot product at each position, and collect the results into an output matrix (the feature map).
+  </p>
+
+  <div class="callout-example">
+    <div class="callout-title">Example — 2D Convolution Step by Step</div>
+    <p>Consider a $7 \times 7$ grayscale image $\mathbf{x}$ and a $3 \times 3$ filter $W$:</p>
+    <div class="math-block">
+      $$W = \begin{pmatrix} 1 & 0 & 1 \\ 0 & 1 & 0 \\ 1 & 0 & 1 \end{pmatrix}$$
+    </div>
+    <p>To compute the $(1,1)$ entry of the output, place $W$ on top of the upper-left $3 \times 3$ submatrix of $\mathbf{x}$, treat both as 9-dimensional vectors, and compute their dot product. Then slide $W$ one step to the right and repeat to get the $(1,2)$ entry. Continue sliding through all valid positions. Since a $3 \times 3$ filter can be placed in $5 \times 5 = 25$ positions on a $7 \times 7$ image, the result is a $5 \times 5$ feature map.</p>
+  </div>
+
+  <h3>5.2 3D Convolution (RGB Images)</h3>
+  <p>
+    For RGB images (tensors of shape $n \times n \times 3$), the filter is also three-dimensional — for example $3 \times 3 \times 3$. The operation works the same way: slide the filter across the two spatial dimensions, and at each position, flatten both the overlapping $3 \times 3 \times 3$ patch and the filter into 27-dimensional vectors and compute their dot product. The result of applying one 3D filter is still a <strong>single 2D feature map</strong> (a matrix), because the depth dimension is summed over.
+  </p>
+  <p>
+    In practice, we apply <strong>multiple filters</strong> $w_1, w_2, \ldots, w_m$ to the same input. Each filter produces its own feature map, and we stack these maps together to form an output tensor of depth $m$. This means a convolutional layer takes a tensor as input and outputs a tensor — possibly with different spatial dimensions and a different depth.
+  </p>
+</section>
+
+<!-- ======== SECTION 6: Padding and Stride ======== -->
+<section>
+  <h2>6. Padding and Stride</h2>
+
+  <p>
+    Two hyperparameters control the details of how the filter slides over the input:
+  </p>
+
+  <h3>6.1 Padding ($p$)</h3>
+  <p>
+    Without any special treatment, pixels at the <strong>border</strong> of the image participate in far fewer dot products than pixels in the centre. For instance, the top-left corner pixel is only covered when the filter is placed at the very first position, while a central pixel is covered by many filter positions. This means border information is underrepresented in the output.
+  </p>
+  <p>
+    <strong>Padding</strong> addresses this by adding a frame of zeros (rows and columns of zeros) around the image before applying the convolution. If the padding has depth $p$, the effective image size becomes $(n + 2p) \times (n + 2p)$. A common choice is to set $p$ so that the output has the same spatial dimensions as the input (called "same" padding).
+  </p>
+
+  <h3>6.2 Stride ($s$)</h3>
+  <p>
+    So far, we've assumed the filter moves one pixel at a time (stride $s = 1$). But we can choose a larger step size: with stride $s = 2$, the filter jumps two pixels at each step, producing a smaller output. Larger strides reduce the output dimensions and can be used as an alternative to pooling for downsampling.
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Output Dimension Formula</div>
+    <p>For an $n \times n$ image, $m$ filters of size $f \times f$, padding $p$, and stride $s$, the output tensor has dimensions:</p>
+    <div class="math-block">
+      $$\left\lfloor\frac{n + 2p - f}{s} + 1\right\rfloor \times \left\lfloor\frac{n + 2p - f}{s} + 1\right\rfloor \times m$$
+    </div>
+    <p>If we want $s$ to divide $(n + 2p - f)$ exactly (so the filter covers the image completely without leftover), the condition is that $s \mid (n + 2p - f)$.</p>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Example — Applying the Formula</div>
+    <p>Consider a $32 \times 32$ RGB image. We apply 16 filters of size $5 \times 5$ with padding $p = 2$ and stride $s = 1$. The output dimensions are:</p>
+    <div class="math-block">
+      $$\frac{32 + 2(2) - 5}{1} + 1 = 32 \quad \Longrightarrow \quad 32 \times 32 \times 16$$
+    </div>
+    <p>The spatial dimensions are preserved (thanks to the padding), while the depth has changed from 3 to 16 — one feature map per filter.</p>
+  </div>
+
+  <div class="callout-warning">
+    <div class="callout-title">Counting Parameters in a Convolutional Layer</div>
+    <p>Each filter has size $f \times f \times c$ (where $c$ is the input depth / number of channels), plus one bias term. With $m$ filters, the total number of parameters is $m \times (f^2 \times c + 1)$. Notice this does <strong>not</strong> depend on the image size $n$ — a huge advantage over fully connected layers.</p>
+  </div>
+</section>
+
+<!-- ======== SECTION 7: Full CNN Architecture ======== -->
+<section>
+  <h2>7. Putting It All Together: A Full CNN</h2>
+
+  <p>
+    A typical CNN is built by stacking several types of layers in sequence:
+  </p>
+  <ol>
+    <li><strong>Convolutional layer:</strong> Applies a set of learned filters to produce feature maps. Each convolutional layer is followed by a nonlinear activation (typically ReLU).</li>
+    <li><strong>Pooling layer (optional):</strong> Downsamples the feature maps spatially. A common choice is <strong>max pooling</strong>, which takes the maximum value in each small patch (e.g. $2 \times 2$). This reduces spatial dimensions, provides a degree of translation invariance, and further reduces computation.</li>
+    <li><strong>Fully connected layers:</strong> After several rounds of convolution and pooling, the resulting feature maps are flattened into a vector and fed through one or more fully connected layers to produce the final output (e.g. class probabilities for classification via softmax).</li>
+  </ol>
+
+  <p>
+    The early convolutional layers tend to learn low-level features (edges, corners, colour blobs), while deeper layers combine these into progressively higher-level features (textures, object parts, entire objects). This hierarchical feature learning is one of the main reasons CNNs are so effective for vision tasks.
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Translation Equivariance</div>
+    <p>Because the same filter is applied at every spatial position, convolution is <strong>equivariant to translation</strong>: if the input is shifted, the feature map shifts by the same amount. This means a CNN can detect a pattern regardless of where it appears in the image — a cat's ear in the top-left corner activates the same edge-detecting filter as the same ear in the bottom-right. Combined with pooling (which provides a degree of translation <em>invariance</em>), this makes CNNs naturally suited to visual recognition tasks.</p>
+  </div>
+</section>
+
+<!-- ======== SECTION 8: Comparison FC vs CNN ======== -->
+<section>
+  <h2>8. Fully Connected vs. Convolutional: A Comparison</h2>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Property</th>
+          <th>Fully Connected Layer</th>
+          <th>Convolutional Layer</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Connectivity</td>
+          <td>Every input connected to every output</td>
+          <td>Each output depends only on a local patch</td>
+        </tr>
+        <tr>
+          <td>Weight sharing</td>
+          <td>No — separate weight per connection</td>
+          <td>Yes — same filter reused at every position</td>
+        </tr>
+        <tr>
+          <td>Parameters (1 layer)</td>
+          <td>$n_{\text{in}} \times n_{\text{out}}$ — depends on input size</td>
+          <td>$m \times (f^2 \times c + 1)$ — independent of image size</td>
+        </tr>
+        <tr>
+          <td>Spatial structure</td>
+          <td>Ignored (input is flattened)</td>
+          <td>Exploited (local neighbourhoods preserved)</td>
+        </tr>
+        <tr>
+          <td>Translation equivariance</td>
+          <td>No</td>
+          <td>Yes — built into the architecture</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ======== KEY TAKEAWAYS ======== -->
+<section>
+  <h2>Key Takeaways</h2>
+  <ul>
+    <li><strong>Images are tensors.</strong> Grayscale images are matrices; RGB images are $m \times n \times 3$ tensors. This spatial structure contains vital information that fully connected networks ignore.</li>
+    <li><strong>Local connectivity + weight sharing</strong> are the two defining ideas of CNNs. They slash the parameter count from millions to thousands and encode the inductive bias that nearby pixels matter more than distant ones.</li>
+    <li><strong>Convolution is a sliding dot product.</strong> In 1D, the filter slides along a vector; in 2D, it slides across a matrix; in 3D (RGB), the filter matches the input depth and the dot product sums over all channels. The 1D case can be written as a matrix multiplication with a Toeplitz matrix.</li>
+    <li><strong>Padding and stride</strong> control the spatial dimensions of the output. Padding preserves border information; stride controls downsampling. The output size is $\left(\frac{n+2p-f}{s}+1\right) \times \left(\frac{n+2p-f}{s}+1\right) \times m$.</li>
+    <li><strong>CNNs are hierarchical feature learners:</strong> early layers detect low-level patterns (edges, textures); deeper layers combine them into high-level concepts (object parts, objects). This is followed by fully connected layers for the final prediction.</li>
+    <li><strong>Translation equivariance</strong> is a built-in property of convolution: shifting the input shifts the feature map by the same amount, meaning the network naturally detects patterns regardless of their spatial position.</li>
+  </ul>
+</section>
+
+</main>
+
+<footer>
+  <p>&copy; 2026 Piotr Marciniak. All rights reserved.</p>
+</footer>
+
+</body>
+</html>
