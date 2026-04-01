@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lecture 6 – Group Lasso &amp; High-Dimensional Additive Models</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      font-size: 17px;
+      line-height: 1.75;
+      color: #1a1a2e;
+      background: #fdfdfd;
+      margin: 0;
+    }
+
+    nav ul {
+      list-style: none;
+      display: flex;
+      justify-content: center;
+      background: #444;
+      margin: 0;
+      padding: 0;
+    }
+    nav ul li {
+      margin: 0 15px;
+    }
+    nav ul li a {
+      color: #fff;
+      text-decoration: none;
+      padding: 14px 20px;
+      display: block;
+    }
+    nav ul li a:hover {
+      background: #555;
+    }
+
+    header, main {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    header {
+      margin-top: 2.5rem;
+      border-top: 3px solid #1a73e8;
+      padding-top: 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+    header h1 {
+      font-size: 1.9rem;
+      font-weight: 700;
+      color: #16213e;
+      margin-bottom: 0.5rem;
+    }
+    .meta {
+      font-size: 14px;
+      color: #555;
+    }
+    .meta span + span::before {
+      content: " · ";
+      color: #999;
+    }
+
+    section { margin-bottom: 2.5rem; }
+
+    h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #16213e;
+      border-bottom: 1px solid #e0e0e0;
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.3rem;
+    }
+    h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #0f3460;
+      margin-top: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    h4 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #0f3460;
+      font-style: italic;
+      margin-top: 1rem;
+      margin-bottom: 0.3rem;
+    }
+
+    p { margin-bottom: 0.75rem; }
+
+    .math-block {
+      margin: 1.25rem 0;
+      padding-left: 1rem;
+    }
+
+    .callout-definition {
+      background: #eef6ff;
+      border-left: 4px solid #1a73e8;
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0;
+      border-radius: 0 6px 6px 0;
+    }
+    .callout-definition .callout-title {
+      font-weight: 700;
+      color: #1a73e8;
+      margin-bottom: 0.4rem;
+    }
+
+    .callout-example {
+      background: #f1f8f1;
+      border-left: 4px solid #2e7d32;
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0;
+      border-radius: 0 6px 6px 0;
+    }
+    .callout-example .callout-title {
+      font-weight: 700;
+      color: #2e7d32;
+      margin-bottom: 0.4rem;
+    }
+
+    .callout-note {
+      background: #fff8e1;
+      border-left: 4px solid #f9a825;
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0;
+      border-radius: 0 6px 6px 0;
+    }
+    .callout-note .callout-title {
+      font-weight: 700;
+      color: #e65100;
+      margin-bottom: 0.4rem;
+    }
+
+    code {
+      font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+      font-size: 15px;
+      background: #f4f4f8;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+
+    pre {
+      background: #f4f4f8;
+      border: 1px solid #d0d0da;
+      border-radius: 6px;
+      padding: 1rem 1.25rem;
+      overflow-x: auto;
+      font-size: 15px;
+      line-height: 1.6;
+      font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+      margin: 1rem 0;
+    }
+
+    ul, ol { padding-left: 1.5rem; margin-bottom: 0.75rem; }
+    li { margin-bottom: 0.4rem; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      font-size: 15px;
+    }
+    th, td {
+      border: 1px solid #d0d0da;
+      padding: 0.6rem 1rem;
+      text-align: left;
+    }
+    th { background: #f4f4f8; font-weight: 600; }
+    tr:nth-child(even) { background: #fafafa; }
+    .table-wrapper { overflow-x: auto; }
+
+    figure { margin: 1.5rem 0; text-align: center; }
+    figcaption { font-size: 14px; font-style: italic; color: #555; margin-top: 0.5rem; }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      background: #333;
+      color: #fff;
+      margin-top: 40px;
+    }
+
+    a { color: #1a73e8; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+    .comparison-grid > div {
+      background: #f9f9fc;
+      border-radius: 6px;
+      padding: 0.75rem 1rem;
+      border: 1px solid #e0e0e0;
+    }
+    .comparison-grid > div strong {
+      display: block;
+      margin-bottom: 0.3rem;
+      color: #0f3460;
+    }
+
+    @media (max-width: 600px) {
+      header, main { padding: 0 1rem; }
+      header h1 { font-size: 1.5rem; }
+      .comparison-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+<body>
+  <nav>
+    <ul>
+      <li><a href="https://piotr-marciniak.com/#about">About</a></li>
+      <li><a href="https://piotr-marciniak.com/#projects">Projects</a></li>
+      <li><a href="https://piotr-marciniak.com/#contact">Contact</a></li>
+    </ul>
+  </nav>
+
+<header>
+  <h1>Lecture 6: Group Lasso &amp; High-Dimensional Additive Models</h1>
+  <div class="meta">
+    <span>High-Dimensional Statistics</span>
+    <span>Lecture 6</span>
+    <span>Based on Bühlmann &amp; van de Geer (2011), Chapters 4 &amp; 5</span>
+  </div>
+</header>
+
+<main>
+
+  <p>
+    This lecture extends the Lasso framework in two major directions. First, we introduce the <strong>Group Lasso</strong>, which handles predictors that naturally come in groups (e.g., factor variables, interaction terms, basis expansions). Instead of selecting individual coefficients, the Group Lasso selects or removes entire groups at once. Second, we move beyond linear models into <strong>high-dimensional additive models</strong>, where each covariate contributes a smooth nonlinear function. The key idea is a combined <em>sparsity-smoothness penalty</em> that keeps the model flexible yet tractable.
+  </p>
+
+  <!-- ==================== SECTION: RECAP ==================== -->
+  <section>
+    <h2>0. Recap: KKT Conditions for the Lasso</h2>
+
+    <p>
+      Before diving into new material, we recall the <strong>Karush-Kuhn-Tucker (KKT) conditions</strong> that characterize the Lasso solution. These conditions are both necessary and sufficient because the Lasso objective is convex.
+    </p>
+
+    <div class="callout-definition">
+      <div class="callout-title">KKT Conditions for the Lasso</div>
+      <p>
+        For the Lasso estimator $\hat{\beta}(\lambda) = \arg\min_\beta \left( \|Y - X\beta\|_2^2/n + \lambda\|\beta\|_1 \right)$, define the negative gradient $G(\beta) = -2X^T(Y - X\beta)/n$. Then the KKT conditions state:
+      </p>
+      <div class="math-block">
+        $$G_j(\hat{\beta}) = -\text{sign}(\hat{\beta}_j)\lambda \quad \text{if } \hat{\beta}_j \neq 0$$
+        $$|G_j(\hat{\beta})| \leq \lambda \quad \text{if } \hat{\beta}_j = 0$$
+      </div>
+    </div>
+
+    <p>
+      <strong>Intuition:</strong> Think of $G_j(\hat{\beta})$ as the "gradient pressure" pushing coefficient $j$ away from zero. The Lasso solution says: if the data's gradient signal for variable $j$ is weaker than the penalty $\lambda$, that coefficient is killed to zero. If it's strong enough, the coefficient is non-zero but shrunk so that the gradient exactly balances the penalty. Sparsity is induced at the points of non-differentiability of the $\ell_1$-penalty — exactly where $\beta_j = 0$.
+    </p>
+  </section>
+
+  <!-- ==================== SECTION: GROUP LASSO ==================== -->
+  <section>
+    <h2>1. The Group Lasso</h2>
+
+    <h3>1.1 Motivation: Why Groups?</h3>
+    <p>
+      In many applications, the parameter vector $\beta$ has a natural <em>group structure</em>. The indices $\{1, \ldots, p\}$ are partitioned into $q$ non-overlapping groups $G_1, \ldots, G_q$ so that:
+    </p>
+    <div class="math-block">
+      $$\beta = (\beta_{G_1}, \beta_{G_2}, \ldots, \beta_{G_q})^T, \quad \bigcup_{j=1}^q G_j = \{1,\ldots,p\}, \quad G_j \cap G_k = \emptyset \text{ for } j \neq k$$
+    </div>
+
+    <p>The most common situations where groups arise naturally are:</p>
+    <ul>
+      <li><strong>Categorical (factor) variables:</strong> A factor with $d$ levels requires $d - 1$ dummy parameters (e.g., using sum contrasts). All $d-1$ parameters form one group. It makes no sense to select only some of these dummy variables — either the whole factor matters, or it doesn't.</li>
+      <li><strong>Interaction terms:</strong> A first-order interaction between two factors with 4 levels each requires $3 \times 3 = 9$ parameters, forming another group.</li>
+      <li><strong>Basis expansions:</strong> In additive models, each smooth function $f_j(\cdot)$ is represented by $K$ basis coefficients — these form a group.</li>
+    </ul>
+
+    <div class="callout-example">
+      <div class="callout-title">Example — Factor Variables with 4 Levels</div>
+      <p>
+        Consider $p = 2$ categorical variables, each with 4 levels $\{0, 1, 2, 3\}$. Using sum contrasts, each main effect needs 3 parameters. With main effects only, $\beta_{G_1} = (\beta_1, \beta_2, \beta_3)$ for the first factor and $\beta_{G_2} = (\beta_4, \beta_5, \beta_6)$ for the second. If we also include a first-order interaction, that requires $3 \times 3 = 9$ additional parameters in a third group $G_3$.
+      </p>
+      <p>
+        A standard Lasso might zero out individual dummy coefficients (e.g., set $\beta_2 = 0$ but keep $\beta_1, \beta_3 \neq 0$), which breaks the coherent interpretation of the factor. The Group Lasso avoids this by forcing $\beta_{G_j} \equiv 0$ (entire group out) or $\beta_{G_j} \not\equiv 0$ (entire group in).
+      </p>
+    </div>
+
+    <h3>1.2 The Group Lasso Penalty</h3>
+
+    <div class="callout-definition">
+      <div class="callout-title">Definition — Group Lasso</div>
+      <p>
+        The Group Lasso estimator for a linear model is:
+      </p>
+      <div class="math-block">
+        $$\hat{\beta} = \arg\min_\beta \left( \|Y - X\beta\|_2^2 / n + \lambda \sum_{j=1}^{q} m_j \|\beta_{G_j}\|_2 \right)$$
+      </div>
+      <p>
+        where $\|\beta_{G_j}\|_2 = \sqrt{\sum_{r \in G_j} \beta_r^2}$ is the Euclidean ($\ell_2$) norm of the sub-vector for group $j$, and $m_j$ are weights (often $m_j = \sqrt{|G_j|}$ to account for different group sizes).
+      </p>
+    </div>
+
+    <p>
+      <strong>Key insight — the geometry of group sparsity:</strong> The standard Lasso uses the $\ell_1$-norm $\|\beta\|_1 = \sum_j |\beta_j|$, which has "corners" at the axes, producing individual sparsity. The Group Lasso uses a <em>mixed $\ell_1/\ell_2$-norm</em>: it applies an $\ell_2$-norm <em>within</em> each group and sums these with an $\ell_1$-style structure <em>across</em> groups. The $\ell_2$-norm within a group is smooth everywhere except at the origin $\beta_{G_j} = 0$. This single non-differentiable point is what drives entire groups to zero — just like the kink at zero in the absolute value drives individual Lasso coefficients to zero.
+    </p>
+
+    <p>
+      Think of it this way: within each group, the penalty is "round" (no corners, so no individual sparsity within the group), but across groups the penalty has $\ell_1$-type corners (driving whole groups to zero).
+    </p>
+
+    <div class="callout-note">
+      <div class="callout-title">Special Case: When Every Group Has Size 1</div>
+      <p>
+        If $|G_j| = 1$ for all $j$, then $\|\beta_{G_j}\|_2 = |\beta_j|$ and the Group Lasso reduces exactly to the standard Lasso. So the Lasso is a special case of the Group Lasso.
+      </p>
+    </div>
+
+    <h3>1.3 The Generalized Group Lasso Penalty</h3>
+
+    <p>
+      In practice, we often want a more flexible penalty that accounts for the internal structure of each group. The <strong>generalized Group Lasso penalty</strong> replaces the standard Euclidean norm with a weighted quadratic form:
+    </p>
+
+    <div class="math-block">
+      $$\text{pen}(\beta) = \lambda \sum_{j=1}^{q} m_j \sqrt{\beta_{G_j}^T A_j \beta_{G_j}}$$
+    </div>
+
+    <p>
+      where each $A_j$ is a positive definite matrix. This is computationally convenient because we can transform to the standard Group Lasso via $\tilde{\beta}_{G_j} = A_j^{1/2} \beta_{G_j}$, which turns the penalty into $\lambda \sum_j m_j \|\tilde{\beta}_{G_j}\|_2$.
+    </p>
+
+    <h4>Groupwise Prediction Penalty</h4>
+    <p>
+      A particularly important special case sets $A_j = X_{G_j}^T X_{G_j}$:
+    </p>
+    <div class="math-block">
+      $$\text{pen}(\beta) = \lambda \sum_{j=1}^{q} m_j \|X_{G_j}\beta_{G_j}\|_2$$
+    </div>
+    <p>
+      This penalty is <strong>invariant under arbitrary reparametrizations within every group</strong>. This is very important for categorical variables: no matter which contrast coding you use (sum contrasts, treatment contrasts, Helmert, etc.), the penalty gives the same result. When using an orthogonal parameterization with $X_{G_j}^T X_{G_j} = I$, this simplifies back to the standard Group Lasso.
+    </p>
+
+    <h3>1.4 Algorithm: Block Coordinate Descent</h3>
+
+    <p>
+      The Group Lasso is solved by a <strong>block coordinate descent</strong> algorithm — a generalization of the coordinatewise descent used for the standard Lasso. Instead of optimizing over one coefficient at a time, we optimize over one <em>group</em> at a time while keeping all other groups fixed.
+    </p>
+
+    <div class="callout-definition">
+      <div class="callout-title">Algorithm — Block Coordinate Descent for Group Lasso</div>
+      <p><strong>Initialize:</strong> $\beta^{[0]} \in \mathbb{R}^p$, set $m = 0$.</p>
+      <p><strong>Repeat</strong> until convergence:</p>
+      <ol>
+        <li>Increment $m$, cycle through groups $j = 1, \ldots, q$.</li>
+        <li><strong>Check:</strong> If $\|(-\nabla\rho(\beta^{[m-1]}_{-G_j}))_{G_j}\|_2 \leq \lambda m_j$, set $\beta^{[m]}_{G_j} = 0$ (kill the group).</li>
+        <li><strong>Otherwise:</strong> $\beta^{[m]}_{G_j} = \arg\min_{\beta_{G_j}} Q_\lambda(\beta^{[m-1]}_{+G_j})$ (optimize within the group).</li>
+      </ol>
+    </div>
+
+    <p>
+      For <strong>squared error loss</strong> with orthogonalized design ($n^{-1}X_{G_j}^T X_{G_j} = I$), the block update has a beautiful closed form — a <em>group-level soft-thresholding</em>:
+    </p>
+    <div class="math-block">
+      $$\beta^{[m]}_{G_j} = \left(1 - \frac{\lambda m_j}{\|U_{G_j}\|_2}\right)_+ U_{G_j}, \quad U_{G_j} = \frac{2}{n}X_{G_j}^T(Y - X\beta^{[m-1]}_{-G_j})$$
+    </div>
+    <p>
+      Here $(x)_+ = \max(x, 0)$. This is the multi-dimensional analog of the Lasso's scalar soft-thresholding: the entire group vector $U_{G_j}$ is shrunk uniformly toward zero, and set exactly to zero when the gradient norm $\|U_{G_j}\|_2$ is below the threshold $\lambda m_j$.
+    </p>
+
+    <div class="callout-note">
+      <div class="callout-title">Active Set Strategy</div>
+      <p>
+        For sparse problems (many groups, few active), an active set strategy dramatically speeds up computation. The algorithm focuses on currently active groups and only revisits inactive groups occasionally (e.g., every 10th iteration). This easily scales to $p \approx 10^4$ – $10^6$.
+      </p>
+    </div>
+
+    <h3>1.5 Theoretical Guarantees (Sketch)</h3>
+    <p>
+      The theoretical analysis of the Group Lasso follows a similar spirit to the standard Lasso, but with more involved arguments. The key results are:
+    </p>
+    <ul>
+      <li><strong>Prediction consistency:</strong> Under appropriate conditions (compatibility condition for groups, mild distributional assumptions), the Group Lasso achieves $(\hat{\beta}(\lambda) - \beta^0)^T \Sigma_X (\hat{\beta}(\lambda) - \beta^0) = o_P(1)$ even when $p \gg n$.</li>
+      <li><strong>Variable screening at group level:</strong> With suitable $\lambda$, the estimated active group set contains all truly active groups with high probability: $\hat{S}_{\text{group}}(\lambda) \supseteq S^0_{\text{group}}$.</li>
+      <li><strong>Prediction gain from grouping:</strong> When the group structure is real (group sizes $T_j > 1$), and $T_j > \log(q)$, the Group Lasso achieves better rates than applying the standard Lasso that ignores the group structure.</li>
+    </ul>
+
+    <h3>1.6 Application: DNA Splice Site Prediction</h3>
+    <p>
+      A compelling application uses the Group Lasso with logistic regression for predicting splice sites in DNA. The model uses 7 sequence positions, each with 4 nucleotide levels, and considers main effects plus 2-way and 3-way interactions. The Group Lasso naturally selects which main effects and interaction terms matter, producing an interpretable model. Results show mainly main effects are selected, with a few interactions — a finding that has been debated in computational biology.
+    </p>
+  </section>
+
+  <!-- ==================== SECTION: ADDITIVE MODELS ==================== -->
+  <section>
+    <h2>2. High-Dimensional Additive Models</h2>
+
+    <h3>2.1 From Linear to Additive: Why Go Nonlinear?</h3>
+    <p>
+      A linear model $Y_i = \sum_{j=1}^p \beta_j X_i^{(j)} + \varepsilon_i$ assumes each covariate has a strictly linear effect. In reality, effects may be nonlinear: a drug's effect might plateau, or a temperature effect might be U-shaped. <strong>Additive models</strong> are the most natural first step beyond linearity:
+    </p>
+
+    <div class="callout-definition">
+      <div class="callout-title">Definition — High-Dimensional Additive Model</div>
+      <div class="math-block">
+        $$Y_i = \mu + \sum_{j=1}^{p} f_j(X_i^{(j)}) + \varepsilon_i, \quad i = 1, \ldots, n$$
+      </div>
+      <p>
+        where $\mu$ is an intercept, each $f_j$ is a smooth univariate function, $\varepsilon_i$ are i.i.d. with $E[\varepsilon_i] = 0$, and we assume centering: $\sum_{i=1}^n f_j(X_i^{(j)}) = 0$ for identification.
+      </p>
+    </div>
+
+    <p>
+      The model is "additive" because the total effect is a sum of individual contributions — one function per covariate, with no interactions. Each $f_j$ is allowed to be an arbitrary smooth function, not just a linear one. This gives us a lot of flexibility while keeping the model interpretable: we can plot each $f_j$ to understand its individual contribution.
+    </p>
+
+    <p>
+      At first glance, fitting additive models with $p \gg n$ seems hopeless — we have infinitely many parameters (entire functions!) for each of $p$ covariates. The trick is to combine <strong>sparsity</strong> (most $f_j$ should be zero) with <strong>smoothness</strong> (the non-zero $f_j$ should be smooth).
+    </p>
+
+    <h3>2.2 Basis Expansion: Making the Problem Finite</h3>
+    <p>
+      Each function $f_j$ is expanded in a set of $K$ basis functions (e.g., B-splines):
+    </p>
+    <div class="math-block">
+      $$f_j(x) = \sum_{k=1}^{K} \beta_{j,k} \, h_{j,k}(x)$$
+    </div>
+    <p>
+      This converts the infinite-dimensional problem into a finite one with $pK$ parameters. We construct an $n \times pK$ design matrix $H = [H_1 | H_2 | \ldots | H_p]$ where $(H_j)_{i,k} = h_{j,k}(X_i^{(j)})$. A typical choice is $K \approx \sqrt{n}$ basis functions per covariate.
+    </p>
+    <p>
+      Notice that the parameters for each covariate $j$ naturally form a <strong>group</strong> $\beta_j = (\beta_{j,1}, \ldots, \beta_{j,K})^T$. This is the bridge connecting additive models to the Group Lasso!
+    </p>
+
+    <h3>2.3 The Sparsity-Smoothness Penalty (SSP)</h3>
+    <p>
+      To estimate $f_1, \ldots, f_p$ well in high dimensions, we need a penalty that does two things simultaneously: (1) drives entire functions $f_j$ to zero (sparsity at the function level), and (2) keeps the surviving functions smooth (avoiding overfitting within each function). This leads to the <em>sparsity-smoothness penalty</em>:
+    </p>
+
+    <div class="callout-definition">
+      <div class="callout-title">Definition — Sparsity-Smoothness Penalty (SSP)</div>
+      <div class="math-block">
+        $$\text{pen}_{\lambda_1, \lambda_2}(\beta) = \underbrace{\lambda_1 \sum_{j=1}^{p} \|f_j\|_n}_{\text{sparsity across functions}} + \underbrace{\lambda_2 \sum_{j=1}^{p} I(f_j)}_{\text{smoothness within functions}}$$
+      </div>
+      <p>
+        where $\|f_j\|_n = \sqrt{n^{-1}\sum_{i=1}^n f_j(X_i^{(j)})^2}$ is the empirical $\ell_2$-norm of $f_j$, and $I(f_j) = \sqrt{\int |f_j''(x)|^2 dx}$ is the Sobolev semi-norm measuring the roughness of $f_j$.
+      </p>
+    </div>
+
+    <p>
+      <strong>Intuition:</strong> The two tuning parameters $\lambda_1$ and $\lambda_2$ control different aspects. The sparsity part ($\lambda_1$) acts like the Group Lasso — it penalizes the "size" of each function, pushing entire functions to zero. The smoothness part ($\lambda_2$) acts like a roughness penalty — it penalizes the curvature of each function, preventing wild oscillations. You need both: sparsity alone doesn't prevent overfitting within active functions, and smoothness alone doesn't reduce the number of active functions.
+    </p>
+
+    <h3>2.4 Natural Cubic Splines: An Elegant Reduction</h3>
+
+    <p>
+      A remarkable result shows that we don't have to search over all possible smooth functions. When we optimize over the Sobolev space (continuously differentiable functions with square-integrable second derivatives), the solution is guaranteed to be a <strong>natural cubic spline</strong>:
+    </p>
+
+    <div class="callout-definition">
+      <div class="callout-title">Proposition 5.1 (Bühlmann &amp; van de Geer, 2011)</div>
+      <p>
+        Let $\mathcal{F}$ be the Sobolev space of continuously differentiable functions on $[a,b]$ with square-integrable second derivatives. Then the minimizers $\hat{f}_j$ of the SSP problem are <strong>natural cubic splines</strong> with knots at the data points $X_i^{(j)}$, $i = 1, \ldots, n$.
+      </p>
+    </div>
+
+    <p>
+      <strong>Why this matters:</strong> This result reduces an infinite-dimensional optimization (searching over all smooth functions) to a finite-dimensional one. Natural cubic splines with $n$ knots have $n$ degrees of freedom, so the total parameter dimension is $\approx np$. With B-spline basis functions and a manageable number of knots ($K \approx \sqrt{n}$), the effective dimension becomes $pK \approx p\sqrt{n}$, which is large but tractable.
+    </p>
+
+    <p>
+      In parametric form, we can write the empirical norm and smoothness penalty as:
+    </p>
+    <div class="math-block">
+      $$\|f_j\|_n = \sqrt{\beta_j^T H_j^T H_j \beta_j / n}, \qquad I(f_j) = \sqrt{\beta_j^T W_j \beta_j}$$
+    </div>
+    <p>
+      where $W_j$ is the matrix of inner products of second derivatives of the basis functions: $(W_j)_{k,\ell} = \int h_{j,k}''(x) h_{j,\ell}''(x)\,dx$.
+    </p>
+
+    <h3>2.5 SSP of Group Lasso Type</h3>
+
+    <p>
+      The original SSP penalty $\lambda_1 \sum_j \|f_j\|_n + \lambda_2 \sum_j I(f_j)$ has better theoretical properties, but it is harder to compute because the two norms appear as separate terms. For easier computation, an <strong>alternative SSP of Group Lasso type</strong> combines both norms under a single square root:
+    </p>
+
+    <div class="callout-definition">
+      <div class="callout-title">SSP of Group Lasso Type</div>
+      <div class="math-block">
+        $$\text{pen}_{\lambda_1,\lambda_2}(\beta) = \lambda_1 \sum_{j=1}^{p} \sqrt{\|f_j\|_n^2 + \lambda_2^2 I^2(f_j)}$$
+      </div>
+      <p>In parametric form:</p>
+      <div class="math-block">
+        $$= \lambda_1 \sum_{j=1}^{p} \sqrt{\beta_j^T \underbrace{\left(H_j^T H_j/n + \lambda_2^2 W_j\right)}_{=: A_j} \beta_j}$$
+      </div>
+    </div>
+
+    <p>
+      <strong>The key observation:</strong> For every fixed $\lambda_2$, this is exactly a <strong>generalized Group Lasso penalty</strong> with positive definite matrices $A_j = H_j^T H_j/n + \lambda_2^2 W_j$. This means we can use the same block coordinate descent algorithm from the Group Lasso section! We just need to transform to $\tilde{\beta}_{G_j} = A_j^{1/2}\beta_j$, solve a standard Group Lasso, and transform back via $\hat{\beta}_j = A_j^{-1/2}\hat{\tilde{\beta}}_j$.
+    </p>
+
+    <div class="callout-note">
+      <div class="callout-title">Practical Note on $\lambda_2$</div>
+      <p>
+        Simulations show that $\lambda_2$ (the smoothness parameter) is often not very sensitive — a few candidate values suffice. The sparsity parameter $\lambda_1$ is more critical and is typically selected via cross-validation. One can simply run the algorithm for a small grid of $\lambda_2$ values and cross-validate over the full $(\lambda_1, \lambda_2)$ grid.
+      </p>
+    </div>
+
+    <h3>2.6 Numerical Example: Recovering Nonlinear Functions</h3>
+
+    <p>
+      The lecture illustrates the method with a simulated example: $n = 150$ observations, $p = 200$ covariates, but only $s_0 = 4$ truly active functions:
+    </p>
+    <div class="math-block">
+      $$f_1(x) = -\sin(2x), \quad f_2(x) = \frac{x^2}{2} - \frac{25}{12}, \quad f_3(x) = x, \quad f_4(x) = e^{-x} - \frac{2}{5}\sinh\!\left(\frac{5}{2}\right)$$
+    </div>
+    <p>
+      Functions $f_5, \ldots, f_{200}$ are all zero. This is a challenging high-dimensional setting ($p > n$), yet the additive model estimator with the SSP penalty successfully recovers all four nonlinear functions, including the sinusoidal shape of $f_1$, the quadratic $f_2$, the linear $f_3$, and the exponential $f_4$. The inactive functions $f_5, f_6, \ldots$ are correctly estimated as (near-)zero.
+    </p>
+
+    <div class="callout-example">
+      <div class="callout-title">Example — Comparing Additive vs. Linear Fits</div>
+      <p>
+        In the simulated example, the SSP penalty successfully recovers the curved shapes that a linear model would miss entirely. The linear Lasso would approximate $f_1(x) = -\sin(2x)$ with just a straight line, losing the oscillatory structure. The additive model captures the curvature because it uses flexible basis expansions while controlling smoothness.
+      </p>
+      <p>
+        On real data (e.g., motif regression for DNA binding sites), the additive model can yield an improvement in cross-validated prediction error of about 20% compared to a Lasso-estimated linear model.
+      </p>
+    </div>
+
+    <h3>2.7 Prediction and Variable Selection Properties</h3>
+
+    <p>
+      The theoretical analysis (Chapter 8 of the book) establishes oracle-type results. Under sparsity and a compatibility condition for the design:
+    </p>
+    <div class="math-block">
+      $$\|\hat{f} - f^0\|_n^2 = O_P\!\left(s_0 \sqrt{\log(p)}\, n^{-4/5} / \varphi^2\right)$$
+    </div>
+    <p>
+      This achieves the optimal rate $O(s_0 n^{-4/5})$ up to a $\sqrt{\log(p)}$ factor — the "price" of not knowing in advance which functions are active. The rate $n^{-4/5}$ (rather than $n^{-1}$ as in the linear case) is the known minimax-optimal rate for estimating twice-differentiable functions, reflecting the inherent difficulty of nonparametric estimation.
+    </p>
+    <p>
+      For variable screening, under a "beta-min" type condition (the non-zero functions must be detectable), the method correctly identifies all active functions with high probability:
+    </p>
+    <div class="math-block">
+      $$\hat{S} = \{j : \|\hat{f}_j\|_n \neq 0\} \supseteq S^0 = \{j : \|f_j^0\|_n \neq 0\}$$
+    </div>
+  </section>
+
+  <!-- ==================== SECTION: BIG PICTURE ==================== -->
+  <section>
+    <h2>3. The Big Picture: How It All Connects</h2>
+
+    <p>
+      Here is a conceptual summary of the hierarchy of methods covered so far:
+    </p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Penalty</th>
+            <th>Sparsity Level</th>
+            <th>When to Use</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Lasso</td>
+            <td>$\lambda \sum_j |\beta_j|$</td>
+            <td>Individual coefficients</td>
+            <td>Linear model, independent predictors</td>
+          </tr>
+          <tr>
+            <td>Group Lasso</td>
+            <td>$\lambda \sum_j m_j \|\beta_{G_j}\|_2$</td>
+            <td>Entire groups</td>
+            <td>Factors, interactions, basis expansions</td>
+          </tr>
+          <tr>
+            <td>Additive Model + SSP</td>
+            <td>$\lambda_1 \sum_j \|f_j\|_n + \lambda_2 \sum_j I(f_j)$</td>
+            <td>Entire functions + smoothness</td>
+            <td>Nonlinear effects, smooth covariates</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      The unifying theme is that <em>structure in the parameters</em> should be reflected in the <em>structure of the penalty</em>. The Lasso treats each coefficient independently; the Group Lasso respects group structure; the additive model penalty further incorporates smoothness. Each level adds flexibility and better adaptation to the true data-generating process, at the cost of additional tuning parameters and complexity.
+    </p>
+  </section>
+
+  <!-- ==================== KEY TAKEAWAYS ==================== -->
+  <section>
+    <h2>Key Takeaways</h2>
+    <ul>
+      <li>The <strong>Group Lasso</strong> extends the Lasso to handle grouped parameters by using an $\ell_1/\ell_2$ mixed norm: $\ell_2$ within groups (no individual sparsity) and $\ell_1$-type across groups (driving entire groups to zero). It reduces to the standard Lasso when all group sizes are 1.</li>
+      <li>The <strong>generalized Group Lasso</strong> and the <strong>groupwise prediction penalty</strong> ensure <strong>invariance under reparametrization</strong> within groups — critical for factor variables where the choice of contrast coding should not affect the result.</li>
+      <li><strong>High-dimensional additive models</strong> extend linear models to allow each covariate to have a nonlinear (smooth) effect. The <strong>sparsity-smoothness penalty</strong> simultaneously selects which covariates are active and controls the roughness of the estimated functions.</li>
+      <li>A key theoretical result (Proposition 5.1) shows that the optimal functions are <strong>natural cubic splines</strong>, reducing the infinite-dimensional problem to a tractable parametric one.</li>
+      <li>The SSP of <strong>Group Lasso type</strong> turns the additive model estimation into a standard Group Lasso problem (for each fixed $\lambda_2$), making computation efficient via block coordinate descent.</li>
+    </ul>
+  </section>
+
+</main>
+
+<footer>
+  <p>&copy; 2026 Piotr Marciniak. All rights reserved.</p>
+</footer>
+
+</body>
+</html>
