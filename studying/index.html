@@ -43,13 +43,19 @@
       margin-bottom: 20px;
     }
     .subject {
-      margin-bottom: 24px;
+      margin-bottom: 14px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      background: #fff;
     }
-    .subject h3 {
-      margin-bottom: 8px;
+    .subject summary {
+      cursor: pointer;
+      padding: 12px 16px;
+      font-weight: 600;
+      background: #ececec;
     }
     .subject ul {
-      margin-left: 20px;
+      margin: 12px 20px 16px 34px;
     }
     .subject li {
       margin-bottom: 6px;
@@ -74,40 +80,46 @@
   <section id="studying-overview">
     <h2>Studying</h2>
 
-    <div class="subject">
-      <h3>Introduction to Machine Learning</h3>
+    <details class="subject" open>
+      <summary>Introduction to Machine Learning</summary>
       <ul>
-        <li><a href="introduction-to-machine-learning/">Lecture Overviews</a></li>
+        <li><a href="introduction-to-machine-learning/lecture9-kernels.html">Lecture 9 - The Kernel Trick</a></li>
+        <li><a href="introduction-to-machine-learning/lecture10-kernels2.html">Lecture 10 - Kernels and Other Methods</a></li>
+        <li><a href="introduction-to-machine-learning/lecture11-nn.html">Lecture 11 - Introduction to Neural Networks</a></li>
+        <li><a href="introduction-to-machine-learning/lecture12-nn2.html">Lecture 12 - Neural Networks 2</a></li>
+        <li><a href="introduction-to-machine-learning/lecture13-nn3.html">Lecture 13 - Neural Networks 3</a></li>
       </ul>
-    </div>
+    </details>
 
-    <div class="subject">
-      <h3>Convex Optimization</h3>
+    <details class="subject">
+      <summary>Convex Optimization</summary>
       <ul>
-        <li><a href="convex-optimization/">Lecture Overviews</a></li>
+        <li><a href="convex-optimization/chapter1-background-knowledge.html">Chapter 1 - Background Knowledge</a></li>
+        <li><a href="convex-optimization/chapter2-convex-optimization-problems.html">Chapter 2 - Convex Optimization Problems</a></li>
+        <li><a href="convex-optimization/chapter3-duality.html">Chapter 3 - Duality</a></li>
       </ul>
-    </div>
+    </details>
 
-    <div class="subject">
-      <h3>Computational Statistics</h3>
+    <details class="subject">
+      <summary>Computational Statistics</summary>
       <ul>
-        <li><a href="computational-statistics/">Lecture Overviews</a></li>
+        <li><a href="computational-statistics/lecture-1-overview.html">Lecture 1 Overview</a></li>
       </ul>
-    </div>
+    </details>
 
-    <div class="subject">
-      <h3>High-Dimensional Statistics</h3>
+    <details class="subject">
+      <summary>High-Dimensional Statistics</summary>
       <ul>
-        <li><a href="high-dimensional-statistics/">Lecture Overviews</a></li>
+        <li><a href="high-dimensional-statistics/lecture-1-overview.html">Lecture 1 Overview</a></li>
       </ul>
-    </div>
+    </details>
 
-    <div class="subject">
-      <h3>Core Concepts in Statistical Learning</h3>
+    <details class="subject">
+      <summary>Core Concepts in Statistical Learning</summary>
       <ul>
-        <li><a href="core-concepts-in-statistical-learning/">Lecture Overviews</a></li>
+        <li><a href="core-concepts-in-statistical-learning/lecture-1-overview.html">Lecture 1 Overview</a></li>
       </ul>
-    </div>
+    </details>
   </section>
 
   <footer>
