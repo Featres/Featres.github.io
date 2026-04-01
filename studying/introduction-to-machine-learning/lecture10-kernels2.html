@@ -16,15 +16,35 @@
       color: #1a1a2e;
       background: #fdfdfd;
       margin: 0;
-      padding: 3rem 2rem;
     }
 
-    header, main, footer {
+    nav ul {
+      list-style: none;
+      display: flex;
+      justify-content: center;
+      background: #444;
+    }
+    nav ul li {
+      margin: 0 15px;
+    }
+    nav ul li a {
+      color: #fff;
+      text-decoration: none;
+      padding: 14px 20px;
+      display: block;
+    }
+    nav ul li a:hover {
+      background: #555;
+    }
+
+    header, main {
       max-width: 820px;
       margin: 0 auto;
+      padding: 0 2rem;
     }
 
     header {
+      margin-top: 2.5rem;
       border-top: 3px solid #1a73e8;
       padding-top: 1.5rem;
       margin-bottom: 2.5rem;
@@ -165,16 +185,15 @@
     .table-wrapper { overflow-x: auto; }
 
     footer {
-      font-size: 14px;
-      color: #777;
-      border-top: 1px solid #e0e0e0;
-      padding-top: 1.5rem;
-      margin-top: 2rem;
+      text-align: center;
+      padding: 20px;
+      background: #333;
+      color: #fff;
+      margin-top: 40px;
     }
-    footer a { color: #1a73e8; }
 
     @media (max-width: 600px) {
-      body { padding: 1rem; }
+      header, main { padding: 0 1rem; }
       h1 { font-size: 1.5rem; }
     }
   </style>
@@ -190,6 +209,13 @@
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
 </head>
 <body>
+  <nav>
+    <ul>
+      <li><a href="https://piotr-marciniak.com/#about">About</a></li>
+      <li><a href="https://piotr-marciniak.com/#projects">Projects</a></li>
+      <li><a href="https://piotr-marciniak.com/#contact">Contact</a></li>
+    </ul>
+  </nav>
 
 <header>
   <h1>Lecture 10: Kernels &amp; Other Methods</h1>
@@ -477,9 +503,7 @@
 </main>
 
 <footer>
-  <p>Summary based on lecture slides and notes, Chapter 9 of the IML lecture notes. See also:
-    <a href="#">Lecture 9 (The Kernel Trick)</a> · <a href="#">Lecture 11 (Neural Networks)</a>
-  </p>
+  <p>&copy; 2026 Piotr Marciniak. All rights reserved.</p>
 </footer>
 
 </body>
