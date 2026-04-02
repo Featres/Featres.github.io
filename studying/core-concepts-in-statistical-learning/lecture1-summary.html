@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lecture 1 – Sample Space, Random Variables, and Distributions</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      font-size: 17px;
+      line-height: 1.75;
+      color: #1a1a2e;
+      background: #fdfdfd;
+      margin: 0;
+    }
+
+    nav ul {
+      list-style: none;
+      display: flex;
+      justify-content: center;
+      background: #444;
+      margin: 0;
+      padding: 0;
+    }
+    nav ul li {
+      margin: 0 15px;
+    }
+    nav ul li a {
+      color: #fff;
+      text-decoration: none;
+      padding: 14px 20px;
+      display: block;
+    }
+    nav ul li a:hover {
+      background: #555;
+    }
+
+    header, main {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    header {
+      margin-top: 2.5rem;
+      border-top: 3px solid #1a73e8;
+      padding-top: 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+
+    h1 {
+      font-size: 1.9rem;
+      font-weight: 700;
+      color: #16213e;
+      margin: 0 0 0.5rem 0;
+    }
+
+    .meta {
+      font-size: 14px;
+      color: #555;
+    }
+    .meta span + span::before {
+      content: ' · ';
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #16213e;
+      border-bottom: 1px solid #e0e0e0;
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.4rem;
+    }
+
+    h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #0f3460;
+      margin-top: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    h4 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #0f3460;
+      font-style: italic;
+      margin-top: 1rem;
+      margin-bottom: 0.3rem;
+    }
+
+    section {
+      margin-bottom: 2.5rem;
+    }
+
+    .callout-definition {
+      background: #eef6ff;
+      border-left: 4px solid #1a73e8;
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0;
+      border-radius: 0 6px 6px 0;
+    }
+    .callout-definition .callout-title {
+      font-weight: 700;
+      color: #1a73e8;
+      margin-bottom: 0.4rem;
+    }
+
+    .callout-example {
+      background: #f1f8f1;
+      border-left: 4px solid #2e7d32;
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0;
+      border-radius: 0 6px 6px 0;
+    }
+    .callout-example .callout-title {
+      font-weight: 700;
+      color: #2e7d32;
+      margin-bottom: 0.4rem;
+    }
+
+    .callout-note {
+      background: #fff8e1;
+      border-left: 4px solid #f9a825;
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0;
+      border-radius: 0 6px 6px 0;
+    }
+    .callout-note .callout-title {
+      font-weight: 700;
+      color: #e65100;
+      margin-bottom: 0.4rem;
+    }
+
+    .math-block {
+      margin: 1.25rem 0;
+      padding-left: 1rem;
+      overflow-x: auto;
+    }
+
+    code {
+      font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+      font-size: 15px;
+      background: #f4f4f8;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+
+    ul, ol {
+      padding-left: 1.5rem;
+    }
+    li {
+      margin-bottom: 0.4rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      font-size: 15px;
+    }
+    th, td {
+      border: 1px solid #d0d0da;
+      padding: 0.6rem 1rem;
+      text-align: left;
+    }
+    th {
+      background: #f4f4f8;
+      font-weight: 600;
+    }
+    tr:nth-child(even) { background: #fafafa; }
+
+    .table-wrapper {
+      overflow-x: auto;
+    }
+
+    figure {
+      margin: 1.5rem 0;
+      text-align: center;
+    }
+    figcaption {
+      font-size: 14px;
+      font-style: italic;
+      color: #555;
+      margin-top: 0.5rem;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      background: #333;
+      color: #fff;
+      margin-top: 40px;
+    }
+
+    a { color: #1a73e8; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .highlight { color: #1a73e8; font-weight: 600; }
+
+    @media (max-width: 600px) {
+      header, main { padding: 0 1rem; }
+      h1 { font-size: 1.5rem; }
+    }
+  </style>
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+<body>
+  <nav>
+    <ul>
+      <li><a href="https://piotr-marciniak.com/#about">About</a></li>
+      <li><a href="https://piotr-marciniak.com/#projects">Projects</a></li>
+      <li><a href="https://piotr-marciniak.com/#contact">Contact</a></li>
+    </ul>
+  </nav>
+
+<header>
+  <h1>Lecture 1: Sample Space, Random Variables, and Distributions</h1>
+  <div class="meta">
+    <span>Course: Core Concepts in Statistical Learning</span>
+    <span>Lecture 1</span>
+  </div>
+</header>
+
+<main>
+
+<section>
+  <p>
+    This lecture lays the probabilistic groundwork that everything in statistical learning builds upon. We start from the very beginning — <em>what is randomness?</em> — and build up to random variables, their distributions, and the key tools we need to describe and work with uncertain quantities. Think of this lecture as assembling a toolkit: sample spaces, events, probabilities, random variables, CDFs, and density/mass functions are the core instruments you'll reach for in every later topic.
+  </p>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <h2>1. The Sample Space</h2>
+
+  <p>
+    Before we can talk about probabilities, we need to define <em>what can happen</em>. The <span class="highlight">sample space</span> $\Omega$ is simply the set of all possible outcomes of a random experiment. Every probabilistic statement we ever make is, at its core, a statement about subsets of $\Omega$.
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition — Sample Space</div>
+    <p>The <strong>sample space</strong> $\Omega$ is the set of all possible outcomes of a random experiment. Individual elements $\omega \in \Omega$ are called <strong>sample outcomes</strong> (or realizations, or elementary events).</p>
+  </div>
+
+  <p>Sample spaces come in different "sizes":</p>
+  <ul>
+    <li><strong>Finite:</strong> $\Omega = \{\omega_1, \ldots, \omega_N\}$ for some $N \in \mathbb{N}$.</li>
+    <li><strong>Countably infinite:</strong> $\Omega = \{\omega_1, \omega_2, \ldots \}$ — you can list the outcomes one by one, but the list never ends.</li>
+    <li><strong>Uncountable:</strong> $\Omega = \mathbb{R}$ (or an interval like $(a, b]$) — outcomes form a continuum.</li>
+  </ul>
+
+  <div class="callout-example">
+    <div class="callout-title">Example — Coin Tossed Twice</div>
+    <p>
+      Toss a coin twice. Each toss yields Heads (H) or Tails (T). The sample space is:
+    </p>
+    <div class="math-block">
+      $$\Omega = \{(H,H),\;(H,T),\;(T,H),\;(T,T)\}$$
+    </div>
+    <p>This is a finite sample space with $|\Omega| = 4$ outcomes.</p>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Example — Rolling a Die</div>
+    <p>Roll a standard six-sided die once:</p>
+    <div class="math-block">$$\Omega = \{1, 2, 3, 4, 5, 6\}$$</div>
+    <p>Again finite, with 6 outcomes.</p>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Example — Continuous Measurement</div>
+    <p>Measure the temperature outside right now. In principle the result could be any real number, so $\Omega = \mathbb{R}$ (uncountable). In practice you might restrict to $\Omega = [-50, 60]$ degrees Celsius, but mathematically we treat it as a continuum.</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <h2>2. Events</h2>
+
+  <p>
+    An <span class="highlight">event</span> is any subset of $\Omega$. Intuitively, an event is a "question" you can ask about the outcome of the experiment — and the answer is either "yes, it happened" or "no, it didn't."
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition — Event</div>
+    <p>A subset $A \subseteq \Omega$ is called an <strong>event</strong>. We say the event $A$ <em>occurred</em> if the observed outcome $\omega$ belongs to $A$.</p>
+  </div>
+
+  <p>Since events are sets, all the usual set operations apply:</p>
+  <ul>
+    <li>$A^c$ — the <strong>complement</strong> ("$A$ did not happen").</li>
+    <li>$A \cup B$ — the <strong>union</strong> ("at least one of $A$ or $B$ happened").</li>
+    <li>$A \cap B$ — the <strong>intersection</strong> ("both $A$ and $B$ happened").</li>
+    <li>$A \setminus B = A \cap B^c$ — the <strong>difference</strong> ("$A$ happened but $B$ did not").</li>
+  </ul>
+
+  <div class="callout-example">
+    <div class="callout-title">Example — Events in the Double Coin Toss</div>
+    <p>Let $A$ = "the first toss is H". Then:</p>
+    <div class="math-block">
+      $$A = \{(H,H),\;(H,T)\}, \qquad A^c = \{(T,H),\;(T,T)\}$$
+    </div>
+    <p>Let $B$ = "at least one toss is T". Then $B = \{(H,T),(T,H),(T,T)\}$ and $A \cap B = \{(H,T)\}$ — the first toss was H <em>and</em> at least one toss was T.</p>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Example — Shrinking Intervals</div>
+    <p>Take $\Omega = \mathbb{R}$ and define $A_i = [0, \tfrac{1}{i})$ for $i = 1, 2, 3, \ldots$. Each subsequent interval is smaller: $A_1 = [0,1)$, $A_2 = [0,\tfrac{1}{2})$, $A_3 = [0,\tfrac{1}{3})$, and so on. Then:</p>
+    <div class="math-block">
+      $$\bigcup_{i=1}^{\infty} A_i = [0, 1), \qquad \bigcap_{i=1}^{\infty} A_i = \{0\}$$
+    </div>
+    <p>The union is the largest interval $A_1$. The intersection shrinks to the single point that belongs to every interval — namely $0$.</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <h2>3. Probability Measure</h2>
+
+  <p>
+    We now want to assign a <em>number</em> to each event that captures "how likely" it is. A <span class="highlight">probability measure</span> $P$ does exactly this — it's a function that takes an event and returns a number between 0 and 1, following three intuitive rules.
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition — Probability Measure (Kolmogorov Axioms)</div>
+    <p>A <strong>probability measure</strong> $P$ is a function on events satisfying:</p>
+    <ol>
+      <li><strong>Non-negativity:</strong> $P(A) \geq 0$ for every event $A$.</li>
+      <li><strong>Normalization:</strong> $P(\Omega) = 1$ — something always happens.</li>
+      <li><strong>$\sigma$-Additivity:</strong> If $A_1, A_2, \ldots$ are <em>disjoint</em> events (no two can happen simultaneously), then $P\!\left(\bigcup_{i=1}^{\infty} A_i\right) = \sum_{i=1}^{\infty} P(A_i)$.</li>
+    </ol>
+  </div>
+
+  <p>
+    <strong>Intuition:</strong> Axiom 3 is the powerful one. It says that if events don't overlap, the probability of "any of them happening" is just the sum of their individual probabilities. This is the foundation for most probability calculations.
+  </p>
+
+  <h3>Properties That Follow</h3>
+
+  <p>From these three axioms alone, we can derive several useful facts:</p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Key Properties</div>
+    <ul>
+      <li><strong>Impossible event:</strong> $P(\varnothing) = 0$.</li>
+      <li><strong>Complement rule:</strong> $P(A^c) = 1 - P(A)$. <em>(Often the easiest way to compute a probability — find the probability of the opposite!)</em></li>
+      <li><strong>Bound:</strong> $P(A) \leq 1$ for any event $A$.</li>
+      <li><strong>Monotonicity:</strong> If $A \subseteq B$, then $P(A) \leq P(B)$. <em>(A more specific event is at most as likely as a broader one.)</em></li>
+      <li><strong>Inclusion-Exclusion:</strong> $P(A \cup B) = P(A) + P(B) - P(A \cap B)$.</li>
+    </ul>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Example — Complement Rule in Practice</div>
+    <p>Suppose you roll a fair die. What is the probability of getting <em>at least</em> one 6 in three rolls? Directly counting outcomes with at least one 6 is messy. Instead, use the complement:</p>
+    <div class="math-block">
+      $$P(\text{at least one 6}) = 1 - P(\text{no 6 in 3 rolls}) = 1 - \left(\frac{5}{6}\right)^3 = 1 - \frac{125}{216} \approx 0.421$$
+    </div>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Example — Inclusion-Exclusion</div>
+    <p>In a class of 30 students, 18 study Python, 12 study R, and 5 study both. What fraction study at least one?</p>
+    <div class="math-block">
+      $$P(\text{Python} \cup \text{R}) = \frac{18}{30} + \frac{12}{30} - \frac{5}{30} = \frac{25}{30} \approx 0.833$$
+    </div>
+    <p>Without subtracting the overlap, you'd double-count the 5 students who do both.</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <h2>4. Independence and Conditional Probability</h2>
+
+  <h3>Independence</h3>
+
+  <p>
+    Intuitively, two events are <span class="highlight">independent</span> if knowing that one occurred tells you nothing about whether the other occurred. The formal definition translates this into a clean multiplicative rule.
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition — Independence of Two Events</div>
+    <p>Events $A$ and $B$ are <strong>independent</strong> if:</p>
+    <div class="math-block">$$P(A \cap B) = P(A) \times P(B)$$</div>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Example — Two Fair Coin Tosses</div>
+    <p>$A$ = "1st toss is H" and $B$ = "2nd toss is H". Each has probability $\frac{1}{2}$. Their intersection is $\{(H,H)\}$ with probability $\frac{1}{4}$.</p>
+    <div class="math-block">
+      $$P(A \cap B) = \frac{1}{4} = \frac{1}{2} \times \frac{1}{2} = P(A) \times P(B) \quad \checkmark$$
+    </div>
+    <p>So the two tosses are independent — knowing the first result doesn't help predict the second.</p>
+  </div>
+
+  <div class="callout-note">
+    <div class="callout-title">Important — Disjoint ≠ Independent</div>
+    <p>A common misconception: if two events are <em>disjoint</em> (can't both happen), they are actually <strong>strongly dependent</strong> (as long as both have positive probability). If $A \cap B = \varnothing$, then $P(A \cap B) = 0$, but $P(A)\times P(B) > 0$ — so the independence equation fails. Knowing $A$ occurred immediately tells you $B$ did not!</p>
+  </div>
+
+  <p>For more than two events, independence must hold for <em>every</em> subcollection:</p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition — Mutual Independence</div>
+    <p>A collection $\{A_i, i \in I\}$ is <strong>mutually independent</strong> if for every finite subset $J \subseteq I$:</p>
+    <div class="math-block">
+      $$P\!\left(\bigcap_{j \in J} A_j\right) = \prod_{j \in J} P(A_j)$$
+    </div>
+  </div>
+
+  <h3>Conditional Probability</h3>
+
+  <p>
+    When events are <em>not</em> independent, learning that one occurred changes your belief about the other. Conditional probability quantifies this updated belief.
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition — Conditional Probability</div>
+    <p>For events $A$ and $B$ with $P(B) > 0$:</p>
+    <div class="math-block">
+      $$P(A \mid B) = \frac{P(A \cap B)}{P(B)}$$
+    </div>
+    <p><strong>Intuition:</strong> Once we know $B$ happened, our "universe" shrinks from $\Omega$ to $B$. We rescale so that $B$ has total probability 1, and then ask what fraction of $B$ is also in $A$.</p>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Example — Conditional Probability with a Die</div>
+    <p>Roll a fair die. Let $A$ = "result is $\leq 3$" and $B$ = "result is even" = $\{2,4,6\}$.</p>
+    <div class="math-block">
+      $$P(A \mid B) = \frac{P(A \cap B)}{P(B)} = \frac{P(\{2\})}{P(\{2,4,6\})} = \frac{1/6}{3/6} = \frac{1}{3}$$
+    </div>
+    <p>Without any information, $P(A) = 1/2$. But once you know the result is even, only one of the three even numbers ($2$) is $\leq 3$, so the probability drops to $1/3$.</p>
+  </div>
+
+  <div class="callout-note">
+    <div class="callout-title">Link Between Independence and Conditioning</div>
+    <p>$A$ and $B$ are independent (with $P(B)>0$) if and only if $P(A\mid B) = P(A)$. In words: learning $B$ happened doesn't change your belief about $A$ — that's exactly what "independent" means.</p>
+  </div>
+
+  <h3>Bayes' Theorem</h3>
+
+  <p>
+    Bayes' theorem lets you "reverse" a conditional probability. If you know $P(B \mid A_i)$ (how likely is the evidence given a cause), it tells you $P(A_i \mid B)$ (how likely is the cause given the evidence).
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Theorem — Bayes' Theorem</div>
+    <p>Let $A_1, \ldots, A_k$ be a <strong>partition</strong> of $\Omega$ (mutually exclusive, exhaustive) with $P(A_i)>0$ for all $i$. For any event $B$ with $P(B)>0$:</p>
+    <div class="math-block">
+      $$P(A_i \mid B) = \frac{P(B \mid A_i)\,P(A_i)}{\sum_{j=1}^{k} P(B \mid A_j)\,P(A_j)}$$
+    </div>
+    <p>$P(A_i)$ is the <strong>prior</strong> (belief before seeing evidence). $P(A_i \mid B)$ is the <strong>posterior</strong> (updated belief after seeing $B$).</p>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Example — Medical Test</div>
+    <p>A disease affects 1% of a population. A test is 95% accurate: $P(\text{positive} \mid \text{disease}) = 0.95$ and $P(\text{positive} \mid \text{no disease}) = 0.05$ (5% false positive rate). You test positive — what's the probability you're actually sick?</p>
+    <div class="math-block">
+      $$P(\text{disease} \mid \text{+}) = \frac{0.95 \times 0.01}{0.95 \times 0.01 + 0.05 \times 0.99} = \frac{0.0095}{0.0095 + 0.0495} \approx 0.161$$
+    </div>
+    <p>Despite the test being "95% accurate," there's only about a 16% chance you actually have the disease! The low base rate (1%) means most positive results are false alarms. This is one of the most important and counter-intuitive consequences of Bayes' theorem.</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <h2>5. Random Variables</h2>
+
+  <p>
+    In practice, we rarely work directly with sample outcomes $\omega$. Instead, we assign <em>numerical values</em> to outcomes. A <span class="highlight">random variable</span> is the function that performs this assignment.
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition — Random Variable</div>
+    <p>A <strong>random variable</strong> $X$ is a function:</p>
+    <div class="math-block">$$X : \Omega \to \mathbb{R}, \qquad \omega \mapsto X(\omega)$$</div>
+    <p>It maps each outcome in the sample space to a real number.</p>
+  </div>
+
+  <p>
+    <strong>Intuition:</strong> Think of a random variable as a "measurement" or "summary" of the random experiment. The experiment produces some outcome $\omega$; the random variable extracts a number from it.
+  </p>
+
+  <div class="callout-example">
+    <div class="callout-title">Example — Counting Heads</div>
+    <p>Toss a coin 10 times. The outcome $\omega$ is a sequence like $(H,T,T,T,H,H,T,T,T,H)$. Let $X$ = "number of heads." Then $X(\omega) = 4$ for this particular outcome. The random variable collapses a complex outcome (a length-10 sequence) into a single informative number.</p>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Example — Sum of Two Dice</div>
+    <p>Roll two dice. The sample space has 36 outcomes: $\Omega = \{(i,j): i,j \in \{1,\ldots,6\}\}$. Define $X = i + j$ (the sum). Now $X$ takes values in $\{2, 3, \ldots, 12\}$. For instance, $X((3,5)) = 8$.</p>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Example — Continuous Random Variable</div>
+    <p>The lifetime of a lightbulb is a random variable $X \geq 0$. Here $\Omega$ is abstract (all possible "states of the world" that determine how long the bulb lasts), but we care about the numerical output: how many hours until failure.</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <h2>6. Cumulative Distribution Function (CDF)</h2>
+
+  <p>
+    Given a random variable $X$, how do we fully describe its "randomness"? The <span class="highlight">CDF</span> is the most general answer — it works for discrete, continuous, and mixed random variables alike.
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition — Cumulative Distribution Function</div>
+    <p>The CDF of a random variable $X$ is:</p>
+    <div class="math-block">$$F_X(x) = P(X \leq x), \qquad x \in \mathbb{R}$$</div>
+    <p>It answers: "what is the probability that $X$ takes a value at most $x$?"</p>
+  </div>
+
+  <div class="callout-definition">
+    <div class="callout-title">Properties of Any CDF</div>
+    <ul>
+      <li><strong>Non-decreasing:</strong> If $a < b$, then $F_X(a) \leq F_X(b)$. <em>(More values are $\leq b$ than $\leq a$.)</em></li>
+      <li><strong>Right-continuous:</strong> $\lim_{x \to a^+} F_X(x) = F_X(a)$.</li>
+      <li><strong>Boundary values:</strong> $\lim_{x \to -\infty} F_X(x) = 0$ and $\lim_{x \to \infty} F_X(x) = 1$.</li>
+    </ul>
+  </div>
+
+  <p><strong>Intuition:</strong> Imagine sliding a vertical line from left to right along the number line. $F_X(x)$ tells you how much of the "probability mass" you've swept up so far. It starts at 0, ends at 1, and never decreases.</p>
+
+  <figure>
+    <svg width="520" height="260" viewBox="0 0 520 260" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;">
+      <!-- Axes -->
+      <line x1="60" y1="210" x2="490" y2="210" stroke="#1a1a2e" stroke-width="1.5"/>
+      <line x1="60" y1="210" x2="60" y2="20" stroke="#1a1a2e" stroke-width="1.5"/>
+      <!-- Y-axis labels -->
+      <text x="50" y="215" text-anchor="end" font-size="13" fill="#555">0</text>
+      <text x="50" y="115" text-anchor="end" font-size="13" fill="#555">0.5</text>
+      <text x="50" y="30" text-anchor="end" font-size="13" fill="#555">1</text>
+      <!-- Dashed grid -->
+      <line x1="60" y1="110" x2="490" y2="110" stroke="#e0e0e0" stroke-dasharray="4"/>
+      <line x1="60" y1="30" x2="490" y2="30" stroke="#e0e0e0" stroke-dasharray="4"/>
+      <!-- Continuous CDF curve (like a logistic / normal CDF shape) -->
+      <path d="M60,210 C120,210 160,205 200,185 C240,155 270,80 310,55 C350,35 400,28 490,25" fill="none" stroke="#1a73e8" stroke-width="2.5"/>
+      <!-- Labels -->
+      <text x="275" y="245" text-anchor="middle" font-size="14" fill="#1a1a2e" font-style="italic">x</text>
+      <text x="30" y="120" text-anchor="middle" font-size="14" fill="#1a1a2e" font-style="italic" transform="rotate(-90,30,120)">F(x)</text>
+      <text x="275" y="255" text-anchor="middle" font-size="12" fill="#777">Continuous CDF: smooth, S-shaped curve</text>
+    </svg>
+    <figcaption>Figure 1: A typical continuous CDF. It rises smoothly from 0 to 1.</figcaption>
+  </figure>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <h2>7. PMF and PDF — Two Flavors of Distribution</h2>
+
+  <p>
+    The CDF is universal, but for calculations it's often easier to work with either a <strong>probability mass function</strong> (for discrete RVs) or a <strong>probability density function</strong> (for continuous RVs).
+  </p>
+
+  <h3>Discrete: Probability Mass Function (PMF)</h3>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition — PMF</div>
+    <p>If $X$ takes values in a countable set $\{x_1, x_2, \ldots\}$, its <strong>PMF</strong> is:</p>
+    <div class="math-block">$$f_X(x) = P(X = x)$$</div>
+    <p>The PMF tells you the probability of each specific value. It satisfies $\sum_x f_X(x) = 1$.</p>
+  </div>
+
+  <p>The CDF of a discrete RV is a <strong>staircase function</strong> — it jumps at each value $x_i$ by an amount equal to $f_X(x_i)$:</p>
+  <div class="math-block">
+    $$F_X(x) = \sum_{x_i \leq x} f_X(x_i)$$
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Example — Binomial(3, 1/2)</div>
+    <p>Toss a fair coin 3 times. Let $X$ = number of heads. Then $X \sim \text{Binomial}(3, 1/2)$ and:</p>
+    <div class="math-block">
+      $$f_X(x) = \binom{3}{x}\left(\frac{1}{2}\right)^3 = \frac{1}{8}\binom{3}{x}, \quad x \in \{0,1,2,3\}$$
+    </div>
+    <div class="table-wrapper">
+      <table>
+        <tr><th>$x$</th><th>0</th><th>1</th><th>2</th><th>3</th></tr>
+        <tr><td>$f_X(x)$</td><td>$1/8$</td><td>$3/8$</td><td>$3/8$</td><td>$1/8$</td></tr>
+        <tr><td>$F_X(x)$</td><td>$1/8$</td><td>$4/8$</td><td>$7/8$</td><td>$1$</td></tr>
+      </table>
+    </div>
+    <p>The CDF jumps at $x = 0, 1, 2, 3$ and is flat between them.</p>
+  </div>
+
+  <h3>Continuous: Probability Density Function (PDF)</h3>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition — PDF</div>
+    <p>If the CDF $F_X$ can be written as an integral of a non-negative function $f_X$:</p>
+    <div class="math-block">$$F_X(x) = \int_{-\infty}^{x} f_X(t)\,dt$$</div>
+    <p>then $f_X$ is the <strong>probability density function</strong>. It satisfies $\int_{-\infty}^{\infty} f_X(x)\,dx = 1$.</p>
+  </div>
+
+  <div class="callout-note">
+    <div class="callout-title">Important — Density ≠ Probability</div>
+    <p>For continuous RVs, $P(X = x) = 0$ for any single point $x$. The PDF $f_X(x)$ is <em>not</em> a probability — it's a <em>density</em>. To get a probability, you must integrate over an interval: $P(a < X \leq b) = \int_a^b f_X(x)\,dx$. Think of $f_X(x)\,dx$ as the probability of $X$ falling in a tiny interval of width $dx$ around $x$.</p>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Example — Uniform(0,1)</div>
+    <p>$X \sim \text{Uniform}(0,1)$ has the simplest continuous distribution:</p>
+    <div class="math-block">
+      $$f_X(x) = \begin{cases} 1 & \text{if } 0 \leq x \leq 1 \\ 0 & \text{otherwise}\end{cases} \qquad F_X(x) = \begin{cases} 0 & \text{if } x < 0 \\ x & \text{if } 0 \leq x < 1 \\ 1 & \text{if } x \geq 1\end{cases}$$
+    </div>
+    <p>Every sub-interval of $[0,1]$ of the same length has the same probability. For example, $P(0.2 < X < 0.5) = 0.5 - 0.2 = 0.3$.</p>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Example — Exponential Distribution</div>
+    <p>Lightbulb lifetime might follow $X \sim \text{Exp}(\lambda)$ with $f_X(x) = \lambda e^{-\lambda x}$ for $x \geq 0$. If $\lambda = 1$:</p>
+    <div class="math-block">
+      $$P(X > 2) = \int_2^{\infty} e^{-x}\,dx = e^{-2} \approx 0.135$$
+    </div>
+    <p>There's about a 13.5% chance the bulb lasts more than 2 units of time.</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <h2>8. Moments — Summarizing a Distribution</h2>
+
+  <p>
+    A full distribution (CDF, PMF, or PDF) contains complete information about a random variable, but is often more detail than we need. <span class="highlight">Moments</span> compress this information into a few key numbers.
+  </p>
+
+  <h3>Expectation (Mean)</h3>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition — Expected Value</div>
+    <p>The <strong>expected value</strong> (or mean) of $X$ is:</p>
+    <div class="math-block">
+      $$E(X) = \int_{-\infty}^{\infty} x\,dF_X(x) = \begin{cases} \displaystyle\sum_x x\,f_X(x) & \text{(discrete)} \\[6pt] \displaystyle\int_{-\infty}^{\infty} x\,f_X(x)\,dx & \text{(continuous)}\end{cases}$$
+    </div>
+    <p><strong>Intuition:</strong> $E(X)$ is the "center of mass" of the distribution — the long-run average if you repeated the experiment infinitely many times.</p>
+  </div>
+
+  <p>A crucial property is <strong>linearity</strong>: for any constants $a_1, \ldots, a_p$ and random variables $X_1, \ldots, X_p$:</p>
+  <div class="math-block">
+    $$E\!\left(\sum_{i=1}^{p} a_i X_i\right) = \sum_{i=1}^{p} a_i\,E(X_i)$$
+  </div>
+  <p>This holds <em>always</em>, even when the $X_i$ are dependent.</p>
+
+  <h3>Variance and Standard Deviation</h3>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition — Variance</div>
+    <p>The <strong>variance</strong> measures spread around the mean:</p>
+    <div class="math-block">
+      $$\text{Var}(X) = E\!\left[(X - E(X))^2\right] = E(X^2) - [E(X)]^2$$
+    </div>
+    <p>The <strong>standard deviation</strong> is $\sigma_X = \sqrt{\text{Var}(X)}$, which has the same units as $X$.</p>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Example — Fair Die</div>
+    <p>Let $X$ = result of rolling a fair die. Then:</p>
+    <div class="math-block">
+      $$E(X) = \frac{1+2+3+4+5+6}{6} = 3.5$$
+    </div>
+    <div class="math-block">
+      $$E(X^2) = \frac{1+4+9+16+25+36}{6} = \frac{91}{6} \approx 15.17$$
+    </div>
+    <div class="math-block">
+      $$\text{Var}(X) = \frac{91}{6} - 3.5^2 = \frac{91}{6} - \frac{49}{4} = \frac{35}{12} \approx 2.92$$
+    </div>
+  </div>
+
+  <h3>Covariance and Correlation</h3>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition — Covariance and Correlation</div>
+    <p>For two random variables $X$ and $Y$:</p>
+    <div class="math-block">
+      $$\text{Cov}(X,Y) = E[(X - E(X))(Y - E(Y))] = E(XY) - E(X)E(Y)$$
+    </div>
+    <p>The <strong>correlation</strong> normalizes covariance to $[-1, 1]$:</p>
+    <div class="math-block">
+      $$\rho_{X,Y} = \frac{\text{Cov}(X,Y)}{\sigma_X \,\sigma_Y}$$
+    </div>
+    <p>$\rho = +1$ means perfect positive linear relationship, $\rho = -1$ means perfect negative, $\rho = 0$ means no linear relationship.</p>
+  </div>
+
+  <div class="callout-note">
+    <div class="callout-title">Key Fact — Independence Implies Zero Covariance</div>
+    <p>If $X$ and $Y$ are independent, then $E(XY) = E(X)E(Y)$, so $\text{Cov}(X,Y) = 0$. The <em>converse is false</em> — zero covariance does not imply independence (it only rules out <em>linear</em> dependence).</p>
+  </div>
+
+  <h3>The Covariance Matrix</h3>
+  <p>For a random vector $\mathbf{X} = (X_1, \ldots, X_k)^\top$, the mean vector is $\boldsymbol{\mu} = (E(X_1), \ldots, E(X_k))^\top$ and the <strong>covariance matrix</strong> is:</p>
+  <div class="math-block">
+    $$\Sigma_{\mathbf{X}} = E[(\mathbf{X} - \boldsymbol{\mu})(\mathbf{X} - \boldsymbol{\mu})^\top]$$
+  </div>
+  <p>The $(i,j)$-entry is $\text{Cov}(X_i, X_j)$, so the diagonal entries are variances and off-diagonal entries are covariances. A useful rule: if $\mathbf{Y} = A\mathbf{X}$ for a matrix $A$, then $\text{Var}(\mathbf{Y}) = A\,\Sigma_{\mathbf{X}}\,A^\top$.</p>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <h2>9. Conditional Expectation and Variance</h2>
+
+  <p>
+    Just as we conditioned probabilities on events, we can condition expectations and variances on the value of another random variable. This is central to prediction and regression.
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition — Conditional Expectation</div>
+    <p>$E(X \mid Y = y)$ is the mean of the <strong>conditional distribution</strong> of $X$ given $Y = y$:</p>
+    <div class="math-block">
+      $$E(X \mid Y = y) = \begin{cases} \displaystyle\sum_x x\,f_{X|Y}(x \mid y) & \text{(discrete)} \\[6pt] \displaystyle\int x\,f_{X|Y}(x \mid y)\,dx & \text{(continuous)}\end{cases}$$
+    </div>
+    <p>Viewed as a function of $Y$, $E(X \mid Y)$ is itself a random variable.</p>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Example — Predicting Test Scores</div>
+    <p>Suppose study hours $Y$ and test score $X$ are jointly distributed. $E(X \mid Y = 5)$ answers: "if a student studies 5 hours, what score do we expect on average?" As $Y$ varies, $E(X \mid Y)$ traces out the <em>regression function</em> — the best prediction of $X$ given $Y$.</p>
+  </div>
+
+  <h3>Two Powerful Decomposition Laws</h3>
+
+  <div class="callout-definition">
+    <div class="callout-title">Theorem — Tower Rule (Law of Iterated Expectations)</div>
+    <div class="math-block">$$E\big[E(X \mid Y)\big] = E(X)$$</div>
+    <p><strong>Intuition:</strong> Subdivide the population by $Y$. Compute the average $X$ within each group. Then average those group averages (weighted by group size). You get back the overall average of $X$.</p>
+  </div>
+
+  <div class="callout-definition">
+    <div class="callout-title">Theorem — Law of Total Variance</div>
+    <div class="math-block">$$\text{Var}(X) = E[\text{Var}(X \mid Y)] + \text{Var}(E(X \mid Y))$$</div>
+    <p>Total variance = <strong>average within-group variance</strong> + <strong>between-group variance</strong>.</p>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Example — Heights by Country</div>
+    <p>$X$ = a person's height, $Y$ = their country. $E[\text{Var}(X \mid Y)]$ captures how much height varies <em>within</em> each country. $\text{Var}(E(X \mid Y))$ captures how much <em>average</em> heights differ <em>between</em> countries. Together they explain all the variation in height.</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <h2>10. Key Probability Inequalities</h2>
+
+  <p>
+    Often we can't compute exact probabilities, but we can <strong>bound</strong> them using just the mean or variance. These bounds are essential tools in theoretical statistics.
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Markov's Inequality</div>
+    <p>If $X \geq 0$ and $t > 0$:</p>
+    <div class="math-block">$$P(X \geq t) \leq \frac{E(X)}{t}$$</div>
+    <p><strong>Intuition:</strong> A non-negative variable can't be "large" too often if its average is small. If the average income is €30k, at most $1/3$ of people earn ≥€90k.</p>
+  </div>
+
+  <div class="callout-definition">
+    <div class="callout-title">Chebyshev's Inequality</div>
+    <p>For any random variable $X$ with mean $\mu$ and variance $\sigma^2$:</p>
+    <div class="math-block">$$P(|X - \mu| \geq t) \leq \frac{\sigma^2}{t^2}$$</div>
+    <p><strong>Intuition:</strong> A low-variance distribution concentrates near its mean. Setting $t = k\sigma$: at most $1/k^2$ of the probability lies more than $k$ standard deviations from the mean.</p>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Example — Chebyshev Applied</div>
+    <p>If $E(X) = 100$ and $\text{Var}(X) = 25$ (so $\sigma = 5$), then:</p>
+    <div class="math-block">
+      $$P(|X - 100| \geq 15) \leq \frac{25}{225} = \frac{1}{9} \approx 0.111$$
+    </div>
+    <p>At most about 11% of the probability is more than 3 standard deviations from the mean — regardless of the distribution's shape.</p>
+  </div>
+
+  <div class="callout-definition">
+    <div class="callout-title">Jensen's Inequality</div>
+    <p>If $g$ is a <strong>convex</strong> function: $E(g(X)) \geq g(E(X))$.</p>
+    <p><strong>Memory aid:</strong> Take $g(x) = x^2$. Then $E(X^2) \geq (E(X))^2$, which is the same as saying $\text{Var}(X) \geq 0$. That's reassuring and easy to remember!</p>
+    <p>If $g$ is <strong>concave</strong>, the inequality reverses: $E(g(X)) \leq g(E(X))$.</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <h2>11. Convergence of Random Sequences</h2>
+
+  <p>
+    In statistics, we often study what happens as the sample size $n \to \infty$. But "a sequence of random variables converges" can mean several different things. Here are the three main notions.
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Convergence in Probability</div>
+    <p>$X_n \xrightarrow{P} X$ if for every $\epsilon > 0$: $\lim_{n \to \infty} P(|X_n - X| > \epsilon) = 0$.</p>
+    <p><strong>Intuition:</strong> For large $n$, $X_n$ is "close" to $X$ with high probability. There might be rare exceptions, but they become vanishingly unlikely.</p>
+  </div>
+
+  <div class="callout-definition">
+    <div class="callout-title">Convergence in Distribution</div>
+    <p>$X_n \xrightarrow{d} X$ if $\lim_{n \to \infty} F_{X_n}(x) = F_X(x)$ at every continuity point $x$ of $F_X$.</p>
+    <p><strong>Intuition:</strong> The <em>shape</em> of the distribution of $X_n$ approaches the shape of the distribution of $X$. The individual random variables $X_n$ and $X$ need not be related — only their distributions must match in the limit.</p>
+  </div>
+
+  <div class="callout-definition">
+    <div class="callout-title">Convergence in $L^r$</div>
+    <p>$X_n \xrightarrow{L^r} X$ (for $r \geq 1$) if $\lim_{n \to \infty} E(|X_n - X|^r) = 0$.</p>
+    <p>When $r = 2$, this is called <strong>convergence in quadratic mean</strong>.</p>
+  </div>
+
+  <h3>How They Relate</h3>
+
+  <figure>
+    <svg width="460" height="130" viewBox="0 0 460 130" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;">
+      <!-- Boxes -->
+      <rect x="10" y="45" width="100" height="40" rx="6" fill="#eef6ff" stroke="#1a73e8" stroke-width="1.5"/>
+      <text x="60" y="70" text-anchor="middle" font-size="14" font-weight="600" fill="#16213e">L<tspan font-size="10" baseline-shift="super">r</tspan></text>
+      <rect x="180" y="45" width="100" height="40" rx="6" fill="#eef6ff" stroke="#1a73e8" stroke-width="1.5"/>
+      <text x="230" y="70" text-anchor="middle" font-size="14" font-weight="600" fill="#16213e">Probability</text>
+      <rect x="350" y="45" width="100" height="40" rx="6" fill="#eef6ff" stroke="#1a73e8" stroke-width="1.5"/>
+      <text x="400" y="70" text-anchor="middle" font-size="14" font-weight="600" fill="#16213e">Distribution</text>
+      <!-- Arrows -->
+      <line x1="110" y1="65" x2="175" y2="65" stroke="#1a73e8" stroke-width="1.5" marker-end="url(#arrowblue)"/>
+      <line x1="280" y1="65" x2="345" y2="65" stroke="#1a73e8" stroke-width="1.5" marker-end="url(#arrowblue)"/>
+      <!-- Labels -->
+      <text x="143" y="58" text-anchor="middle" font-size="11" fill="#555">implies</text>
+      <text x="313" y="58" text-anchor="middle" font-size="11" fill="#555">implies</text>
+      <!-- Note about constant -->
+      <text x="400" y="110" text-anchor="middle" font-size="11" fill="#555">If limit is a constant c,</text>
+      <text x="400" y="124" text-anchor="middle" font-size="11" fill="#555">dist. ⟹ probability</text>
+      <defs>
+        <marker id="arrowblue" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+          <path d="M0,0 L8,3 L0,6" fill="none" stroke="#1a73e8" stroke-width="1.2"/>
+        </marker>
+      </defs>
+    </svg>
+    <figcaption>Figure 2: Hierarchy of convergence modes. Stronger notions imply weaker ones.</figcaption>
+  </figure>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <h2>12. The Big Theorems — LLN and CLT</h2>
+
+  <p>
+    These two results are the workhorses of statistics. They explain why sample averages behave so well and why the normal distribution appears everywhere.
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Theorem — Weak Law of Large Numbers (WLLN)</div>
+    <p>Let $X_1, X_2, \ldots$ be i.i.d. with $E(X_i) = \mu$. Then:</p>
+    <div class="math-block">$$\bar{X}_n = \frac{1}{n}\sum_{i=1}^n X_i \xrightarrow{P} \mu$$</div>
+    <p><strong>Intuition:</strong> The sample average stabilizes around the true mean as you collect more data. This is why polls, experiments, and simulations work — with enough observations, the average converges to the quantity you're trying to measure.</p>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Example — Casino Law of Large Numbers</div>
+    <p>A casino game has a 1% house edge. On any given bet, the house might lose. But averaged over millions of bets, the casino's profit per bet converges to 1% of the wager — the LLN guarantees it.</p>
+  </div>
+
+  <div class="callout-definition">
+    <div class="callout-title">Theorem — Central Limit Theorem (CLT)</div>
+    <p>Let $X_1, X_2, \ldots$ be i.i.d. with $E(X_i) = \mu$ and $\text{Var}(X_i) = \sigma^2 > 0$. Then:</p>
+    <div class="math-block">$$\frac{\sqrt{n}(\bar{X}_n - \mu)}{\sigma} \xrightarrow{d} N(0, 1)$$</div>
+    <p><strong>Intuition:</strong> No matter what distribution the individual $X_i$ come from (Bernoulli, exponential, Poisson, anything with finite variance), the <em>standardized</em> sample average is approximately normal for large $n$. This is why the bell curve appears so often in practice.</p>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Example — CLT in Action</div>
+    <p>Roll a fair die $n = 100$ times and compute $\bar{X}_{100}$. Each $X_i$ is uniform on $\{1,\ldots,6\}$ — decidedly not normal. Yet the CLT tells us:</p>
+    <div class="math-block">
+      $$\bar{X}_{100} \approx N\!\left(3.5, \;\frac{35/12}{100}\right) = N(3.5, \; 0.292)$$
+    </div>
+    <p>So $\bar{X}_{100}$ is approximately normal with mean 3.5 and standard deviation $\approx 0.54$. The probability that $\bar{X}_{100}$ falls between 3.0 and 4.0 is roughly 95% — even though each individual die roll is far from normal.</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <h2>Key Takeaways</h2>
+
+  <ul>
+    <li><strong>Sample space $\Omega$</strong> defines what can happen; <strong>events</strong> are subsets we assign probabilities to; the <strong>probability measure</strong> $P$ follows three axioms from which everything else is derived.</li>
+    <li><strong>Independence</strong> means $P(A \cap B) = P(A)P(B)$ — knowing one event tells you nothing about the other. Disjoint events are the <em>opposite</em> of independent.</li>
+    <li><strong>Bayes' theorem</strong> reverses conditional probabilities and is the foundation of Bayesian reasoning — posterior $\propto$ likelihood $\times$ prior.</li>
+    <li><strong>Random variables</strong> map outcomes to numbers; their behavior is fully described by the CDF, and more conveniently by the PMF (discrete) or PDF (continuous).</li>
+    <li><strong>Moments</strong> (mean, variance, covariance) compress distributional information into key summaries; <strong>inequalities</strong> (Markov, Chebyshev, Jensen) let us bound probabilities using only these summaries.</li>
+    <li><strong>LLN</strong>: sample means converge to population means. <strong>CLT</strong>: sample means are approximately normal for large $n$. Together, these justify most of classical statistics.</li>
+  </ul>
+</section>
+
+</main>
+
+<footer>
+  <p>&copy; 2026 Piotr Marciniak. All rights reserved.</p>
+</footer>
+
+</body>
+</html>
