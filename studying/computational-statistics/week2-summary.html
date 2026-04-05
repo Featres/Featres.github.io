@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Comp Stats – Lecture 2: Properties of OLS & Inference</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      font-size: 17px;
+      line-height: 1.75;
+      color: #1a1a2e;
+      background: #fdfdfd;
+      padding: 3rem 2rem;
+    }
+
+    header, main, footer {
+      max-width: 820px;
+      margin: 0 auto;
+    }
+
+    header {
+      border-top: 3px solid #1a73e8;
+      padding-top: 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+
+    h1 {
+      font-size: 1.9rem;
+      font-weight: 700;
+      color: #16213e;
+      margin-bottom: 0.5rem;
+    }
+
+    .meta {
+      font-size: 14px;
+      color: #555;
+    }
+    .meta span + span::before {
+      content: ' · ';
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #16213e;
+      border-bottom: 1px solid #e0e0e0;
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.3rem;
+    }
+
+    h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #0f3460;
+      margin-top: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    h4 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #0f3460;
+      font-style: italic;
+      margin-top: 1rem;
+    }
+
+    section {
+      margin-bottom: 2.5rem;
+    }
+
+    p {
+      margin-bottom: 0.75rem;
+    }
+
+    .callout-definition {
+      background: #eef6ff;
+      border-left: 4px solid #1a73e8;
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0;
+      border-radius: 0 6px 6px 0;
+    }
+    .callout-definition .callout-title {
+      font-weight: 700;
+      color: #1a73e8;
+      margin-bottom: 0.4rem;
+    }
+
+    .callout-example {
+      background: #f1f8f1;
+      border-left: 4px solid #2e7d32;
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0;
+      border-radius: 0 6px 6px 0;
+    }
+    .callout-example .callout-title {
+      font-weight: 700;
+      color: #2e7d32;
+      margin-bottom: 0.4rem;
+    }
+
+    .callout-note {
+      background: #fff8e1;
+      border-left: 4px solid #f9a825;
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0;
+      border-radius: 0 6px 6px 0;
+    }
+    .callout-note .callout-title {
+      font-weight: 700;
+      color: #e65100;
+      margin-bottom: 0.4rem;
+    }
+
+    .math-block {
+      margin: 1.25rem 0;
+      margin-left: 1rem;
+      overflow-x: auto;
+    }
+
+    code {
+      font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+      font-size: 15px;
+      background: #f4f4f8;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+
+    pre {
+      background: #f4f4f8;
+      border: 1px solid #d0d0da;
+      border-radius: 6px;
+      padding: 1rem 1.25rem;
+      overflow-x: auto;
+      font-size: 15px;
+      line-height: 1.6;
+      margin: 1rem 0;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+    }
+
+    ul, ol {
+      padding-left: 1.5rem;
+      margin-bottom: 0.75rem;
+    }
+    li {
+      margin-bottom: 0.4rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      font-size: 15px;
+    }
+    th, td {
+      border: 1px solid #d0d0da;
+      padding: 0.6rem 1rem;
+      text-align: left;
+    }
+    th {
+      background: #f4f4f8;
+      font-weight: 600;
+    }
+    tr:nth-child(even) { background: #fafafa; }
+
+    .table-wrapper {
+      overflow-x: auto;
+    }
+
+    footer {
+      font-size: 14px;
+      color: #777;
+      border-top: 1px solid #e0e0e0;
+      padding-top: 1.5rem;
+      margin-top: 2rem;
+    }
+
+    a { color: #1a73e8; }
+
+    @media (max-width: 600px) {
+      body { padding: 1rem; }
+      h1 { font-size: 1.5rem; }
+    }
+  </style>
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+<body>
+
+<header>
+  <h1>Lecture 2: Properties of OLS &amp; Towards Inference</h1>
+  <div class="meta">
+    <span>Computational Statistics FS2026</span>
+    <span>Week 2</span>
+    <span>Dr. Jonathan Koh, ETH Zürich</span>
+    <span>Last updated: February 28, 2026</span>
+  </div>
+</header>
+
+<main>
+
+<section>
+  <p>
+    This lecture builds on the linear model foundations from Week 1. The main goals are to understand the
+    <strong>statistical properties</strong> of the least squares estimator (unbiasedness, variance, optimality),
+    prove the <strong>Gauss–Markov theorem</strong>, extend optimality to <strong>UMVU</strong> under Gaussian errors,
+    and take the first steps towards <strong>inference</strong> (hypothesis testing and confidence intervals) in the linear model. The lecture also features a group game to build intuition about sampling variability in regression.
+  </p>
+</section>
+
+<!-- ========== SECTION: Recap ========== -->
+<section>
+  <h2>1. Recap from Week 1</h2>
+  <p>
+    Last week covered the statistical learning problem, the distinction between prediction and inference,
+    the difference between an <em>estimate</em> (a fixed number computed from observed data) and an
+    <em>estimator</em> (a random variable, since it depends on the random response $Y$). We set up
+    the linear model $Y = X\beta + \varepsilon$ and derived the least squares estimate
+    $\hat{\beta} = (X^\top X)^{-1}X^\top y$, explored the geometry of the projection matrix $P = X(X^\top X)^{-1}X^\top$ (which is idempotent), and saw that the fitted values are $\hat{y} = Py$ while the residuals are $r = (I - P)y$.
+  </p>
+</section>
+
+<!-- ========== SECTION: Group Game ========== -->
+<section>
+  <h2>2. Group Game &amp; Takeaways</h2>
+  <p>
+    The lecture began with a hands-on group game (~20 minutes) where teams of students collected data (e.g. height, shoe size, hand length) and fitted linear models in groups of about 10. The exercise was designed to build intuition about the following key concepts:
+  </p>
+  <ul>
+    <li><strong>The estimator $\hat{\beta}$ is random:</strong> Different groups of 10 students obtained different slope estimates for the same model, illustrating sampling variability.</li>
+    <li><strong>Model selection:</strong> Is hand length a better predictor than shoe size? Can we drop one? (Covered later in the course.)</li>
+    <li><strong>Hypothesis testing:</strong> How can we say if a slope is "significantly" different from zero?</li>
+    <li><strong>Confidence intervals:</strong> How would variability change if each group had 100 observations instead of 10?</li>
+    <li><strong>Multiple vs. single regression:</strong> The coefficient estimates of a predictor can change depending on what other predictors are in the model (see §1.3.4 in the script).</li>
+  </ul>
+</section>
+
+<!-- ========== SECTION: Properties of OLS ========== -->
+<section>
+  <h2>3. Properties of the Least Squares Estimator</h2>
+  <p>
+    Now we move from the <em>estimate</em> (lowercase $y$, fixed data) to the <em>estimator</em> (uppercase $Y$, random). The least squares estimator is $\hat{\beta} = (X^\top X)^{-1}X^\top Y$. Since $Y$ is random, $\hat{\beta}$ is also random — and we want to characterise its distribution.
+  </p>
+
+  <h3>3.1 Unbiasedness</h3>
+  <p>
+    Under the linear model $Y = X\beta + \varepsilon$ with $E[\varepsilon] = 0$, the proof of unbiasedness is straightforward:
+  </p>
+  <div class="math-block">
+    $$E[\hat{\beta}] = E[(X^\top X)^{-1}X^\top Y] = (X^\top X)^{-1}X^\top E[X\beta + \varepsilon] = (X^\top X)^{-1}X^\top X\beta = \beta.$$
+  </div>
+  <p>
+    In words: on average, across many hypothetical datasets drawn from the same model, the OLS estimator hits the true parameter value. There is no systematic over- or under-estimation.
+  </p>
+
+  <h3>3.2 Covariance of $\hat{\beta}$</h3>
+  <p>
+    We also need to know <em>how much</em> the estimator varies from sample to sample. The key derivation (shown step-by-step on the slides) proceeds by substituting $Y = X\beta + \varepsilon$ and using $\text{Cov}(\varepsilon) = \sigma^2 I$:
+  </p>
+  <div class="math-block">
+    $$\text{Cov}(\hat{\beta}) = \text{Cov}\{(X^\top X)^{-1}X^\top \varepsilon\} = (X^\top X)^{-1}X^\top \cdot \sigma^2 I \cdot X(X^\top X)^{-1} = \sigma^2(X^\top X)^{-1}.$$
+  </div>
+
+  <div class="callout-definition">
+    <div class="callout-title">Key Properties (Moments of OLS)</div>
+    <p>Under the linear model $Y = X\beta + \varepsilon$, $E[\varepsilon]=0$, $\text{Cov}(\varepsilon) = \sigma^2 I$:</p>
+    <ul>
+      <li>$E[\hat{\beta}] = \beta$ &nbsp;(unbiased)</li>
+      <li>$\text{Cov}(\hat{\beta}) = \sigma^2(X^\top X)^{-1}$</li>
+      <li>$\text{Cov}(\hat{Y}) = \sigma^2 P$, &nbsp; $\text{Cov}(\tilde{r}) = \sigma^2(I - P)$</li>
+      <li>$\text{Var}(\tilde{r}_i) = \sigma^2(1 - P_{ii})$ — note that the residuals are <em>not</em> uncorrelated!</li>
+    </ul>
+  </div>
+
+  <h3>3.3 Estimating $\sigma^2$</h3>
+  <p>
+    The error variance $\sigma^2$ is unknown and must be estimated. The natural estimator uses the residuals:
+  </p>
+  <div class="math-block">
+    $$\hat{\sigma}^2 = \frac{1}{n-p}\sum_{i=1}^{n}(y_i - \hat{y}_i)^2.$$
+  </div>
+  <p>
+    Why divide by $n - p$ instead of $n$? Because fitting $p$ parameters "uses up" $p$ degrees of freedom. Formally, we can show $E[\hat{\sigma}^2] = \sigma^2$ by using the fact that $\sum \text{Var}(\tilde{r}_i) = \sigma^2(n - \text{tr}(P)) = \sigma^2(n-p)$. So dividing by $n-p$ makes the estimator unbiased.
+  </p>
+</section>
+
+<!-- ========== SECTION: Gauss-Markov ========== -->
+<section>
+  <h2>4. Optimality: The Gauss–Markov Theorem</h2>
+  <p>
+    We now ask: is OLS the "best" we can do? The answer is yes — but only within a specific class of estimators and under specific assumptions.
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Gauss–Markov Assumptions</div>
+    <p>Consider the linear model $Y = X\beta + \varepsilon$ with $\text{rank}(X) = p$, and assume:</p>
+    <ol>
+      <li>$E[\varepsilon] = 0$ &nbsp;(errors have mean zero)</li>
+      <li>$\text{Cov}(\varepsilon) = \sigma^2 I$ &nbsp;(errors are uncorrelated with constant variance)</li>
+    </ol>
+  </div>
+
+  <div class="callout-definition">
+    <div class="callout-title">Theorem — Gauss–Markov</div>
+    <p>
+      Under the Gauss–Markov assumptions, $\hat{\beta} = (X^\top X)^{-1}X^\top Y$ is the <strong>Best Linear Unbiased Estimator (BLUE)</strong> of $\beta$. That is, for any other linear unbiased estimator $\tilde{\beta}$ of $\beta$,
+    </p>
+    <div class="math-block">
+      $$\text{Cov}(\tilde{\beta}) - \text{Cov}(\hat{\beta}) \text{ is positive semidefinite.}$$
+    </div>
+  </div>
+
+  <h3>4.1 Proof Sketch</h3>
+  <p>
+    The proof is elegant and worth understanding in full. Here's the idea:
+  </p>
+  <p>
+    Any linear estimator can be written as $\tilde{\beta} = AY$ for some matrix $A \in \mathbb{R}^{p \times n}$. For it to be unbiased for all $\beta$, we need $AX = I_p$. Now decompose $A = (X^\top X)^{-1}X^\top + B$ for some matrix $B$. The unbiasedness condition then forces $BX = 0$.
+  </p>
+  <p>
+    Computing the covariance:
+  </p>
+  <div class="math-block">
+    $$\text{Cov}(\tilde{\beta}) = \sigma^2 AA^\top = \sigma^2 BB^\top + \sigma^2(X^\top X)^{-1},$$
+  </div>
+  <p>
+    where the cross terms vanish because $BX = 0$. Since $BB^\top$ is always positive semidefinite, we get $\text{Cov}(\tilde{\beta}) - \text{Cov}(\hat{\beta}) = \sigma^2 BB^\top \succeq 0$. Equality holds only when $B = 0$, i.e., when the estimator <em>is</em> OLS.
+  </p>
+
+  <h3>4.2 Limitations of Gauss–Markov</h3>
+  <div class="callout-note">
+    <div class="callout-title">Important Caveat</div>
+    <p>The Gauss–Markov theorem has clear limitations:</p>
+    <ul>
+      <li>It assumes the linear model is correctly specified.</li>
+      <li>It assumes errors are uncorrelated with constant variance $\sigma^2$.</li>
+      <li>It only considers <strong>linear</strong> and <strong>unbiased</strong> estimators.</li>
+    </ul>
+    <p>
+      The key insight: we can relax the <em>unbiasedness</em> requirement! By allowing a little bias, we can sometimes achieve much lower overall error (mean squared error). This is the idea behind <strong>Ridge</strong> and <strong>LASSO</strong> regression, which will be covered later in the course.
+    </p>
+  </div>
+
+  <h3>4.3 EduApp Example: Exponential Errors</h3>
+  <div class="callout-example">
+    <div class="callout-title">Example — Are Gauss–Markov assumptions satisfied with $\varepsilon_i \sim \text{Exp}(\lambda)$?</div>
+    <p>
+      Consider $Y = \beta_0 + \beta_1 X_1 + \varepsilon$ where $\varepsilon \sim \text{Exp}(\lambda)$. At first glance this seems problematic since $E[\varepsilon] = 1/\lambda \neq 0$. But we can rewrite:
+    </p>
+    <div class="math-block">
+      $$Y = \underbrace{(\beta_0 + 1/\lambda)}_{\tilde{\beta}_0} + \beta_1 X_1 + \underbrace{(\varepsilon - 1/\lambda)}_{\tilde{\varepsilon}}.$$
+    </div>
+    <p>
+      Now $E[\tilde{\varepsilon}] = 0$ and $\text{Var}(\tilde{\varepsilon}) = 1/\lambda^2$, and the errors are uncorrelated. So the Gauss–Markov assumptions <em>are</em> satisfied (with a shifted intercept), and OLS is still BLUE. The non-zero mean of the original error simply gets absorbed into the intercept.
+    </p>
+  </div>
+</section>
+
+<!-- ========== SECTION: Gaussian & UMVU ========== -->
+<section>
+  <h2>5. The Gaussian Linear Model &amp; UMVU</h2>
+  <p>
+    Can we do better than just "best among linear unbiased"? Yes — if we're willing to make a stronger distributional assumption.
+  </p>
+
+  <h3>5.1 Gaussian Errors: OLS = MLE</h3>
+  <p>
+    Suppose we strengthen our assumptions to $\varepsilon \sim N(0, \sigma^2 I)$, i.e., the errors are jointly normal. The likelihood function is then proportional to
+  </p>
+  <div class="math-block">
+    $$\exp\!\left(-\frac{1}{2\sigma^2}(y - X\beta)^\top(y - X\beta)\right).$$
+  </div>
+  <p>
+    Maximising this likelihood with respect to $\beta$ is equivalent to minimising $\|y - X\beta\|^2$ — which is exactly the least squares criterion. So under Gaussian errors, <strong>OLS and maximum likelihood estimation give the same answer</strong>.
+  </p>
+
+  <h3>5.2 UMVU via Cramér–Rao</h3>
+  <div class="callout-definition">
+    <div class="callout-title">Theorem — UMVU Optimality</div>
+    <p>
+      Under the Gaussian linear model, $\hat{\beta}$ is a <strong>uniformly minimum variance unbiased (UMVU)</strong> estimator of $\beta$. This means it has the smallest variance among <em>all</em> unbiased estimators — not just linear ones.
+    </p>
+  </div>
+  <p>
+    The proof relies on the <strong>Cramér–Rao lower bound</strong>. The Fisher information matrix is $I(\beta) = \frac{1}{\sigma^2}X^\top X$, and the Cramér–Rao bound says that no unbiased estimator can have covariance smaller than $I(\beta)^{-1} = \sigma^2(X^\top X)^{-1}$. Since $\text{Cov}(\hat{\beta})$ equals exactly this bound, $\hat{\beta}$ is UMVU.
+  </p>
+
+  <div class="callout-note">
+    <div class="callout-title">Hierarchy of Optimality</div>
+    <p>
+      Think of this as a progression of increasingly strong results:
+    </p>
+    <ul>
+      <li><strong>Gauss–Markov assumptions only:</strong> $\hat{\beta}$ is BLUE (best among linear &amp; unbiased).</li>
+      <li><strong>Gauss–Markov + Gaussian errors:</strong> $\hat{\beta}$ is UMVU (best among <em>all</em> unbiased), and also the MLE.</li>
+    </ul>
+    <p>However, even UMVU does not mean universally optimal — biased estimators (Ridge/LASSO) can have lower MSE.</p>
+  </div>
+</section>
+
+<!-- ========== SECTION: Inference ========== -->
+<section>
+  <h2>6. A Step Towards Inference</h2>
+  <p>
+    With the distributional results in hand, we can now do inference — constructing tests and confidence intervals for the regression coefficients.
+  </p>
+
+  <h3>6.1 Distributions under Gaussian Errors</h3>
+  <div class="callout-definition">
+    <div class="callout-title">Key Distributional Results</div>
+    <p>Under $\varepsilon \sim N(0, \sigma^2 I)$, the following hold, and $\hat{\beta}$ and $\hat{\sigma}^2$ are <strong>independent</strong>:</p>
+    <ul>
+      <li>$\hat{\beta} \sim N_p\!\big(\beta,\; \sigma^2(X^\top X)^{-1}\big)$</li>
+      <li>$\hat{\sigma}^2 \sim \frac{\sigma^2}{n-p}\,\chi^2_{n-p}$</li>
+    </ul>
+  </div>
+  <p>
+    These results are the foundation for all classical inference in the linear model: $t$-tests, $F$-tests, confidence intervals, and prediction intervals.
+  </p>
+
+  <h3>6.2 Testing Individual Coefficients: The $t$-Test</h3>
+  <p>
+    To test whether the $j$-th predictor is relevant, we test $H_{0,j}: \beta_j = 0$ against $H_{A,j}: \beta_j \neq 0$. Under $H_0$:
+  </p>
+  <div class="math-block">
+    $$T_j = \frac{\hat{\beta}_j}{\sqrt{\hat{\sigma}^2 \, (X^\top X)^{-1}_{jj}}} \;\sim\; t_{n-p}.$$
+  </div>
+  <p>
+    The denominator is the estimated standard error of $\hat{\beta}_j$. If $|T_j|$ is large (or equivalently the $p$-value is small), we reject $H_0$ and conclude the predictor has a significant effect — <em>conditional on all other predictors being in the model</em>.
+  </p>
+
+  <div class="callout-note">
+    <div class="callout-title">Interpreting Individual $t$-Tests</div>
+    <p>
+      An individual $t$-test for $H_{0,j}$ quantifies the effect of the $j$-th predictor <strong>after having subtracted the linear effect of all other predictors</strong>. This means it's possible for all individual $t$-tests to be non-significant even when the predictors collectively have a strong effect — especially when predictors are correlated.
+    </p>
+  </div>
+
+  <h3>6.3 Confidence Intervals</h3>
+  <p>
+    From the $t$-distribution result, we can construct a two-sided confidence interval for $\beta_j$:
+  </p>
+  <div class="math-block">
+    $$\hat{\beta}_j \;\pm\; \sqrt{\hat{\sigma}^2(X^\top X)^{-1}_{jj}} \cdot t_{n-p;\,1-\alpha/2},$$
+  </div>
+  <p>
+    which covers the true $\beta_j$ with probability $1 - \alpha$.
+  </p>
+
+  <h3>6.4 Practical Considerations</h3>
+  <p>
+    The normality assumption on $\varepsilon_i$ is often not exactly satisfied in practice. However, thanks to the <strong>central limit theorem</strong>, for large sample size $n$, the distributional results above remain approximately valid. For strongly non-Gaussian errors, robust methods may be preferable (though not covered in this course).
+  </p>
+</section>
+
+<!-- ========== SECTION: R Output ========== -->
+<section>
+  <h2>7. Reading R Output: Body Fat Example</h2>
+  <p>
+    The lecture included an example with body fat data ($n = 247$ men, $p = 13$ quantitative predictors) to practice reading R's <code>summary(lm(...))</code> output. The key columns are:
+  </p>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr><th>Column</th><th>What it shows</th><th>Formula</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Estimate</td><td>$\hat{\beta}_j$</td><td>$(X^\top X)^{-1}X^\top y$</td></tr>
+        <tr><td>Std. Error</td><td>Estimated std. dev. of $\hat{\beta}_j$</td><td>$\sqrt{\hat{\sigma}^2 (X^\top X)^{-1}_{jj}}$</td></tr>
+        <tr><td>t value</td><td>Test statistic for $H_0: \beta_j = 0$</td><td>Estimate / Std. Error</td></tr>
+        <tr><td>Pr(>|t|)</td><td>Two-sided $p$-value</td><td>From $t_{n-p}$ distribution</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    The output also reports the <strong>residual standard error</strong> $\hat{\sigma} = \sqrt{\hat{\sigma}^2}$ with $n-p$ degrees of freedom, the $R^2$ and adjusted $R^2$ values, and the $F$-statistic for the global null hypothesis that all regression coefficients (except the intercept) are zero.
+  </p>
+</section>
+
+<!-- ========== SECTION: Summary Table ========== -->
+<section>
+  <h2>8. Summary: Levels of Assumptions &amp; Guarantees</h2>
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr><th>Assumptions</th><th>What OLS achieves</th><th>Class of comparison</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>$E[\varepsilon]=0$, $\text{Cov}(\varepsilon)=\sigma^2 I$ (Gauss–Markov)</td>
+          <td>BLUE</td>
+          <td>Linear &amp; unbiased estimators</td>
+        </tr>
+        <tr>
+          <td>Gauss–Markov + $\varepsilon \sim N(0,\sigma^2 I)$</td>
+          <td>UMVU = MLE</td>
+          <td>All unbiased estimators</td>
+        </tr>
+        <tr>
+          <td>Relaxing unbiasedness</td>
+          <td>Ridge/LASSO can beat OLS in MSE</td>
+          <td>All estimators (incl. biased)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ========== SECTION: Key Takeaways ========== -->
+<section>
+  <h2>Key Takeaways</h2>
+  <ul>
+    <li>The OLS estimator $\hat{\beta}$ is <strong>random</strong> — different datasets from the same model give different estimates. Its expectation is $\beta$ (unbiased) and its covariance is $\sigma^2(X^\top X)^{-1}$.</li>
+    <li>The <strong>Gauss–Markov theorem</strong> guarantees OLS is the best <em>linear unbiased</em> estimator under mild assumptions ($E[\varepsilon]=0$, $\text{Cov}(\varepsilon)=\sigma^2 I$). The proof uses a clever matrix decomposition $A = B + (X^\top X)^{-1}X^\top$.</li>
+    <li>Under <strong>Gaussian errors</strong>, OLS is also the MLE and achieves <strong>UMVU</strong> status (optimal among <em>all</em> unbiased estimators) via the Cramér–Rao bound.</li>
+    <li>The theorem's scope is limited: we can often do better by <strong>allowing bias</strong> (Ridge, LASSO) — this is the bias-variance tradeoff, explored later.</li>
+    <li>The distributional results ($\hat{\beta} \sim N_p$, $\hat{\sigma}^2 \sim \chi^2$) enable classical inference: $t$-tests for individual coefficients, confidence intervals, and $F$-tests. Even without exact normality, the CLT provides asymptotic justification for large $n$.</li>
+  </ul>
+</section>
+
+</main>
+
+<footer>
+  <p>Summary generated from Week 2 lecture slides and course script. Course: Computational Statistics FS2026, ETH Zürich.</p>
+</footer>
+
+</body>
+</html>

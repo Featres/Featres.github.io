@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Comp Stats – Lecture 1: Introduction & Linear Regression</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      font-size: 17px;
+      line-height: 1.75;
+      color: #1a1a2e;
+      background: #fdfdfd;
+      padding: 3rem 2rem;
+    }
+
+    header, main, footer { max-width: 820px; margin: 0 auto; }
+
+    header {
+      border-top: 3px solid #1a73e8;
+      padding-top: 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+
+    h1 {
+      font-size: 1.9rem;
+      font-weight: 700;
+      color: #16213e;
+      margin-bottom: 0.5rem;
+    }
+
+    .meta {
+      font-size: 14px;
+      color: #555;
+    }
+    .meta span + span::before {
+      content: ' · ';
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #16213e;
+      border-bottom: 1px solid #e0e0e0;
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.3rem;
+    }
+
+    h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #0f3460;
+      margin-top: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    h4 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #0f3460;
+      font-style: italic;
+      margin-top: 1rem;
+      margin-bottom: 0.3rem;
+    }
+
+    section { margin-bottom: 2.5rem; }
+
+    p { margin-bottom: 0.75rem; }
+
+    a { color: #1a73e8; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    code {
+      font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+      font-size: 15px;
+      background: #f4f4f8;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+
+    pre {
+      background: #f4f4f8;
+      border: 1px solid #d0d0da;
+      border-radius: 6px;
+      padding: 1rem 1.25rem;
+      overflow-x: auto;
+      font-size: 15px;
+      line-height: 1.6;
+      margin: 1rem 0;
+      font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    }
+
+    .math-block {
+      margin: 1.25rem 0;
+      padding-left: 1rem;
+      overflow-x: auto;
+    }
+
+    .callout-definition {
+      background: #eef6ff;
+      border-left: 4px solid #1a73e8;
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0;
+      border-radius: 0 6px 6px 0;
+    }
+    .callout-definition .callout-title {
+      font-weight: 700;
+      color: #1a73e8;
+      margin-bottom: 0.4rem;
+    }
+
+    .callout-example {
+      background: #f1f8f1;
+      border-left: 4px solid #2e7d32;
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0;
+      border-radius: 0 6px 6px 0;
+    }
+    .callout-example .callout-title {
+      font-weight: 700;
+      color: #2e7d32;
+      margin-bottom: 0.4rem;
+    }
+
+    .callout-warning {
+      background: #fff8e1;
+      border-left: 4px solid #f9a825;
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0;
+      border-radius: 0 6px 6px 0;
+    }
+    .callout-warning .callout-title {
+      font-weight: 700;
+      color: #e65100;
+      margin-bottom: 0.4rem;
+    }
+
+    ul, ol { padding-left: 1.5rem; margin-bottom: 0.75rem; }
+    li { margin-bottom: 0.4rem; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      font-size: 15px;
+    }
+    th, td {
+      border: 1px solid #d0d0da;
+      padding: 0.6rem 1rem;
+      text-align: left;
+    }
+    th { background: #f4f4f8; font-weight: 600; }
+    tr:nth-child(even) { background: #fafafa; }
+
+    .table-wrapper { overflow-x: auto; }
+
+    figure { margin: 1.5rem 0; text-align: center; }
+    figcaption { font-size: 14px; font-style: italic; color: #555; margin-top: 0.5rem; }
+
+    footer {
+      border-top: 1px solid #e0e0e0;
+      padding-top: 1.5rem;
+      margin-top: 2.5rem;
+      font-size: 14px;
+      color: #777;
+    }
+
+    @media (max-width: 600px) {
+      body { padding: 1rem; }
+      h1 { font-size: 1.5rem; }
+    }
+  </style>
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+<body>
+
+<header>
+  <h1>Week 1: Introduction & Linear Regression</h1>
+  <div class="meta">
+    <span>Course: Computational Statistics (401-3632-00L)</span>
+    <span>Dr. Jonathan Koh</span>
+    <span>ETH Zürich, FS2026</span>
+  </div>
+</header>
+
+<main>
+
+<section>
+  <p>
+    This first lecture sets the stage for the entire course. It introduces the motivation behind computational statistics as a field, lays out the supervised learning framework that underpins most of the methods we'll study, and then dives into the first major topic: <strong>multiple linear regression</strong> and the <strong>least squares method</strong>. By the end of this week, you should understand the core setup of a statistical learning problem, be comfortable with the matrix formulation of linear regression, and have a geometric intuition for what least squares actually does.
+  </p>
+</section>
+
+<!-- ============================================ -->
+<section>
+  <h2>1. Course Overview & Motivation</h2>
+
+  <p>
+    The course covers the statistical foundations behind widely used machine learning methods. The goal of ML is to program computers to learn information from data — and while these algorithms are most often used for <strong>prediction</strong>, they can also help us <strong>interpret</strong> the relationships between inputs and outputs.
+  </p>
+
+  <p>
+    These methods appear everywhere: finance, healthcare, marketing, tech, climatology, ecology, and more. You'll also encounter many synonymous terms in the wild — statistical learning, data science, data analytics, and big data all largely refer to overlapping sets of ideas.
+  </p>
+
+  <h3>Learning Objectives</h3>
+  <p>
+    The focus is on <strong>methodology over theory</strong>. By the end of the semester, you should be able to implement the statistical learning techniques covered in class using existing software (primarily R) or your own code. The emphasis is on algorithmic thinking, model formulation, simulation-based inference, and reproducible workflows — not on learning programming syntax for its own sake.
+  </p>
+
+  <div class="callout-warning">
+    <div class="callout-title">Prediction vs. Inference — A Recurring Theme</div>
+    <p>
+      Many ML methods lean heavily toward prediction, which has seen impressive recent progress. But inference — understanding <em>why</em> a model makes the predictions it does, and quantifying uncertainty — remains equally important. This tension (prediction vs. interpretation) runs throughout the entire course. For further reading, see Breiman (2001), "Statistical Modeling: The Two Cultures."
+    </p>
+  </div>
+
+  <h3>Logistics</h3>
+  <p>
+    The course uses <strong>R</strong> as the primary programming language. The evaluation is a 100% on-site digital Moodle exam consisting of TRUE/FALSE, multiple-choice, and numeric-answer questions. Everything on the slides, in the script, and on the exercise sheets is examinable unless explicitly stated otherwise.
+  </p>
+  <p>
+    Key references include: <em>An Introduction to Statistical Learning</em> (ISL), <em>The Elements of Statistical Learning</em> (ESL), and <em>Computer Age Statistical Inference</em> (CASI).
+  </p>
+</section>
+
+<!-- ============================================ -->
+<section>
+  <h2>2. The Statistical Learning Framework</h2>
+
+  <p>
+    Before diving into any specific method, we need to establish the general setup. This framework stays with us for the rest of the course.
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition — Supervised Learning Setup</div>
+    <p>
+      We observe <strong>training data</strong> $(x_1, y_1), \ldots, (x_n, y_n)$ where each $x_i \in \mathbb{R}^p$ is a vector of <strong>predictors</strong> (also called covariates, features, or inputs) and each $y_i$ is a <strong>response</strong> (or output).
+    </p>
+  </div>
+
+  <h3>Types of Variables</h3>
+  <p>
+    <strong>Quantitative variables</strong> take values in $\mathbb{R}$ with a natural ordering — values close numerically are close in meaning (e.g., height, temperature). <strong>Qualitative variables</strong> (categorical/factors) take values in a finite set with no inherent ordering (e.g., "spam" vs. "not spam").
+  </p>
+
+  <h3>Types of Learning Tasks</h3>
+  <p>
+    When $Y$ takes values in $\mathbb{R}$, we have a <strong>regression</strong> problem. When $Y$ takes values in a finite set $\mathcal{G} = \{G_1, \ldots, G_K\}$, we have a <strong>classification</strong> problem. When the $y_i$'s are unobserved entirely, we enter the realm of <strong>unsupervised learning</strong> (e.g., clustering), which this course does not cover.
+  </p>
+
+  <h3>Two Goals of Statistical Learning</h3>
+  <ol>
+    <li><strong>Prediction:</strong> Given a new input $x_+$, predict the unobserved response $y_+$.</li>
+    <li><strong>Interpretation / Inference:</strong> Understand how $x_i$ influences $y_i$. To fully understand this link, we'd need $\Pr(Y \mid X)$, which is hard. Often we settle for $\mathbb{E}(Y \mid X)$.</li>
+  </ol>
+
+  <h3>Random Design vs. Fixed Design</h3>
+  <p>
+    There are two paradigms for how we think about the predictors. In the <strong>random-$X$ (random design)</strong> paradigm, we assume $(x_i, y_i)$ are i.i.d. realizations from a joint distribution $\Pr(X, Y)$. In the <strong>fixed-$X$ (fixed design)</strong> paradigm, the predictors $x_1, \ldots, x_n$ are treated as fixed non-random quantities and only the responses $Y_i$ are random.
+  </p>
+  <p>
+    For linear regression (our first topic), we use the fixed-$X$ paradigm. Later in the course we shift to the random-$X$ view, which makes it easier to define prediction risk as $R(f) = \mathbb{E}[L(Y, f(X))]$.
+  </p>
+</section>
+
+<!-- ============================================ -->
+<section>
+  <h2>3. The Linear Model</h2>
+
+  <p>
+    Linear regression is one of the oldest and most important tools in statistics. Despite its simplicity, it remains highly relevant — and every more advanced method you'll see later in this course builds on or contrasts with linear regression in some way.
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition — The Linear Model</div>
+    <p>
+      The linear model assumes that each observation can be written as:
+    </p>
+    <div class="math-block">
+      $$ y_i = \beta_1 x_{i1} + \beta_2 x_{i2} + \cdots + \beta_p x_{ip} + \varepsilon_i, \quad i = 1, \ldots, n $$
+    </div>
+    <p>
+      In matrix form:
+    </p>
+    <div class="math-block">
+      $$ \mathbf{Y} = \mathbf{X}\boldsymbol{\beta} + \boldsymbol{\varepsilon} $$
+    </div>
+    <p>
+      where $\mathbf{X}$ is an $n \times p$ design matrix, $\boldsymbol{\beta} \in \mathbb{R}^p$ is the coefficient vector, and $\boldsymbol{\varepsilon}$ is a vector of error terms.
+    </p>
+  </div>
+
+  <div class="callout-warning">
+    <div class="callout-title">What "Linear" Actually Means</div>
+    <p>
+      The model is called "linear" because it is <strong>linear in the coefficients</strong> $\beta_j$. The predictor variables themselves can be nonlinear transformations of raw inputs! For example, $y_i = \beta_1 + \beta_2 \log(x_{i2}) + \beta_3 \sin(\pi x_{i3}) + \varepsilon_i$ is still a linear model. This is a subtle but important point.
+    </p>
+  </div>
+
+  <h3>Notation Conventions</h3>
+  <p>
+    The first column of $\mathbf{X}$ is typically a vector of $1$'s, making $\beta_1$ (or $\beta_0$) the intercept. We assume $n > p$ and that $\mathbf{X}$ has full column rank $p$ (i.e., the columns are linearly independent).
+  </p>
+
+  <h3>Estimate vs. Estimator</h3>
+  <p>
+    This distinction matters and is easy to mix up. An <strong>estimate</strong> $\hat{\beta} = \hat{\beta}(y)$ is a computed number — a deterministic function of the observed data $y$. An <strong>estimator</strong> $\hat{\beta} = \hat{\beta}(Y)$ is a random variable — it's a function of the random vector $Y$. The estimate is what you get after plugging in the data; the estimator is the abstract recipe. Different data realizations from the same model would yield different estimates.
+  </p>
+</section>
+
+<!-- ============================================ -->
+<section>
+  <h2>4. The Least Squares Method</h2>
+
+  <p>
+    The central idea: find the coefficient vector $\boldsymbol{\beta}$ that makes the predicted values $\mathbf{X}\boldsymbol{\beta}$ as close as possible to the observed responses $\mathbf{y}$, measured by the sum of squared differences.
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition — Least Squares Estimate</div>
+    <p>
+      The least squares estimate is defined as:
+    </p>
+    <div class="math-block">
+      $$ \hat{\boldsymbol{\beta}} = \arg\min_{\boldsymbol{\beta} \in \mathbb{R}^p} \|\mathbf{y} - \mathbf{X}\boldsymbol{\beta}\|^2 = \arg\min_{\boldsymbol{\beta}} \sum_{i=1}^{n} (y_i - \mathbf{x}_i^\top \boldsymbol{\beta})^2 $$
+    </div>
+    <p>
+      The quantity being minimized, $\text{RSS}(\boldsymbol{\beta}) = \|\mathbf{y} - \mathbf{X}\boldsymbol{\beta}\|^2$, is called the <strong>residual sum of squares</strong>.
+    </p>
+  </div>
+
+  <h3>Deriving the Normal Equations</h3>
+  <p>
+    To find the minimum, we take the gradient of $\text{RSS}(\boldsymbol{\beta})$ with respect to $\boldsymbol{\beta}$ and set it to zero:
+  </p>
+  <div class="math-block">
+    $$ \frac{\partial}{\partial \boldsymbol{\beta}} \|\mathbf{y} - \mathbf{X}\boldsymbol{\beta}\|^2 = -2\mathbf{X}^\top(\mathbf{y} - \mathbf{X}\hat{\boldsymbol{\beta}}) = \mathbf{0} $$
+  </div>
+  <p>
+    This gives us the <strong>normal equations</strong>:
+  </p>
+  <div class="math-block">
+    $$ \mathbf{X}^\top \mathbf{X} \hat{\boldsymbol{\beta}} = \mathbf{X}^\top \mathbf{y} $$
+  </div>
+  <p>
+    If $\mathbf{X}$ has full column rank $p$, then $\mathbf{X}^\top\mathbf{X}$ is invertible and we get the unique closed-form solution:
+  </p>
+  <div class="math-block">
+    $$ \hat{\boldsymbol{\beta}} = (\mathbf{X}^\top \mathbf{X})^{-1} \mathbf{X}^\top \mathbf{y} $$
+  </div>
+
+  <div class="callout-warning">
+    <div class="callout-title">Practical Note</div>
+    <p>
+      The formula $(\mathbf{X}^\top\mathbf{X})^{-1}\mathbf{X}^\top\mathbf{y}$ is great for theory but <strong>not how you compute it in practice</strong>. Inverting $\mathbf{X}^\top\mathbf{X}$ is numerically unstable. Instead, software uses the QR decomposition: factor $\mathbf{X} = QR$ and solve two triangular systems sequentially. This is much more stable.
+    </p>
+  </div>
+
+  <h3>Fitted Values and Residuals</h3>
+  <p>
+    Once we have $\hat{\boldsymbol{\beta}}$, we can compute the <strong>fitted values</strong> $\hat{\mathbf{y}} = \mathbf{X}\hat{\boldsymbol{\beta}}$ and the <strong>residuals</strong> $\mathbf{r} = \mathbf{y} - \hat{\mathbf{y}}$. The residuals are our estimates for the unknown errors $\varepsilon_i$.
+  </p>
+  <p>
+    The variance of the errors is estimated by:
+  </p>
+  <div class="math-block">
+    $$ \hat{\sigma}^2 = \frac{1}{n - p} \sum_{i=1}^{n} r_i^2 $$
+  </div>
+  <p>
+    The denominator is $n - p$ (not $n$) to make this estimator unbiased — we "lose" $p$ degrees of freedom from estimating $p$ parameters.
+  </p>
+</section>
+
+<!-- ============================================ -->
+<section>
+  <h2>5. Linear Model Assumptions</h2>
+
+  <p>
+    The least squares formula works purely as an optimization procedure regardless of assumptions. But to say anything meaningful about the <em>properties</em> of the resulting estimator (unbiasedness, variance, optimality), we need assumptions.
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Assumptions for the Linear Model</div>
+    <ol>
+      <li>The model $\mathbf{Y} = \mathbf{X}\boldsymbol{\beta} + \boldsymbol{\varepsilon}$ is correctly specified (equivalently, $\mathbb{E}(\mathbf{Y} \mid \mathbf{X}) = \mathbf{X}\boldsymbol{\beta}$).</li>
+      <li>$\mathbb{E}(\boldsymbol{\varepsilon}) = \mathbf{0}$ — the errors have mean zero.</li>
+      <li>$\text{Var}(\varepsilon_i) = \sigma^2$ for all $i$ — constant variance (<strong>homoscedasticity</strong>).</li>
+      <li>$\text{Cov}(\boldsymbol{\varepsilon}) = \sigma^2 \mathbf{I}$ — errors are uncorrelated.</li>
+      <li>(Optional, stronger) $\boldsymbol{\varepsilon} \sim \mathcal{N}(\mathbf{0}, \sigma^2 \mathbf{I})$ — Gaussian errors.</li>
+    </ol>
+  </div>
+
+  <p>
+    Assumptions 1–4 are known as the <strong>Gauss–Markov assumptions</strong>. They are sufficient to establish that OLS is the best linear unbiased estimator (BLUE). Adding assumption 5 (Gaussianity) unlocks stronger results: exact distributions for test statistics, maximum likelihood equivalence, and UMVU optimality.
+  </p>
+</section>
+
+<!-- ============================================ -->
+<section>
+  <h2>6. Geometry of Least Squares</h2>
+
+  <p>
+    This is perhaps the most illuminating way to understand what least squares does. Think of everything as vectors in $\mathbb{R}^n$.
+  </p>
+
+  <p>
+    The response $\mathbf{y}$ is a vector in $\mathbb{R}^n$. The columns of $\mathbf{X}$ span a $p$-dimensional subspace $\mathcal{X} \subset \mathbb{R}^n$. Varying $\boldsymbol{\beta}$ over all of $\mathbb{R}^p$, the product $\mathbf{X}\boldsymbol{\beta}$ traces out every point in this subspace.
+  </p>
+
+  <p>
+    Least squares finds the $\hat{\boldsymbol{\beta}}$ such that $\mathbf{X}\hat{\boldsymbol{\beta}}$ is the closest point in $\mathcal{X}$ to $\mathbf{y}$ in Euclidean distance. But the closest point in a subspace is always the <strong>orthogonal projection</strong> — so:
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Key Geometric Insight</div>
+    <p>
+      The fitted values $\hat{\mathbf{y}} = \mathbf{X}\hat{\boldsymbol{\beta}}$ are the <strong>orthogonal projection</strong> of $\mathbf{y}$ onto the column space of $\mathbf{X}$. The residual vector $\mathbf{r} = \mathbf{y} - \hat{\mathbf{y}}$ is perpendicular to this column space.
+    </p>
+  </div>
+
+  <figure>
+    <svg width="380" height="260" viewBox="0 0 380 260" xmlns="http://www.w3.org/2000/svg">
+      <!-- Subspace plane -->
+      <polygon points="30,200 200,220 370,170 200,130" fill="#eef6ff" stroke="#1a73e8" stroke-width="1" opacity="0.5"/>
+      <!-- Axes label for subspace -->
+      <line x1="110" y1="195" x2="320" y2="155" stroke="#1a73e8" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <text x="330" y="160" font-size="15" fill="#1a73e8" font-weight="600" font-family="Inter, sans-serif">𝒳 (column space of X)</text>
+      <!-- Y vector -->
+      <line x1="180" y1="185" x2="180" y2="45" stroke="#1a1a2e" stroke-width="2"/>
+      <polygon points="180,45 175,55 185,55" fill="#1a1a2e"/>
+      <text x="188" y="42" font-size="15" font-weight="700" fill="#1a1a2e" font-family="Inter, sans-serif">Y</text>
+      <!-- Y-hat point -->
+      <circle cx="180" cy="185" r="4" fill="#1a73e8"/>
+      <text x="188" y="198" font-size="15" font-weight="700" fill="#1a73e8" font-family="Inter, sans-serif">Ŷ = PY</text>
+      <!-- Residual vector -->
+      <line x1="180" y1="185" x2="180" y2="45" stroke="#e65100" stroke-width="1.5" stroke-dasharray="5,3"/>
+      <text x="130" y="120" font-size="14" fill="#e65100" font-weight="600" font-family="Inter, sans-serif">r = Y − Ŷ</text>
+      <!-- Right angle -->
+      <polyline points="190,185 190,175 180,175" fill="none" stroke="#1a1a2e" stroke-width="1.5"/>
+      <!-- E[Y] -->
+      <circle cx="230" cy="175" r="3" fill="#555"/>
+      <text x="237" y="178" font-size="13" fill="#555" font-family="Inter, sans-serif">E[Y] = Xβ</text>
+    </svg>
+    <figcaption>Figure 1: The fitted values Ŷ are the orthogonal projection of Y onto the column space of X. The residual r is perpendicular to this subspace.</figcaption>
+  </figure>
+
+  <h3>The Projection (Hat) Matrix</h3>
+  <p>
+    We can write the projection explicitly as a matrix operation:
+  </p>
+  <div class="math-block">
+    $$ \hat{\mathbf{y}} = \mathbf{P}\mathbf{y}, \qquad \mathbf{P} = \mathbf{X}(\mathbf{X}^\top \mathbf{X})^{-1}\mathbf{X}^\top $$
+  </div>
+  <p>
+    This matrix $\mathbf{P}$ is called the <strong>projection matrix</strong> (or <strong>hat matrix</strong>, because it "puts the hat on $\mathbf{y}$"). It has three key properties that fully characterize it as an orthogonal projection:
+  </p>
+  <ol>
+    <li><strong>Symmetric:</strong> $\mathbf{P}^\top = \mathbf{P}$</li>
+    <li><strong>Idempotent:</strong> $\mathbf{P}^2 = \mathbf{P}$ — projecting twice gives the same result as projecting once</li>
+    <li><strong>Trace:</strong> $\text{tr}(\mathbf{P}) = p$ — the trace equals the number of parameters</li>
+  </ol>
+
+  <p>
+    The residuals can similarly be expressed as $\mathbf{r} = (\mathbf{I} - \mathbf{P})\mathbf{y}$, where $\mathbf{I} - \mathbf{P}$ is the orthogonal projection onto the complement of the column space. The matrix $\mathbf{I} - \mathbf{P}$ is also symmetric and idempotent.
+  </p>
+
+  <div class="callout-example">
+    <div class="callout-title">Intuition — Why Idempotency Makes Sense</div>
+    <p>
+      If you project a vector onto a subspace and then project the result again onto the same subspace, nothing changes — it's already there. That's exactly what $\mathbf{P}^2 = \mathbf{P}$ says. Think of shining a flashlight straight down onto a table: the shadow of a shadow is the same shadow.
+    </p>
+  </div>
+</section>
+
+<!-- ============================================ -->
+<section>
+  <h2>7. A Peek Ahead: What the Least Squares Estimator Achieves</h2>
+
+  <p>
+    Under the Gauss–Markov assumptions (covered in depth in Week 2), the least squares estimator has several desirable properties. Here's a brief preview of what's coming, since these ideas were alluded to in the Week 1 slides:
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Preview — Properties of $\hat{\boldsymbol{\beta}}$</div>
+    <ul>
+      <li>$\mathbb{E}[\hat{\boldsymbol{\beta}}] = \boldsymbol{\beta}$ — the OLS estimator is <strong>unbiased</strong></li>
+      <li>$\text{Cov}(\hat{\boldsymbol{\beta}}) = \sigma^2 (\mathbf{X}^\top \mathbf{X})^{-1}$</li>
+      <li><strong>Gauss–Markov Theorem:</strong> among all linear unbiased estimators, $\hat{\boldsymbol{\beta}}$ has the smallest variance (it is BLUE — Best Linear Unbiased Estimator)</li>
+      <li>Under the additional Gaussian assumption, $\hat{\boldsymbol{\beta}}$ is also the maximum likelihood estimator and is UMVU (uniformly minimum variance unbiased among <em>all</em> unbiased estimators, not just linear ones)</li>
+    </ul>
+  </div>
+
+  <p>
+    It's worth noting that the Gauss–Markov theorem, while elegant, only compares OLS to other <em>linear unbiased</em> estimators. Later in the course, you'll see that by allowing a small amount of bias (e.g., via Ridge or LASSO regression), you can sometimes achieve a lower mean squared error overall. This bias-variance tradeoff is a central theme.
+  </p>
+</section>
+
+<!-- ============================================ -->
+<section>
+  <h2>Key Takeaways</h2>
+  <ul>
+    <li><strong>The supervised learning framework</strong> is built around training data $\{(x_i, y_i)\}_{i=1}^n$ with two main goals: prediction and interpretation. Regression handles continuous outputs; classification handles categorical ones.</li>
+    <li><strong>"Linear" means linear in the parameters</strong> $\beta_j$, not necessarily in the raw inputs. Transformations of the predictors are perfectly fine.</li>
+    <li><strong>Least squares minimizes</strong> $\|\mathbf{y} - \mathbf{X}\boldsymbol{\beta}\|^2$, yielding $\hat{\boldsymbol{\beta}} = (\mathbf{X}^\top\mathbf{X})^{-1}\mathbf{X}^\top\mathbf{y}$ when $\mathbf{X}$ has full rank. This is equivalent to orthogonally projecting $\mathbf{y}$ onto the column space of $\mathbf{X}$.</li>
+    <li><strong>The hat matrix</strong> $\mathbf{P} = \mathbf{X}(\mathbf{X}^\top\mathbf{X})^{-1}\mathbf{X}^\top$ is symmetric, idempotent, and has trace $p$. The residuals live in the orthogonal complement: $\mathbf{r} = (\mathbf{I} - \mathbf{P})\mathbf{y}$.</li>
+    <li>Keep the <strong>estimate vs. estimator</strong> distinction clear: estimates are computed numbers, estimators are random variables. This distinction becomes critical when we discuss properties like unbiasedness and variance.</li>
+  </ul>
+</section>
+
+</main>
+
+<footer>
+  <p>Summary generated from Week 1 lecture slides and course script, Computational Statistics FS2026, ETH Zürich.</p>
+</footer>
+
+</body>
+</html>
