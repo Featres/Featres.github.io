@@ -4,7 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Page Title</title>
-  <link rel="icon" type="image/png" href="./files/logo.png" />
+  <!-- Favicon: use "files/logo.png" at root, "../files/logo.png" one level deep, "../../files/logo.png" two levels deep -->
+  <link rel="icon" type="image/png" href="files/logo.png" />
   <style>
     * {
       margin: 0;
@@ -35,10 +36,10 @@
     nav ul li a:hover {
       background: #555;
     }
-    section {
-      padding: 40px 20px;
+    main {
       max-width: 1000px;
       margin: auto;
+      padding: 40px 20px;
     }
     footer {
       text-align: center;
@@ -49,6 +50,7 @@
   </style>
 </head>
 <body>
+
   <nav>
     <ul>
       <li><a href="https://piotr-marciniak.com/#about">About</a></li>
@@ -57,12 +59,13 @@
     </ul>
   </nav>
 
-  <section>
-    <!-- Content goes here -->
-  </section>
+  <main>
+    <!-- Page content goes here -->
+  </main>
 
   <footer>
     <p>&copy; 2026 Piotr Marciniak. All rights reserved.</p>
   </footer>
+
 </body>
 </html>
