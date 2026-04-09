@@ -2,6 +2,33 @@
   color-scheme: light;
 }
 
+body.dark {
+  background: #1a1a1a;
+  color: #d0d0d0;
+}
+body.dark p { color: #b0b0b0; }
+body.dark button {
+  background: #2a2a2a;
+  border-color: #555;
+  color: #d0d0d0;
+}
+body.dark button:hover { background: #333; }
+body.dark label {
+  background: #2a2a2a;
+  border-color: #555;
+  color: #d0d0d0;
+}
+body.dark .stats {
+  background: #2a2a2a;
+  border-color: #555;
+}
+body.dark .canvasCard {
+  background: #2a2a2a;
+  border-color: #555;
+}
+body.dark canvas { border-color: #555; }
+body.dark .legend { color: #a0a0a0; }
+
 body {
   font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   margin: 0;
