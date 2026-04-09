@@ -61,6 +61,38 @@
     .subject li {
       margin-bottom: 6px;
     }
+    .search-wrapper {
+      margin-bottom: 24px;
+    }
+    #search {
+      width: 100%;
+      padding: 10px 14px;
+      font-size: 15px;
+      font-family: inherit;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      background: #fff;
+      color: #333;
+      outline: none;
+    }
+    #search:focus {
+      border-color: #888;
+    }
+    .subject[hidden] {
+      display: none;
+    }
+    .snippet {
+      display: block;
+      font-size: 12px;
+      color: #666;
+      margin-top: 2px;
+    }
+    .snippet mark {
+      background: #fff3cd;
+      color: inherit;
+      border-radius: 2px;
+      padding: 0 2px;
+    }
     footer {
       text-align: center;
       padding: 20px;
@@ -80,6 +112,10 @@
 
   <section id="studying-overview">
     <h2>Studying</h2>
+
+    <div class="search-wrapper">
+      <input type="search" id="search" placeholder="Search notes…" autocomplete="off" />
+    </div>
 
     <details class="subject" open>
       <summary>Introduction to Machine Learning</summary>
@@ -141,6 +177,68 @@
       </ul>
     </details>
   </section>
+
+  <script>
+    // Map href -> content text, populated after index loads
+    const contentIndex = {};
+
+    fetch('search-index.json')
+      .then(r => r.json())
+      .then(entries => {
+        for (const e of entries) contentIndex[e.href] = e.content;
+      });
+
+    function excerpt(text, q, context = 60) {
+      const lo = text.toLowerCase();
+      const i = lo.indexOf(q);
+      if (i === -1) return null;
+      const start = Math.max(0, i - context);
+      const end = Math.min(text.length, i + q.length + context);
+      let snip = (start > 0 ? '…' : '') + text.slice(start, end) + (end < text.length ? '…' : '');
+      // Highlight the match
+      const re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+      snip = snip.replace(re, m => `<mark>${m}</mark>`);
+      return snip;
+    }
+
+    const search = document.getElementById('search');
+    search.addEventListener('input', () => {
+      const q = search.value.trim().toLowerCase();
+
+      // Remove any existing snippets
+      document.querySelectorAll('.snippet').forEach(s => s.remove());
+
+      document.querySelectorAll('.subject').forEach(details => {
+        let anyVisible = false;
+        const subjectMatch = !q || details.querySelector('summary').textContent.toLowerCase().includes(q);
+
+        details.querySelectorAll('li').forEach(li => {
+          const a = li.querySelector('a');
+          const href = a ? a.getAttribute('href') : '';
+          const titleMatch = !q || li.textContent.toLowerCase().includes(q);
+          const content = contentIndex[href] || '';
+          const contentMatch = q && content.toLowerCase().includes(q);
+
+          const visible = !q || subjectMatch || titleMatch || contentMatch;
+          li.hidden = !visible;
+          if (visible) anyVisible = true;
+
+          if (q && !subjectMatch && !titleMatch && contentMatch) {
+            const snip = excerpt(content, q);
+            if (snip) {
+              const span = document.createElement('span');
+              span.className = 'snippet';
+              span.innerHTML = snip;
+              li.appendChild(span);
+            }
+          }
+        });
+
+        details.hidden = !anyVisible;
+        if (q) details.open = anyVisible;
+      });
+    });
+  </script>
 
   <footer>
     <p>&copy; 2026 Piotr Marciniak. All rights reserved.</p>
