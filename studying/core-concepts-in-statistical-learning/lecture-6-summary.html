@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Statistical Learning – Lecture 6: Chi-Square and Likelihood Ratio Tests</title>
+  <link rel="icon" type="image/png" href="../../files/logo.png" />
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+    * { box-sizing: border-box; }
+
+    nav ul {
+      list-style: none;
+      display: flex;
+      justify-content: center;
+      background: #444;
+      margin: 0;
+      padding: 0;
+    }
+    nav ul li { margin: 0 15px; }
+    nav ul li a {
+      color: #fff;
+      text-decoration: none;
+      padding: 14px 20px;
+      display: block;
+    }
+    nav ul li a:hover { background: #555; }
+
+    body {
+      background: #fdfdfd;
+      color: #1a1a2e;
+      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      font-size: 17px;
+      line-height: 1.75;
+      margin: 0;
+    }
+
+    header, main { max-width: 820px; margin: 0 auto; padding: 0 2rem; }
+
+    header {
+      margin-top: 2.5rem;
+      border-top: 3px solid #1a73e8;
+      padding-top: 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+
+    header h1 {
+      font-size: 1.9rem;
+      color: #16213e;
+      font-weight: 700;
+      margin: 0 0 0.5rem 0;
+    }
+
+    .meta {
+      font-size: 14px;
+      color: #555;
+    }
+
+    .meta span + span::before {
+      content: " · ";
+      margin: 0 0.4rem;
+      color: #999;
+    }
+
+    main section {
+      margin-bottom: 2.5rem;
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #16213e;
+      border-bottom: 1px solid #e0e0e0;
+      padding-bottom: 0.4rem;
+      margin: 2rem 0 0.75rem 0;
+    }
+
+    h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #0f3460;
+      margin: 1.5rem 0 0.5rem 0;
+    }
+
+    h4 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      font-style: italic;
+      color: #0f3460;
+      margin: 1rem 0 0.4rem 0;
+    }
+
+    p { margin: 0.6rem 0; }
+
+    a {
+      color: #1a73e8;
+      text-decoration: none;
+    }
+    a:hover { text-decoration: underline; }
+
+    code {
+      background: #f4f4f8;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+      font-size: 15px;
+    }
+
+    pre {
+      background: #f4f4f8;
+      border: 1px solid #d0d0da;
+      border-radius: 6px;
+      padding: 1rem 1.25rem;
+      overflow-x: auto;
+      font-size: 15px;
+      line-height: 1.6;
+      font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    }
+
+    .math-block {
+      margin: 1.25rem 0;
+      padding-left: 1rem;
+      overflow-x: auto;
+    }
+
+    .callout-definition,
+    .callout-example,
+    .callout-note {
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0;
+      border-radius: 0 6px 6px 0;
+    }
+
+    .callout-definition {
+      background: #eef6ff;
+      border-left: 4px solid #1a73e8;
+    }
+    .callout-definition .callout-title {
+      font-weight: 700;
+      color: #1a73e8;
+      margin-bottom: 0.4rem;
+    }
+
+    .callout-example {
+      background: #f1f8f1;
+      border-left: 4px solid #2e7d32;
+    }
+    .callout-example .callout-title {
+      font-weight: 700;
+      color: #2e7d32;
+      margin-bottom: 0.4rem;
+    }
+
+    .callout-note {
+      background: #fff8e1;
+      border-left: 4px solid #f9a825;
+    }
+    .callout-note .callout-title {
+      font-weight: 700;
+      color: #e65100;
+      margin-bottom: 0.4rem;
+    }
+
+    ul, ol {
+      padding-left: 1.5rem;
+    }
+    li { margin-bottom: 0.4rem; }
+
+    .table-wrapper {
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 15px;
+    }
+    th, td {
+      border: 1px solid #d0d0da;
+      padding: 0.6rem 1rem;
+      text-align: left;
+    }
+    th {
+      background: #f4f4f8;
+      font-weight: 600;
+    }
+    tr:nth-child(even) { background: #fafafa; }
+
+    figure {
+      margin: 1.5rem 0;
+      text-align: center;
+    }
+    figcaption {
+      font-size: 14px;
+      font-style: italic;
+      color: #555;
+      margin-top: 0.5rem;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      background: #333;
+      color: #fff;
+    }
+
+    .overview {
+      font-size: 17px;
+      background: #fafafa;
+      padding: 1rem 1.25rem;
+      border-radius: 6px;
+      border: 1px solid #e8e8e8;
+    }
+
+    @media (max-width: 600px) {
+      header, main { padding: 0 1rem; }
+      header h1 { font-size: 1.5rem; }
+    }
+
+    nav ul { align-items: center; }
+    #dark-toggle {
+      background: none;
+      border: 1px solid rgba(255,255,255,0.4);
+      color: #fff;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 14px;
+      border-radius: 4px;
+    }
+    #dark-toggle:hover { background: rgba(255,255,255,0.15); }
+    body.dark { background: #12121e; color: #d0d0e0; }
+    body.dark nav ul { background: #222; }
+    body.dark h1, body.dark h2, body.dark h3, body.dark h4 { color: #b8c8d8; }
+    body.dark h2 { border-bottom-color: #3a3a5e; }
+    body.dark header { border-top-color: #4a7abf; }
+    body.dark a { color: #6aabf7; }
+    body.dark code { background: #2a2a3e; color: #d0d0e0; }
+    body.dark pre { background: #2a2a3e; border-color: #3a3a5e; color: #d0d0e0; }
+    body.dark .callout-definition { background: #1a2a3e; }
+    body.dark .callout-example { background: #1a2e1a; }
+    body.dark .callout-note, body.dark .callout-warning { background: #2e2a14; }
+    body.dark th { background: #2a2a3e; }
+    body.dark th, body.dark td { border-color: #3a3a5e; }
+    body.dark tr:nth-child(even) { background: #1e1e2e; }
+    body.dark .meta { color: #9090a0; }
+    body.dark figcaption { color: #666; }
+    body.dark footer { background: #111; }
+  </style>
+</head>
+<body>
+  <script>if(localStorage.getItem('dark')==='1')document.body.classList.add('dark');</script>
+  <nav>
+    <ul>
+      <li><a href="https://piotr-marciniak.com/#about">About</a></li>
+      <li><a href="https://piotr-marciniak.com/#projects">Projects</a></li>
+      <li><a href="https://piotr-marciniak.com/#contact">Contact</a></li>
+      <li><button id="dark-toggle" onclick="toggleDark()">Dark</button></li>
+    </ul>
+  </nav>
+
+  <header>
+    <h1>Lecture 6 — Chi-Square Distribution, Pearson's Test &amp; Likelihood Ratio Tests</h1>
+    <div class="meta">
+      <span>Course: Core Concepts in Statistical Learning</span>
+      <span>Lecture 6</span>
+      <span>Date: 2026-04-13</span>
+    </div>
+  </header>
+
+  <main>
+    <section>
+      <div class="overview">
+        This lecture introduces three tools that belong together: the <strong>chi-square distribution</strong>, which will be the reference distribution for our test statistics; <strong>Pearson's $\chi^2$ test</strong>, which asks whether observed counts match an expected distribution; and <strong>likelihood ratio tests</strong>, a very general construction that compares how well two nested models fit the data. The common thread is that all three rely on squared deviations that, under the null hypothesis, behave asymptotically like sums of squared standard normals.
+      </div>
+    </section>
+
+    <section>
+      <h2>1. The Chi-Square Distribution</h2>
+
+      <p>Before we can build tests, we need to know the distribution of the statistic we'll compare our data against. The chi-square distribution turns out to be the natural candidate whenever we sum up squared normal deviations — which happens all the time in statistics.</p>
+
+      <div class="callout-definition">
+        <div class="callout-title">Definition — Chi-square distribution</div>
+        <p>Let $X_1, \ldots, X_m$ be i.i.d. random variables with $X_i \sim \mathcal{N}(0,1)$. Then the random variable</p>
+        <div class="math-block">
+          $$V = \sum_{i=1}^m X_i^2 \sim \chi^2_{(m)}$$
+        </div>
+        <p>is said to follow a <strong>chi-square distribution with $m$ degrees of freedom</strong>.</p>
+      </div>
+
+      <h3>Why does this distribution show up?</h3>
+
+      <p>The intuition is simple: whenever you have a statistic that — after standardization — behaves like a standard normal, then its <em>square</em> behaves like a $\chi^2_{(1)}$. If you have $m$ such independent standardized quantities and add their squares, you get $\chi^2_{(m)}$. Almost every asymptotic testing result in this lecture will boil down to recognizing this pattern.</p>
+
+      <h3>Connection to the Gamma distribution</h3>
+
+      <p>It can be shown that $\chi^2_{(m)}$ is in fact a special case of the Gamma distribution, specifically $\text{Gamma}(m/2, 1/2)$. Recall that $\text{Gamma}(\alpha, \beta)$ has density</p>
+
+      <div class="math-block">
+        $$f_{\alpha,\beta}(x) = \frac{\beta^\alpha}{\Gamma(\alpha)} x^{\alpha-1} e^{-\beta x} \mathbf{1}_{\{x>0\}}.$$
+      </div>
+
+      <p>So a $\chi^2_{(m)}$ random variable $V$ has density</p>
+
+      <div class="math-block">
+        $$f_m(x) = \frac{1}{2^{m/2} \Gamma(m/2)} x^{m/2 - 1} e^{-x/2} \mathbf{1}_{\{x>0\}}.$$
+      </div>
+
+      <h3>Mean and variance</h3>
+
+      <p>Using the Gamma formulas (mean $= \alpha/\beta$, variance $= \alpha/\beta^2$):</p>
+
+      <div class="math-block">
+        $$\mathbb{E}(V) = \frac{m/2}{1/2} = m, \qquad \mathbb{V}(V) = \frac{m/2}{(1/2)^2} = 2m.$$
+      </div>
+
+      <div class="callout-note">
+        <div class="callout-title">Intuition check</div>
+        <p>The mean is $m$ because each $X_i^2$ contributes $\mathbb{E}(X_i^2) = \mathbb{V}(X_i) = 1$ on average. The variance grows linearly in $m$ because we're summing $m$ independent terms. Bigger $m$ $\Rightarrow$ the distribution shifts right and spreads out.</p>
+      </div>
+
+      <div class="callout-example">
+        <div class="callout-title">Example — $\chi^2_{(1)}$</div>
+        <p>If $Z \sim \mathcal{N}(0,1)$, then $Z^2 \sim \chi^2_{(1)}$. This will matter in a moment: squared $z$-statistics always become $\chi^2_{(1)}$ quantities. For instance, if your Wald statistic $W_n \overset{d}{\to} \mathcal{N}(0,1)$, then $W_n^2 \overset{d}{\to} \chi^2_{(1)}$ by the Continuous Mapping Theorem.</p>
+      </div>
+    </section>
+
+    <section>
+      <h2>2. Pearson's $\chi^2$ Test (Goodness-of-Fit)</h2>
+
+      <p>Suppose a population is partitioned into $k$ categories $C_1, \ldots, C_k$ with probabilities $p_1, \ldots, p_k$ (so that $\sum_{j=1}^k p_j = 1$). We draw a random sample of $n$ individuals and want to ask: <em>does the data agree with a hypothesized probability vector?</em></p>
+
+      <h3>Setup</h3>
+
+      <p>For each category $j \in \{1, \ldots, k\}$, let</p>
+
+      <div class="math-block">
+        $$N_j = \sum_{i=1}^n \mathbf{1}_{\{\text{individual } i \in C_j\}}$$
+      </div>
+
+      <p>be the count of individuals in category $C_j$. Note that $\sum_{j=1}^k N_j = n$ — this linear constraint means the counts cannot be mutually independent, and it will cost us one degree of freedom later.</p>
+
+      <div class="callout-definition">
+        <div class="callout-title">The testing problem</div>
+        <p>Based on observed counts $(N_1, \ldots, N_k)$, we test</p>
+        <div class="math-block">
+          $$H_0: (p_1, \ldots, p_k) = (p_1^0, \ldots, p_k^0) \quad \text{vs} \quad H_1: (p_1, \ldots, p_k) \neq (p_1^0, \ldots, p_k^0)$$
+        </div>
+        <p>where $p_1^0, \ldots, p_k^0$ are fixed probabilities with $\sum_{j=1}^k p_j^0 = 1$. This is called a <strong>goodness-of-fit test</strong>.</p>
+      </div>
+
+      <h3>The test statistic</h3>
+
+      <p>Under $H_0$, if category $j$ has probability $p_j^0$, then in a sample of size $n$ we'd <em>expect</em> about $n p_j^0$ individuals to land in $C_j$. The Pearson statistic measures how far the observed counts deviate from these expected counts, in a normalized way:</p>
+
+      <div class="math-block">
+        $$T_n = \sum_{j=1}^k \frac{(N_j - n p_j^0)^2}{n p_j^0}.$$
+      </div>
+
+      <p>This is sometimes written heuristically as</p>
+
+      <div class="math-block">
+        $$T_n = \sum_j \frac{(O_j - E_j)^2}{E_j}$$
+      </div>
+
+      <p>where $O_j$ stands for "observed" and $E_j = n p_j^0$ for "expected".</p>
+
+      <div class="callout-note">
+        <div class="callout-title">Why this specific form?</div>
+        <p>Each term $(N_j - n p_j^0)^2 / (n p_j^0)$ is essentially a squared $z$-score: the squared deviation divided by something proportional to the variance of $N_j$ (which is $n p_j^0 (1-p_j^0)$, approximately $n p_j^0$ when $p_j^0$ is small). Intuitively, we're summing $k$ squared, approximately standard-normal quantities — so we should expect something close to $\chi^2_{(k)}$ in the limit. But the constraint $\sum_j N_j = n$ removes one degree of freedom, giving us $\chi^2_{(k-1)}$.</p>
+      </div>
+
+      <h3>Asymptotic distribution</h3>
+
+      <p>It can be shown that under $H_0$:</p>
+
+      <div class="math-block">
+        $$T_n \xrightarrow{d} \chi^2_{(k-1)}.$$
+      </div>
+
+      <p>Therefore, for a desired level $\alpha$, the test which</p>
+
+      <ul>
+        <li><strong>rejects $H_0$</strong> if $T_n > q_{k-1, 1-\alpha}$,</li>
+        <li><strong>does not reject $H_0$</strong> otherwise,</li>
+      </ul>
+
+      <p>where $q_{k-1, 1-\alpha}$ is the $(1-\alpha)$-quantile of $\chi^2_{(k-1)}$, has asymptotic level $\alpha$.</p>
+
+      <div class="callout-example">
+        <div class="callout-title">Example — Mendel's peas</div>
+        <p>Mendel crossed peas with round yellow seeds and wrinkled green seeds and observed four types of progeny:</p>
+        <ol>
+          <li>Round yellow</li>
+          <li>Wrinkled yellow</li>
+          <li>Round green</li>
+          <li>Wrinkled green</li>
+        </ol>
+        <p>His theory predicted the probability vector</p>
+        <div class="math-block">
+          $$p^0 = \left( \tfrac{9}{16}, \tfrac{3}{16}, \tfrac{3}{16}, \tfrac{1}{16} \right).$$
+        </div>
+        <p>In $n = 556$ experiments, he observed $(N_1, N_2, N_3, N_4) = (315, 101, 108, 32)$.</p>
+
+        <p>We want to test $H_0: p = p^0$ vs $H_1: p \neq p^0$ at level $\alpha = 0.05$.</p>
+
+        <p><strong>Step 1 — Compute expected counts.</strong> With $n = 556$:</p>
+        <div class="table-wrapper">
+          <table>
+            <tr>
+              <th>Category</th>
+              <th>Observed $N_j$</th>
+              <th>Expected $np_j^0$</th>
+            </tr>
+            <tr><td>Round yellow</td><td>315</td><td>$556 \cdot 9/16 = 312.75$</td></tr>
+            <tr><td>Wrinkled yellow</td><td>101</td><td>$556 \cdot 3/16 = 104.25$</td></tr>
+            <tr><td>Round green</td><td>108</td><td>$556 \cdot 3/16 = 104.25$</td></tr>
+            <tr><td>Wrinkled green</td><td>32</td><td>$556 \cdot 1/16 = 34.75$</td></tr>
+          </table>
+        </div>
+
+        <p><strong>Step 2 — Compute the statistic.</strong></p>
+        <div class="math-block">
+          $$T_n = \frac{(315 - 312.75)^2}{312.75} + \frac{(101 - 104.25)^2}{104.25} + \frac{(108 - 104.25)^2}{104.25} + \frac{(32 - 34.75)^2}{34.75} \approx 0.47.$$
+        </div>
+
+        <p><strong>Step 3 — Compare to the critical value.</strong> With $k - 1 = 3$ degrees of freedom, $q_{3, 0.95} \approx 7.815$.</p>
+
+        <p><strong>Conclusion:</strong> Since $T_n \approx 0.47 \ll 7.815$, the test <em>does not reject</em> $H_0$. There is no evidence against Mendel's hypothesis — the observed counts are remarkably consistent with the $9{:}3{:}3{:}1$ ratio.</p>
+      </div>
+
+      <div class="callout-note">
+        <div class="callout-title">A rule of thumb</div>
+        <p>The $\chi^2$ approximation works well when all expected counts $n p_j^0$ are reasonably large (a common guideline is $\geq 5$). If some expected counts are very small, the test statistic's distribution may differ substantially from $\chi^2_{(k-1)}$, and you might prefer exact tests or combine sparse categories.</p>
+      </div>
+    </section>
+
+    <section>
+      <h2>3. Likelihood Ratio Tests (LRT)</h2>
+
+      <p>The Pearson test answers a specific question (do observed counts match expected probabilities?). The <strong>likelihood ratio test</strong> is a much more general recipe: given a parametric model, we compare how well the model fits when restricted to $H_0$ versus when it's free to use all of $\Theta$.</p>
+
+      <h3>Setup</h3>
+
+      <p>Consider a parametric model indexed by $\theta$. Let $\Theta_0$ and $\Theta_1$ be subsets of $\Theta$ with $\Theta_0 \cap \Theta_1 = \emptyset$ and $\Theta_0 \cup \Theta_1 = \Theta$. We test</p>
+
+      <div class="math-block">
+        $$H_0: \theta \in \Theta_0 \quad \text{vs} \quad H_1: \theta \in \Theta_1 = \Theta_0^c.$$
+      </div>
+
+      <div class="callout-definition">
+        <div class="callout-title">Likelihood ratio statistic</div>
+        <p>Let $L_n(\theta) = \prod_{i=1}^n f(X_i; \theta)$ be the likelihood. Define</p>
+        <div class="math-block">
+          $$\Lambda_n = \frac{\sup_{\theta \in \Theta} L_n(\theta)}{\sup_{\theta \in \Theta_0} L_n(\theta)} = \frac{L_n(\hat{\theta}_n)}{L_n(\hat{\theta}_n^0)}$$
+        </div>
+        <p>where $\hat{\theta}_n$ is the unrestricted MLE and $\hat{\theta}_n^0$ is the MLE restricted to $\Theta_0$. The transformed statistic is</p>
+        <div class="math-block">
+          $$\lambda_n = 2 \log(\Lambda_n) = 2\big(\ell_n(\hat{\theta}_n) - \ell_n(\hat{\theta}_n^0)\big).$$
+        </div>
+      </div>
+
+      <h3>The intuition</h3>
+
+      <p>Think of $\Lambda_n$ as a ratio of "best possible fits". The numerator is the likelihood when we can choose <em>any</em> $\theta$ in $\Theta$. The denominator is the likelihood when we're forced to stay inside $\Theta_0$.</p>
+
+      <ul>
+        <li>If $H_0$ is true, the restriction to $\Theta_0$ doesn't hurt us much — the two maxima will be close, so $\Lambda_n \approx 1$ and $\lambda_n \approx 0$.</li>
+        <li>If $H_0$ is false, staying inside $\Theta_0$ <em>does</em> hurt — the unrestricted maximum is much higher, so $\Lambda_n$ grows and $\lambda_n$ becomes large.</li>
+      </ul>
+
+      <p>So <strong>large $\lambda_n$ is evidence against $H_0$</strong>. The factor of 2 in $\lambda_n = 2\log(\Lambda_n)$ is not cosmetic — it's precisely what's needed for the limiting distribution to come out as a plain chi-square (no scaling).</p>
+
+      <h3>Asymptotic distribution (Wilks' Theorem)</h3>
+
+      <p>Under regularity conditions and under $H_0$:</p>
+
+      <div class="math-block">
+        $$\lambda_n \xrightarrow{d} \chi^2_{(m)}$$
+      </div>
+
+      <p>where $m = \dim(\Theta) - \dim(\Theta_0)$ is the number of constraints imposed by $H_0$.</p>
+
+      <div class="callout-note">
+        <div class="callout-title">How to count constraints</div>
+        <p>If $\Theta = \mathbb{R}^k$ and for some $q \in \{0, \ldots, k-1\}$,</p>
+        <div class="math-block">
+          $$\Theta_0 = \{\theta \in \mathbb{R}^k : \theta_{q+1} = \theta_{q+1}^0, \ldots, \theta_k = \theta_k^0\},$$
+        </div>
+        <p>then $H_0$ fixes the last $k - q$ coordinates, giving $m = k - q$ constraints.</p>
+        <p>Equivalently: $m$ is how many "free parameters you lose" by being forced into $\Theta_0$.</p>
+      </div>
+
+      <h3>The test</h3>
+
+      <p>Let $q_{m, 1-\alpha}$ be the $(1-\alpha)$-quantile of $\chi^2_{(m)}$. The test that</p>
+
+      <ul>
+        <li><strong>rejects $H_0$</strong> if $\lambda_n > q_{m, 1-\alpha}$,</li>
+        <li><strong>does not reject $H_0$</strong> otherwise,</li>
+      </ul>
+
+      <p>has asymptotic level $\alpha$.</p>
+
+      <div class="callout-example">
+        <div class="callout-title">Example — Testing the mean of a Gaussian</div>
+        <p>Let $X_1, \ldots, X_n \overset{i.i.d.}{\sim} \mathcal{N}(\theta, 1)$ with $\theta \in \mathbb{R}$. We test</p>
+        <div class="math-block">
+          $$H_0: \theta = \theta_0 \quad \text{vs} \quad H_1: \theta \neq \theta_0.$$
+        </div>
+
+        <p>Here $\Theta = \mathbb{R}$ and $\Theta_0 = \{\theta_0\}$, so $m = 1 - 0 = 1$.</p>
+
+        <p>The unrestricted MLE is $\hat{\theta}_n = \bar{X}_n$ (we showed this in a previous lecture). Under $H_0$, the "restricted" MLE is trivially $\theta_0$ itself.</p>
+
+        <p><strong>Computing $\lambda_n$.</strong> The log-likelihood is</p>
+        <div class="math-block">
+          $$\ell_n(\theta) = -\frac{n}{2}\log(2\pi) - \frac{1}{2}\sum_{i=1}^n (X_i - \theta)^2.$$
+        </div>
+
+        <p>So</p>
+        <div class="math-block">
+          $$\lambda_n = 2\big(\ell_n(\bar{X}_n) - \ell_n(\theta_0)\big) = -\sum_{i=1}^n (X_i - \bar{X}_n)^2 + \sum_{i=1}^n (X_i - \theta_0)^2.$$
+        </div>
+
+        <p><strong>The algebraic trick.</strong> Expand the second sum by adding and subtracting $\bar{X}_n$:</p>
+        <div class="math-block">
+          $$\begin{aligned}
+          \sum_{i=1}^n (X_i - \theta_0)^2 &= \sum_{i=1}^n (X_i - \bar{X}_n + \bar{X}_n - \theta_0)^2 \\
+          &= \sum_{i=1}^n (X_i - \bar{X}_n)^2 + 2(\bar{X}_n - \theta_0)\underbrace{\sum_{i=1}^n (X_i - \bar{X}_n)}_{=\,0} + n(\bar{X}_n - \theta_0)^2 \\
+          &= \sum_{i=1}^n (X_i - \bar{X}_n)^2 + n(\bar{X}_n - \theta_0)^2.
+          \end{aligned}$$
+        </div>
+
+        <p>Substituting back:</p>
+        <div class="math-block">
+          $$\lambda_n = n(\bar{X}_n - \theta_0)^2 = \big(\sqrt{n}(\bar{X}_n - \theta_0)\big)^2.$$
+        </div>
+
+        <p><strong>Recognizing the distribution.</strong> Under $H_0$, $\sqrt{n}(\bar{X}_n - \theta_0) \sim \mathcal{N}(0,1)$ exactly. So $\lambda_n = Z^2$ with $Z \sim \mathcal{N}(0,1)$, meaning</p>
+        <div class="math-block">
+          $$\lambda_n \sim \chi^2_{(1)} \quad \text{(exactly, not just asymptotically!).}$$
+        </div>
+
+        <p>This confirms Wilks' theorem in a case where we can actually compute everything by hand — and better, the result here holds for finite $n$, so the LRT test has level $\alpha$ (exact, not just asymptotic).</p>
+      </div>
+
+      <div class="callout-note">
+        <div class="callout-title">Why the LRT is powerful</div>
+        <p>Notice how general this framework is. The LRT doesn't require you to guess a specific test statistic — you just compute the likelihood under both models and compare. This same recipe works for testing the mean of a normal, a regression coefficient being zero, one set of nested models vs another, whether certain categories can be combined, etc.</p>
+      </div>
+    </section>
+
+    <section>
+      <h2>4. Testing Independence of Discrete Random Variables</h2>
+
+      <p>We finish the lecture with an important application of the Pearson-style idea: testing whether two discrete variables are independent.</p>
+
+      <h3>The 2×2 case</h3>
+
+      <p>Let $Y$ and $Z$ be random variables defined on the same sample space, each taking two values. Without loss of generality, $Y(\Omega) = Z(\Omega) = \{0, 1\}$. Given $n$ i.i.d. pairs $(Y_1, Z_1), \ldots, (Y_n, Z_n)$ distributed like $(Y, Z)$, we want to test:</p>
+
+      <div class="math-block">
+        $$H_0: Y \perp\!\!\!\perp Z \quad \text{vs} \quad H_1: Y \not\perp\!\!\!\perp Z.$$
+      </div>
+
+      <h3>The contingency table</h3>
+
+      <p>The data is summarized in a <strong>contingency table</strong> of counts:</p>
+
+      <div class="table-wrapper">
+        <table>
+          <tr>
+            <th></th>
+            <th>$Z = 0$</th>
+            <th>$Z = 1$</th>
+            <th>Row total</th>
+          </tr>
+          <tr>
+            <th>$Y = 0$</th>
+            <td>$N_{00}$</td>
+            <td>$N_{01}$</td>
+            <td>$N_{0\cdot}$</td>
+          </tr>
+          <tr>
+            <th>$Y = 1$</th>
+            <td>$N_{10}$</td>
+            <td>$N_{11}$</td>
+            <td>$N_{1\cdot}$</td>
+          </tr>
+          <tr>
+            <th>Column total</th>
+            <td>$N_{\cdot 0}$</td>
+            <td>$N_{\cdot 1}$</td>
+            <td>$n$</td>
+          </tr>
+        </table>
+      </div>
+
+      <p>Here $N_{ij} = \sum_{k=1}^n \mathbf{1}_{\{Y_k = i, Z_k = j\}}$, row sums $N_{i\cdot} = \sum_j N_{ij}$, and column sums $N_{\cdot j} = \sum_i N_{ij}$.</p>
+
+      <p>At the population level, there's a matching table of probabilities $p_{ij} = \mathbb{P}(Y = i, Z = j)$, with marginals $p_{i\cdot}$ and $p_{\cdot j}$. The key observation:</p>
+
+      <div class="math-block">
+        $$Y \perp\!\!\!\perp Z \iff p_{ij} = p_{i\cdot} \, p_{\cdot j} \quad \forall i, j \in \{0, 1\}.$$
+      </div>
+
+      <h3>Building the test statistic</h3>
+
+      <p>Under $H_0$, by the Law of Large Numbers, for large $n$ we'd expect</p>
+
+      <div class="math-block">
+        $$\frac{N_{ij}}{n} \approx \frac{N_{i\cdot}}{n} \cdot \frac{N_{\cdot j}}{n}, \quad \text{or equivalently,} \quad N_{ij} \approx \frac{N_{i\cdot} N_{\cdot j}}{n}.$$
+      </div>
+
+      <p>The quantity $N_{i\cdot} N_{\cdot j} / n$ plays the role of the "expected" count under independence, now <em>estimated from the data</em> (using the observed marginals). This gives the Pearson $\chi^2$ statistic:</p>
+
+      <div class="math-block">
+        $$T_n = \sum_{i,j} \frac{\left( N_{ij} - \frac{N_{i\cdot} N_{\cdot j}}{n} \right)^2}{\frac{N_{i\cdot} N_{\cdot j}}{n}}.$$
+      </div>
+
+      <p>It can be shown that under $H_0$:</p>
+
+      <div class="math-block">
+        $$T_n \xrightarrow{d} \chi^2_{(1)}.$$
+      </div>
+
+      <p>The test that rejects $H_0$ if $T_n > q_{1, 1-\alpha}$ is of asymptotic level $\alpha$.</p>
+
+      <div class="callout-note">
+        <div class="callout-title">Why 1 degree of freedom?</div>
+        <p>In a 2×2 table, there are 4 cells, so naively you might expect $\chi^2_{(4)}$. But:</p>
+        <ul>
+          <li>The total count is fixed at $n$ (−1 df).</li>
+          <li>Under $H_0$, we estimated $p_{0\cdot}$ (the row marginal — one parameter, since $p_{1\cdot} = 1 - p_{0\cdot}$) and $p_{\cdot 0}$ (the column marginal — one parameter). That's −2 df.</li>
+        </ul>
+        <p>So $4 - 1 - 2 = 1$ degree of freedom. More generally, for an $r \times c$ table, the degrees of freedom are $(r-1)(c-1)$.</p>
+      </div>
+
+      <div class="callout-example">
+        <div class="callout-title">Example — Treatment and recovery</div>
+        <p>Suppose we want to know whether a new treatment ($Z$: 1 = treated, 0 = placebo) is associated with recovery ($Y$: 1 = recovered, 0 = not). Out of $n = 200$ patients, we observe:</p>
+
+        <div class="table-wrapper">
+          <table>
+            <tr>
+              <th></th>
+              <th>Placebo ($Z = 0$)</th>
+              <th>Treated ($Z = 1$)</th>
+              <th>Total</th>
+            </tr>
+            <tr>
+              <th>Not recovered ($Y = 0$)</th>
+              <td>60</td>
+              <td>30</td>
+              <td>90</td>
+            </tr>
+            <tr>
+              <th>Recovered ($Y = 1$)</th>
+              <td>40</td>
+              <td>70</td>
+              <td>110</td>
+            </tr>
+            <tr>
+              <th>Total</th>
+              <td>100</td>
+              <td>100</td>
+              <td>200</td>
+            </tr>
+          </table>
+        </div>
+
+        <p>Expected counts under $H_0$ (independence):</p>
+        <div class="math-block">
+          $$\frac{N_{i\cdot} N_{\cdot j}}{n}: \quad \frac{90 \cdot 100}{200} = 45, \quad \frac{110 \cdot 100}{200} = 55 \quad \text{(symmetric across columns)}.$$
+        </div>
+
+        <p>So the expected counts are 45, 45, 55, 55 for the four cells. The statistic:</p>
+        <div class="math-block">
+          $$T_n = \frac{(60-45)^2}{45} + \frac{(30-45)^2}{45} + \frac{(40-55)^2}{55} + \frac{(70-55)^2}{55} = 5 + 5 + \tfrac{225}{55} + \tfrac{225}{55} \approx 18.18.$$
+        </div>
+
+        <p>Comparing to $q_{1, 0.95} \approx 3.841$: since $18.18 \gg 3.841$, we <strong>reject</strong> $H_0$. There is strong evidence that recovery depends on treatment.</p>
+      </div>
+    </section>
+
+    <section>
+      <h2>5. Key Takeaways</h2>
+      <ul>
+        <li><strong>The $\chi^2$ distribution</strong> arises as the distribution of a sum of squared independent standard normals. Its degrees of freedom count how many such "free" squared normals you're summing. It has mean $m$ and variance $2m$.</li>
+        <li><strong>Pearson's $\chi^2$ goodness-of-fit test</strong> compares observed counts to expected counts via $T_n = \sum_j (N_j - np_j^0)^2/(np_j^0)$. Under $H_0$, $T_n \xrightarrow{d} \chi^2_{(k-1)}$ — we lose one df for the constraint $\sum N_j = n$.</li>
+        <li><strong>The Likelihood Ratio Test</strong> is a general-purpose recipe: compare the best fit over all of $\Theta$ to the best fit inside $\Theta_0$ using $\lambda_n = 2(\ell_n(\hat{\theta}_n) - \ell_n(\hat{\theta}_n^0))$. Large $\lambda_n$ is evidence against $H_0$.</li>
+        <li><strong>Wilks' theorem</strong>: under regularity conditions, $\lambda_n \xrightarrow{d} \chi^2_{(m)}$ where $m = \dim(\Theta) - \dim(\Theta_0)$ counts the constraints $H_0$ imposes.</li>
+        <li><strong>Independence testing</strong> in contingency tables uses the same Pearson statistic, but the "expected" counts $N_{i\cdot} N_{\cdot j}/n$ are now <em>estimated from the data</em>. In a 2×2 table, the limiting distribution is $\chi^2_{(1)}$; more generally, $(r-1)(c-1)$ for $r \times c$ tables.</li>
+        <li>A unifying theme: all these tests convert deviations from $H_0$ into squared, standardized quantities that accumulate into a $\chi^2$ under the null. Large statistic values are unlikely under $H_0$, so they're what we reject on.</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 Piotr Marciniak. All rights reserved.</p>
+  </footer>
+
+  <script>
+    function toggleDark() {
+      const d = document.body.classList.toggle('dark');
+      localStorage.setItem('dark', d ? '1' : '0');
+      const btn = document.getElementById('dark-toggle');
+      if (btn) btn.textContent = d ? 'Light' : 'Dark';
+    }
+    (function() {
+      const btn = document.getElementById('dark-toggle');
+      if (btn) btn.textContent = document.body.classList.contains('dark') ? 'Light' : 'Dark';
+    })();
+  </script>
+</body>
+</html>
