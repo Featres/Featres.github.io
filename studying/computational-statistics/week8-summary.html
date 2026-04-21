@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Computational Statistics – Lecture 8: The Bootstrap</title>
+  <link rel="icon" type="image/png" href="../../files/logo.png" />
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+    * { box-sizing: border-box; }
+
+    nav ul {
+      list-style: none;
+      display: flex;
+      justify-content: center;
+      background: #444;
+      margin: 0;
+      padding: 0;
+    }
+    nav ul li { margin: 0 15px; }
+    nav ul li a {
+      color: #fff;
+      text-decoration: none;
+      padding: 14px 20px;
+      display: block;
+    }
+    nav ul li a:hover { background: #555; }
+
+    body {
+      background: #fdfdfd;
+      color: #1a1a2e;
+      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      font-size: 17px;
+      line-height: 1.75;
+      margin: 0;
+    }
+
+    header, main { max-width: 820px; margin: 0 auto; padding: 0 2rem; }
+
+    header {
+      margin-top: 2.5rem;
+      border-top: 3px solid #1a73e8;
+      padding-top: 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+
+    header h1 {
+      font-size: 1.9rem;
+      color: #16213e;
+      font-weight: 700;
+      margin: 0 0 0.5rem 0;
+    }
+
+    .meta {
+      font-size: 14px;
+      color: #555;
+    }
+
+    .meta span + span::before {
+      content: " · ";
+      margin: 0 0.4rem;
+      color: #999;
+    }
+
+    main section {
+      margin-bottom: 2.5rem;
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #16213e;
+      border-bottom: 1px solid #e0e0e0;
+      padding-bottom: 0.4rem;
+      margin: 2rem 0 0.75rem 0;
+    }
+
+    h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #0f3460;
+      margin: 1.5rem 0 0.5rem 0;
+    }
+
+    h4 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      font-style: italic;
+      color: #0f3460;
+      margin: 1rem 0 0.4rem 0;
+    }
+
+    p { margin: 0.6rem 0; }
+
+    a {
+      color: #1a73e8;
+      text-decoration: none;
+    }
+    a:hover { text-decoration: underline; }
+
+    code {
+      background: #f4f4f8;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+      font-size: 15px;
+    }
+
+    pre {
+      background: #f4f4f8;
+      border: 1px solid #d0d0da;
+      border-radius: 6px;
+      padding: 1rem 1.25rem;
+      overflow-x: auto;
+      font-size: 15px;
+      line-height: 1.6;
+      font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+      margin: 1.2rem 0;
+    }
+    pre code {
+      background: none;
+      border: none;
+      padding: 0;
+      font-size: 15px;
+    }
+
+    .code-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #777;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      display: block;
+      margin-bottom: 0.4rem;
+    }
+
+    .math-block {
+      margin: 1.25rem 0;
+      padding-left: 1rem;
+      overflow-x: auto;
+    }
+
+    .callout-definition,
+    .callout-example,
+    .callout-note {
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0;
+      border-radius: 0 6px 6px 0;
+    }
+
+    .callout-definition {
+      background: #eef6ff;
+      border-left: 4px solid #1a73e8;
+    }
+    .callout-definition .callout-title {
+      font-weight: 700;
+      color: #1a73e8;
+      margin-bottom: 0.4rem;
+    }
+
+    .callout-example {
+      background: #f1f8f1;
+      border-left: 4px solid #2e7d32;
+    }
+    .callout-example .callout-title {
+      font-weight: 700;
+      color: #2e7d32;
+      margin-bottom: 0.4rem;
+    }
+
+    .callout-note {
+      background: #fff8e1;
+      border-left: 4px solid #f9a825;
+    }
+    .callout-note .callout-title {
+      font-weight: 700;
+      color: #e65100;
+      margin-bottom: 0.4rem;
+    }
+
+    ul, ol {
+      padding-left: 1.5rem;
+    }
+    li { margin-bottom: 0.4rem; }
+
+    .table-wrapper {
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 15px;
+    }
+    th, td {
+      border: 1px solid #d0d0da;
+      padding: 0.6rem 1rem;
+      text-align: left;
+    }
+    th {
+      background: #f4f4f8;
+      font-weight: 600;
+    }
+    tr:nth-child(even) { background: #fafafa; }
+
+    figure {
+      margin: 1.5rem 0;
+      text-align: center;
+    }
+    figcaption {
+      font-size: 14px;
+      font-style: italic;
+      color: #555;
+      margin-top: 0.5rem;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      background: #333;
+      color: #fff;
+    }
+
+    .overview {
+      font-size: 17px;
+      background: #fafafa;
+      padding: 1rem 1.25rem;
+      border-radius: 6px;
+      border: 1px solid #e8e8e8;
+    }
+
+    @media (max-width: 600px) {
+      header, main { padding: 0 1rem; }
+      header h1 { font-size: 1.5rem; }
+    }
+
+    nav ul { align-items: center; }
+    #dark-toggle {
+      background: none;
+      border: 1px solid rgba(255,255,255,0.4);
+      color: #fff;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 14px;
+      border-radius: 4px;
+    }
+    #dark-toggle:hover { background: rgba(255,255,255,0.15); }
+    body.dark { background: #12121e; color: #d0d0e0; }
+    body.dark nav ul { background: #222; }
+    body.dark h1, body.dark h2, body.dark h3, body.dark h4 { color: #b8c8d8; }
+    body.dark h2 { border-bottom-color: #3a3a5e; }
+    body.dark header { border-top-color: #4a7abf; }
+    body.dark a { color: #6aabf7; }
+    body.dark code { background: #2a2a3e; color: #d0d0e0; }
+    body.dark pre { background: #2a2a3e; border-color: #3a3a5e; color: #d0d0e0; }
+    body.dark .callout-definition { background: #1a2a3e; }
+    body.dark .callout-example { background: #1a2e1a; }
+    body.dark .callout-note { background: #2e2a14; }
+    body.dark th { background: #2a2a3e; }
+    body.dark th, body.dark td { border-color: #3a3a5e; }
+    body.dark tr:nth-child(even) { background: #1e1e2e; }
+    body.dark .meta { color: #9090a0; }
+    body.dark figcaption { color: #666; }
+    body.dark footer { background: #111; }
+    body.dark .overview { background: #1e1e2e; border-color: #3a3a5e; }
+  </style>
+</head>
+<body>
+  <script>if(localStorage.getItem('dark')==='1')document.body.classList.add('dark');</script>
+  <nav>
+    <ul>
+      <li><a href="https://piotr-marciniak.com/#about">About</a></li>
+      <li><a href="https://piotr-marciniak.com/#projects">Projects</a></li>
+      <li><a href="https://piotr-marciniak.com/#contact">Contact</a></li>
+      <li><button id="dark-toggle" onclick="toggleDark()">Dark</button></li>
+    </ul>
+  </nav>
+
+  <header>
+    <h1>Lecture 8 — The Bootstrap</h1>
+    <div class="meta">
+      <span>Course: Computational Statistics (401-3632-00L)</span>
+      <span>Lecture 8</span>
+      <span>Dr. Jonathan Koh · ETH Zürich · FS2026</span>
+    </div>
+  </header>
+
+  <main>
+
+    <section>
+      <div class="overview">
+        Week 8 continues the deep dive into <strong>the bootstrap</strong> (§6 of the lecture notes), one of the most influential ideas in modern statistics, introduced by Efron in 1979. The key insight is elegantly simple: since we cannot simulate from the unknown true distribution $P$, we instead simulate from an <em>estimated</em> version of it. This week develops the nonparametric and parametric bootstrap in detail, explains how to use them for variance estimation and bias correction, and presents several methods for constructing bootstrap confidence intervals.
+      </div>
+    </section>
+
+    <section>
+      <h2>1. Recap &amp; Motivation: Why Bootstrap?</h2>
+
+      <p>
+        In classical statistics, we often rely on analytic formulas to characterise the uncertainty of an estimator $\widehat{\theta}_n = g(Z_1, \ldots, Z_n)$ computed from i.i.d. data $Z_1, \ldots, Z_n \overset{\text{iid}}{\sim} P$. For example, if $\widehat{\theta}_n = \bar{X}_n$, the Central Limit Theorem gives us
+      </p>
+      <div class="math-block">
+        $$\sqrt{n}(\bar{X}_n - \mu) \xrightarrow{d} \mathcal{N}(0, \sigma^2),$$
+      </div>
+      <p>
+        which can be used to build confidence intervals analytically. Similarly, in the Gaussian linear model, exact $t$- and $F$-distributions are available for inference on regression coefficients $\hat{\beta}$.
+      </p>
+
+      <div class="callout-note">
+        <div class="callout-title">When classical theory breaks down</div>
+        <p>In many realistic situations, analytic solutions are unavailable:</p>
+        <ul>
+          <li>The exact sampling distribution of $\widehat{\theta}_n$ is unknown or intractable.</li>
+          <li>Asymptotic variances are difficult to derive (e.g. for a sample median, a ratio, or a complex estimator).</li>
+          <li>Asymptotic approximations may be poor for moderate sample sizes $n$.</li>
+          <li>The estimator has no simple closed-form variance (e.g. cross-validated prediction error).</li>
+        </ul>
+      </div>
+
+      <p>
+        <strong>Key insight:</strong> if the true distribution $P$ were known, we could just simulate many datasets from $P$, compute $\widehat{\theta}_n$ on each, and approximate the distribution of $\widehat{\theta}_n$ directly by Monte Carlo. Since $P$ is unknown, the bootstrap replaces it with an estimate $\widehat{P}$.
+      </p>
+    </section>
+
+    <section>
+      <h2>2. The Bootstrap Principle</h2>
+
+      <div class="callout-definition">
+        <div class="callout-title">Definition — Bootstrap Principle (§6.1)</div>
+        <p>
+          Given observations $Z_1, \ldots, Z_n \overset{\text{iid}}{\sim} P$ (unknown) and an estimator $\widehat{\theta}_n = g(Z_1, \ldots, Z_n)$:
+        </p>
+        <ol>
+          <li>Estimate $P$ by some $\widehat{P}$ (either nonparametrically or parametrically).</li>
+          <li>Draw $B$ independent bootstrap samples $Z_1^*, \ldots, Z_n^* \overset{\text{iid}}{\sim} \widehat{P}$.</li>
+          <li>Compute the bootstrap statistic $\widehat{\theta}_n^* = g(Z_1^*, \ldots, Z_n^*)$ for each sample.</li>
+          <li>Use the empirical distribution of $\widehat{\theta}_n^{*(1)}, \ldots, \widehat{\theta}_n^{*(B)}$ to approximate the sampling distribution of $\widehat{\theta}_n$.</li>
+        </ol>
+        <p>
+          The key substitution is $P \to \widehat{P}$ and $\widehat{\theta}_n \to \widehat{\theta}_n^*$ (real world $\to$ bootstrap world).
+        </p>
+      </div>
+
+      <figure>
+        <svg width="720" height="170" viewBox="0 0 720 170" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif" font-size="14">
+          <rect x="10" y="30" width="160" height="110" rx="8" fill="#eef6ff" stroke="#1a73e8" stroke-width="1.5"/>
+          <text x="90" y="55" text-anchor="middle" font-weight="700" fill="#1a73e8" font-size="13">Real World</text>
+          <text x="90" y="80" text-anchor="middle" fill="#1a1a2e">Unknown $P$</text>
+          <text x="90" y="105" text-anchor="middle" fill="#1a1a2e">↓</text>
+          <text x="90" y="128" text-anchor="middle" fill="#1a1a2e">$Z_1,\ldots,Z_n$</text>
+          <line x1="180" y1="85" x2="260" y2="85" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+          <text x="220" y="75" text-anchor="middle" fill="#555" font-size="13">compute</text>
+          <text x="220" y="100" text-anchor="middle" fill="#555" font-size="13">$\widehat{\theta}_n$</text>
+          <rect x="265" y="58" width="130" height="56" rx="8" fill="#fff8e1" stroke="#f9a825" stroke-width="1.5"/>
+          <text x="330" y="85" text-anchor="middle" fill="#1a1a2e">Sampling dist.</text>
+          <text x="330" y="105" text-anchor="middle" fill="#1a1a2e">of $\widehat{\theta}_n$</text>
+          <text x="410" y="90" text-anchor="middle" fill="#888" font-size="20">≈</text>
+          <rect x="430" y="30" width="160" height="110" rx="8" fill="#f1f8f1" stroke="#2e7d32" stroke-width="1.5"/>
+          <text x="510" y="55" text-anchor="middle" font-weight="700" fill="#2e7d32" font-size="13">Bootstrap World</text>
+          <text x="510" y="80" text-anchor="middle" fill="#1a1a2e">Known $\widehat{P}$</text>
+          <text x="510" y="105" text-anchor="middle" fill="#1a1a2e">↓</text>
+          <text x="510" y="128" text-anchor="middle" fill="#1a1a2e">$Z_1^*,\ldots,Z_n^*$</text>
+          <line x1="600" y1="85" x2="680" y2="85" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+          <text x="640" y="75" text-anchor="middle" fill="#555" font-size="13">compute</text>
+          <text x="640" y="100" text-anchor="middle" fill="#555" font-size="13">$\widehat{\theta}_n^*$</text>
+          <rect x="685" y="58" width="25" height="56" rx="4" fill="#fff8e1" stroke="#f9a825" stroke-width="1.5"/>
+          <defs>
+            <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 z" fill="#555"/>
+            </marker>
+          </defs>
+        </svg>
+        <figcaption>Figure 1: The bootstrap analogy — the bootstrap world mimics the real world, replacing unknown $P$ with estimated $\widehat{P}$.</figcaption>
+      </figure>
+
+      <h3>2.1 Nonparametric Bootstrap</h3>
+      <p>
+        In the <strong>nonparametric bootstrap</strong>, we estimate $P$ by the <em>empirical distribution</em> $\widehat{P}_n$, which places equal mass $1/n$ on each observed data point $z_i$. Sampling from $\widehat{P}_n$ is equivalent to <strong>sampling with replacement</strong> from the original dataset $\{Z_1, \ldots, Z_n\}$.
+      </p>
+
+      <div class="callout-definition">
+        <div class="callout-title">Definition — Empirical Distribution &amp; Nonparametric Bootstrap</div>
+        <p>
+          The empirical distribution function is:
+        </p>
+        <div class="math-block">
+          $$\widehat{F}_n(z) = \frac{1}{n} \sum_{i=1}^n \mathbf{1}[Z_i \leq z].$$
+        </div>
+        <p>
+          A <strong>bootstrap sample</strong> $Z_1^*, \ldots, Z_n^*$ is drawn i.i.d. from $\widehat{F}_n$, i.e. each $Z_i^*$ is chosen uniformly at random (with replacement) from $\{Z_1, \ldots, Z_n\}$.
+        </p>
+        <p>
+          The resulting bootstrap replicate of the statistic is $\widehat{\theta}_n^* = g(Z_1^*, \ldots, Z_n^*)$.
+        </p>
+      </div>
+
+      <div class="callout-note">
+        <div class="callout-title">Intuition: sampling with replacement</div>
+        <p>
+          When you draw $n$ observations from $n$ with replacement, on average about $1 - 1/e \approx 63.2\%$ of the original data points will appear (some more than once), and about $36.8\%$ will not appear at all. This gives each bootstrap sample a slightly different composition — enough variability to simulate the randomness in $\widehat{\theta}_n$.
+        </p>
+      </div>
+
+      <h3>2.2 Parametric Bootstrap</h3>
+      <p>
+        If we have good reason to believe the data come from a specific parametric family — say $P = P_\theta$ for some parameter $\theta$ — we can use the <strong>parametric bootstrap</strong>: estimate $\theta$ to obtain $\widehat{\theta}$, and then sample from the fitted model $P_{\widehat{\theta}}$.
+      </p>
+
+      <div class="callout-example">
+        <div class="callout-title">Example — Parametric Bootstrap for Linear Regression</div>
+        <p>
+          In the linear model $Y = X\beta + \varepsilon$ with $\varepsilon \sim \mathcal{N}(0, \sigma^2 I)$:
+        </p>
+        <ol>
+          <li>Fit the model to get $\widehat{\beta}$ and $\widehat{\sigma}^2$.</li>
+          <li>For each bootstrap sample $b = 1, \ldots, B$:
+            <ul>
+              <li>Draw $\varepsilon_i^* \overset{\text{iid}}{\sim} \mathcal{N}(0, \widehat{\sigma}^2)$.</li>
+              <li>Form $Y_i^* = X_i\widehat{\beta} + \varepsilon_i^*$.</li>
+              <li>Fit the model to $(X, Y^*)$ to obtain $\widehat{\beta}^*$.</li>
+            </ul>
+          </li>
+          <li>Use the distribution of $\widehat{\beta}^*$ to quantify uncertainty in $\widehat{\beta}$.</li>
+        </ol>
+        <p>
+          An alternative is <strong>residual resampling</strong>: resample from the estimated residuals $\widehat{\varepsilon}_i = Y_i - X_i\widehat{\beta}$ instead of from a fitted Gaussian.
+        </p>
+      </div>
+    </section>
+
+    <section>
+      <h2>3. The Bootstrap Algorithm</h2>
+
+      <p>
+        In practice, the distribution of $\widehat{\theta}_n^*$ (conditional on the data) can rarely be computed analytically. Instead, we approximate it by <strong>Monte Carlo</strong>: draw $B$ bootstrap samples and compute the statistic on each.
+      </p>
+
+      <span class="code-label">Pseudocode — Nonparametric Bootstrap</span>
+      <pre><code><strong>Input:</strong>  data Z = {Z₁, ..., Zₙ}, statistic g(·), number of replicates B
+<strong>Output:</strong> bootstrap replicates θ̂*₁, ..., θ̂*_B
+
+<strong>for</strong> b = 1 <strong>to</strong> B <strong>do</strong>
+    Draw Z*₁, ..., Z*ₙ  i.i.d. from {Z₁, ..., Zₙ}  (with replacement)
+    Compute θ̂*_b = g(Z*₁, ..., Z*ₙ)
+<strong>end for</strong>
+<strong>return</strong> θ̂*₁, ..., θ̂*_B</code></pre>
+
+      <p>
+        A typical choice is $B = 1{,}000$ to $10{,}000$ replicates. Larger $B$ reduces Monte Carlo error in the approximation.
+      </p>
+
+      <div class="callout-example">
+        <div class="callout-title">Example — Bootstrap in R (Linear Regression)</div>
+        <p>
+          The following code (from the lecture notes, §1.5.2) estimates the standard deviation of regression coefficients via the nonparametric bootstrap:
+        </p>
+        <span class="code-label">R</span>
+        <pre><code>n &lt;- nrow(data)
+B &lt;- 1000
+coef_matrix &lt;- matrix(nrow = B, ncol = p)
+
+for (b in 1:B) {
+  idx &lt;- sample(1:n, n, replace = TRUE)   # bootstrap sample (indices)
+  fit &lt;- lm(Y ~ ., data = data[idx, ])
+  coef_matrix[b, ] &lt;- coef(fit)
+}
+
+# Bootstrap standard errors
+sd_boot &lt;- apply(coef_matrix, 2, sd)</code></pre>
+        <p>
+          The resulting <code>sd_boot</code> approximates the standard error of each $\widehat{\beta}_j$. For the Gaussian linear model this matches the analytic <em>Std. Error</em> column from <code>summary(lm(...))</code>, but the bootstrap approach is fully general and works even when analytic formulas are unavailable.
+        </p>
+      </div>
+    </section>
+
+    <section>
+      <h2>4. Bootstrap Variance and Bias Estimation</h2>
+
+      <h3>4.1 Variance Estimation</h3>
+      <p>
+        The bootstrap provides a natural estimator of the variance of $\widehat{\theta}_n$. Recall the true (but unknown) variance is $\text{Var}_P(\widehat{\theta}_n)$. The bootstrap approximates this by the <em>variance under $\widehat{P}$</em>:
+      </p>
+      <div class="math-block">
+        $$\widehat{\text{Var}}_{\text{boot}} = \frac{1}{B-1} \sum_{b=1}^{B} \left(\widehat{\theta}_n^{*(b)} - \bar{\theta}^*\right)^2, \quad \bar{\theta}^* = \frac{1}{B}\sum_{b=1}^B \widehat{\theta}_n^{*(b)}.$$
+      </div>
+      <p>
+        This is simply the sample variance of the bootstrap replicates. Its square root $\widehat{\text{se}}_{\text{boot}} = \sqrt{\widehat{\text{Var}}_{\text{boot}}}$ is the <strong>bootstrap standard error</strong>.
+      </p>
+
+      <div class="callout-note">
+        <div class="callout-title">What the bootstrap variance estimates</div>
+        <p>
+          The bootstrap estimates $\text{Var}_{\widehat{P}}(\widehat{\theta}_n^*)$, which approximates the true $\text{Var}_P(\widehat{\theta}_n)$. The approximation is good when $\widehat{P}$ is a good estimate of $P$ (i.e. when $n$ is reasonably large). The bootstrap does <em>not</em> give you the exact variance in finite samples.
+        </p>
+      </div>
+
+      <h3>4.2 Bias Estimation</h3>
+      <p>
+        The bias of $\widehat{\theta}_n$ as an estimator of the true parameter $\theta = \theta(P)$ is defined as:
+      </p>
+      <div class="math-block">
+        $$\text{Bias}_P(\widehat{\theta}_n) = \mathbb{E}_P[\widehat{\theta}_n] - \theta(P).$$
+      </div>
+      <p>
+        In the bootstrap world, the role of $\theta(P)$ is played by $\theta(\widehat{P}) = \widehat{\theta}_n$ (since $\widehat{\theta}_n$ is the "true" parameter in the bootstrap world). The bootstrap estimate of bias is therefore:
+      </p>
+      <div class="math-block">
+        $$\widehat{\text{Bias}}_{\text{boot}} = \bar{\theta}^* - \widehat{\theta}_n,$$
+      </div>
+      <p>
+        where $\bar{\theta}^* = B^{-1}\sum_b \widehat{\theta}_n^{*(b)}$ is the mean of bootstrap replicates and $\widehat{\theta}_n$ is the estimate on the original data.
+      </p>
+      <p>
+        A <strong>bias-corrected estimator</strong> can then be formed as:
+      </p>
+      <div class="math-block">
+        $$\widehat{\theta}_{\text{bc}} = \widehat{\theta}_n - \widehat{\text{Bias}}_{\text{boot}} = 2\widehat{\theta}_n - \bar{\theta}^*.$$
+      </div>
+
+      <div class="callout-note">
+        <div class="callout-title">Bias–Variance trade-off in bias correction</div>
+        <p>
+          Bias-correcting an estimator typically <em>increases its variance</em>. So unless the bias is large relative to the standard error, it may not be worth correcting. Always consider the mean squared error:
+        </p>
+        <div class="math-block">
+          $$\text{MSE}(\widehat{\theta}_n) = \text{Bias}(\widehat{\theta}_n)^2 + \text{Var}(\widehat{\theta}_n).$$
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>5. Bootstrap Confidence Intervals</h2>
+
+      <p>
+        Using the bootstrap replicates $\widehat{\theta}_n^{*(1)}, \ldots, \widehat{\theta}_n^{*(B)}$, there are several ways to construct a confidence interval for the true parameter $\theta = \theta(P)$. The main methods are presented below.
+      </p>
+
+      <h3>5.1 Normal (Wald) Interval</h3>
+      <p>
+        If $\widehat{\theta}_n$ is approximately normally distributed, we can use the bootstrap standard error to form a Wald-type confidence interval:
+      </p>
+      <div class="math-block">
+        $$\text{CI}_{\text{normal}} = \left[\widehat{\theta}_n \pm z_{\alpha/2} \cdot \widehat{\text{se}}_{\text{boot}}\right],$$
+      </div>
+      <p>
+        where $z_{\alpha/2}$ is the relevant standard normal quantile (e.g. $1.96$ for a 95% interval). This is easy to compute, but relies on the normality assumption and ignores any skewness in the bootstrap distribution.
+      </p>
+
+      <h3>5.2 Percentile Interval</h3>
+      <p>
+        A more direct approach uses the empirical quantiles of the bootstrap distribution. The $(1 - \alpha)$ confidence interval is:
+      </p>
+      <div class="math-block">
+        $$\text{CI}_{\text{perc}} = \left[\widehat{\theta}_n^{*(\alpha/2)},\; \widehat{\theta}_n^{*(1-\alpha/2)}\right],$$
+      </div>
+      <p>
+        where $\widehat{\theta}_n^{*(\alpha/2)}$ is the $\alpha/2$ quantile of the $B$ bootstrap replicates (i.e. the $\lfloor B \cdot \alpha/2 \rfloor$-th sorted value). This is simple and does not require normality, but it can be biased when $\widehat{\theta}_n$ is itself biased.
+      </p>
+
+      <h3>5.3 Basic (Reverse Percentile) Interval</h3>
+      <p>
+        The basic bootstrap interval is constructed using the bootstrap distribution of the <em>deviation</em> $\widehat{\theta}_n^* - \widehat{\theta}_n$. The idea is to use this bootstrap deviation to approximate the real-world deviation $\widehat{\theta}_n - \theta$. This gives:
+      </p>
+      <div class="math-block">
+        $$\text{CI}_{\text{basic}} = \left[2\widehat{\theta}_n - \widehat{\theta}_n^{*(1-\alpha/2)},\; 2\widehat{\theta}_n - \widehat{\theta}_n^{*(\alpha/2)}\right].$$
+      </div>
+      <p>
+        Note the endpoints are "reflected" around $\widehat{\theta}_n$ — this is why it is also called the <em>reverse percentile</em> interval.
+      </p>
+
+      <h3>5.4 Studentized (Pivot) Interval</h3>
+      <p>
+        The most theoretically rigorous approach is to bootstrap a <em>studentized statistic</em> (a "pivot"). Define:
+      </p>
+      <div class="math-block">
+        $$T_n = \frac{\widehat{\theta}_n - \theta}{\widehat{\text{se}}(\widehat{\theta}_n)}.$$
+      </div>
+      <p>
+        In the bootstrap world, the analogue is $T_n^* = (\widehat{\theta}_n^* - \widehat{\theta}_n) / \widehat{\text{se}}(\widehat{\theta}_n^*)$, where $\widehat{\text{se}}(\widehat{\theta}_n^*)$ is the standard error of $\widehat{\theta}_n^*$ estimated from a <em>nested</em> inner bootstrap. The interval is then:
+      </p>
+      <div class="math-block">
+        $$\text{CI}_{\text{stud}} = \left[\widehat{\theta}_n - T_n^{*(1-\alpha/2)} \cdot \widehat{\text{se}}(\widehat{\theta}_n),\; \widehat{\theta}_n - T_n^{*(\alpha/2)} \cdot \widehat{\text{se}}(\widehat{\theta}_n)\right].$$
+      </div>
+      <p>
+        This method achieves better accuracy (it is <em>second-order correct</em>) but is computationally expensive because it requires a nested bootstrap loop to estimate $\widehat{\text{se}}(\widehat{\theta}_n^*)$.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Method</th>
+              <th>Formula</th>
+              <th>Requires normality?</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Normal</strong></td>
+              <td>$\widehat{\theta}_n \pm z_{\alpha/2}\,\widehat{\text{se}}_\text{boot}$</td>
+              <td>Yes</td>
+              <td>Simple; can be inaccurate if skewed</td>
+            </tr>
+            <tr>
+              <td><strong>Percentile</strong></td>
+              <td>Empirical $[\alpha/2,\; 1-\alpha/2]$ quantiles of $\widehat{\theta}_n^*$</td>
+              <td>No</td>
+              <td>Simple; biased if $\widehat{\theta}_n$ is biased</td>
+            </tr>
+            <tr>
+              <td><strong>Basic</strong></td>
+              <td>$[2\widehat{\theta}_n - q_{1-\alpha/2}^*,\; 2\widehat{\theta}_n - q_{\alpha/2}^*]$</td>
+              <td>No</td>
+              <td>Corrects for bias; can give poor coverage</td>
+            </tr>
+            <tr>
+              <td><strong>Studentized</strong></td>
+              <td>Uses bootstrapped pivot $T_n^*$</td>
+              <td>No</td>
+              <td>Best coverage; computationally expensive (nested bootstrap)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>6. Nonparametric vs. Parametric Bootstrap</h2>
+
+      <p>
+        The choice between the two flavours depends on how much you trust a parametric model for the data-generating process:
+      </p>
+
+      <ul>
+        <li>
+          <strong>Nonparametric bootstrap</strong>: makes no distributional assumptions beyond the data itself. Robust, but may be less efficient when a parametric model is appropriate.
+        </li>
+        <li>
+          <strong>Parametric bootstrap</strong>: leverages a fitted model $P_{\widehat{\theta}}$. More efficient if the model is correct, but can fail badly if the model is misspecified.
+        </li>
+      </ul>
+
+      <div class="callout-note">
+        <div class="callout-title">Regression: pairs vs. residuals bootstrap</div>
+        <p>
+          In the regression context $(X_i, Y_i)$, there are two common nonparametric bootstrap strategies:
+        </p>
+        <ul>
+          <li><strong>Pairs bootstrap:</strong> resample full pairs $(X_i^*, Y_i^*)$ with replacement. Valid under fixed or random design; robust to heteroskedasticity.</li>
+          <li><strong>Residuals bootstrap:</strong> fix the design $X$ and resample residuals $\widehat{\varepsilon}_i^*$ from $\{\widehat{\varepsilon}_1, \ldots, \widehat{\varepsilon}_n\}$. Form $Y_i^* = X_i\widehat{\beta} + \widehat{\varepsilon}_i^*$. Assumes homoskedasticity but is more efficient when the model is correct.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section>
+      <h2>7. Practical Considerations</h2>
+
+      <h3>How large should $B$ be?</h3>
+      <p>
+        The Monte Carlo error in estimating $\text{Var}_{\widehat{P}}(\widehat{\theta}_n^*)$ decreases as $O(1/\sqrt{B})$. In practice:
+      </p>
+      <ul>
+        <li>$B = 200$–$500$ is typically sufficient for variance/standard error estimation.</li>
+        <li>$B = 1{,}000$–$2{,}000$ is recommended for percentile confidence intervals.</li>
+        <li>$B = 5{,}000$–$10{,}000$ may be needed for accurate tail quantiles (e.g. 99% intervals).</li>
+        <li>The studentized interval requires an inner bootstrap loop (say $B_\text{inner} = 50$–$100$ per outer replicate), making it computationally demanding: $B \times B_\text{inner}$ total fits.</li>
+      </ul>
+
+      <h3>When does the bootstrap work well?</h3>
+      <p>
+        The bootstrap is consistent — meaning the bootstrap distribution converges to the true sampling distribution — under fairly mild regularity conditions on $g$ and $P$. Key requirements include:
+      </p>
+      <ul>
+        <li>The estimator $\widehat{\theta}_n$ should be "smooth" in the data (e.g. differentiable statistics work well; sample maximum or extreme quantiles can be problematic).</li>
+        <li>The sample size $n$ should be large enough that $\widehat{P}_n$ is a good approximation to $P$.</li>
+        <li>The data should be i.i.d. (the standard bootstrap fails for time series or dependent data; modifications such as the block bootstrap are needed).</li>
+      </ul>
+
+      <div class="callout-note">
+        <div class="callout-title">The bootstrap is not a free lunch</div>
+        <p>
+          The bootstrap can fail or give poor results for estimators that depend on extreme-order statistics (e.g. the maximum), for very small $n$, or when the data have heavy tails. It approximates $\text{Var}_{\widehat{P}}(\widehat{\theta}_n^*)$, not $\text{Var}_P(\widehat{\theta}_n)$ — the quality of the approximation is only as good as the approximation $\widehat{P} \approx P$.
+        </p>
+      </div>
+    </section>
+
+    <section>
+      <h2>Key Takeaways</h2>
+      <ul>
+        <li><strong>Core idea:</strong> replace the unknown $P$ with an estimate $\widehat{P}$ and simulate the variability of $\widehat{\theta}_n$ by Monte Carlo in the bootstrap world.</li>
+        <li><strong>Nonparametric bootstrap</strong> $=$ sample $n$ observations with replacement from the original data; no distributional assumptions needed.</li>
+        <li><strong>Parametric bootstrap</strong> $=$ sample from a fitted model; more efficient when the model is correct, risky if misspecified.</li>
+        <li><strong>Bootstrap variance/bias</strong>: compute sample variance/mean of $B$ replicates $\widehat{\theta}_n^{*(b)}$; the difference $\bar{\theta}^* - \widehat{\theta}_n$ estimates the bias.</li>
+        <li><strong>Confidence intervals</strong>: four main approaches (Normal, Percentile, Basic, Studentized) — the Studentized interval has the best coverage but requires a nested bootstrap.</li>
+        <li>The bootstrap is one of the most versatile tools in computational statistics, applicable whenever analytic distributions are unavailable or intractable.</li>
+      </ul>
+    </section>
+
+  </main>
+
+  <footer>
+    <p>&copy; 2026 Piotr Marciniak. All rights reserved.</p>
+  </footer>
+
+  <script>
+    function toggleDark() {
+      const d = document.body.classList.toggle('dark');
+      localStorage.setItem('dark', d ? '1' : '0');
+      const btn = document.getElementById('dark-toggle');
+      if (btn) btn.textContent = d ? 'Light' : 'Dark';
+    }
+    (function() {
+      const btn = document.getElementById('dark-toggle');
+      if (btn) btn.textContent = document.body.classList.contains('dark') ? 'Light' : 'Dark';
+    })();
+  </script>
+</body>
+</html>
