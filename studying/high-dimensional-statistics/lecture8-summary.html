@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Statistics for High-Dimensional Data – Lecture 8: Graphical Models and Uncertainty Quantification</title>
+  <link rel="icon" type="image/png" href="../../files/logo.png" />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      font-size: 17px;
+      line-height: 1.75;
+      color: #1a1a2e;
+      background: #fdfdfd;
+    }
+
+    nav ul {
+      list-style: none;
+      display: flex;
+      justify-content: center;
+      background: #444;
+    }
+    nav ul li a {
+      color: #fff;
+      padding: 14px 20px;
+      display: block;
+      text-decoration: none;
+    }
+    nav ul li a:hover { background: #555; }
+
+    header, main {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+    header {
+      margin-top: 2.5rem;
+      border-top: 3px solid #1a73e8;
+      padding-top: 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+    section { margin-bottom: 2.5rem; }
+
+    h1 {
+      font-size: 1.9rem;
+      font-weight: 700;
+      color: #16213e;
+      margin-bottom: 0.5rem;
+    }
+    h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #16213e;
+      border-bottom: 1px solid #e0e0e0;
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.4rem;
+    }
+    h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #0f3460;
+      margin-top: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    h4 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #0f3460;
+      font-style: italic;
+      margin-top: 1rem;
+      margin-bottom: 0.3rem;
+    }
+    .meta {
+      font-size: 14px;
+      color: #555;
+    }
+    .meta span + span::before { content: ' · '; }
+
+    a {
+      color: #1a73e8;
+      text-decoration: none;
+    }
+    a:hover { text-decoration: underline; }
+
+    code {
+      font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+      font-size: 15px;
+      background: #f4f4f8;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+    pre {
+      background: #f4f4f8;
+      border: 1px solid #d0d0da;
+      border-radius: 6px;
+      padding: 1rem 1.25rem;
+      overflow-x: auto;
+      font-size: 15px;
+      line-height: 1.6;
+      margin: 1rem 0;
+    }
+    pre code { background: none; padding: 0; }
+
+    .math-block {
+      margin: 1.25rem 0;
+      padding-left: 1rem;
+      overflow-x: auto;
+    }
+
+    .callout-definition,
+    .callout-example,
+    .callout-note,
+    .callout-warning {
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0;
+      border-radius: 0 6px 6px 0;
+    }
+    .callout-definition {
+      background: #eef6ff;
+      border-left: 4px solid #1a73e8;
+    }
+    .callout-definition .callout-title {
+      color: #1a73e8;
+    }
+    .callout-example {
+      background: #f1f8f1;
+      border-left: 4px solid #2e7d32;
+    }
+    .callout-example .callout-title {
+      color: #2e7d32;
+    }
+    .callout-note,
+    .callout-warning {
+      background: #fff8e1;
+      border-left: 4px solid #f9a825;
+    }
+    .callout-note .callout-title,
+    .callout-warning .callout-title {
+      color: #e65100;
+    }
+    .callout-title {
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+    }
+
+    ul, ol {
+      padding-left: 1.5rem;
+    }
+    li { margin-bottom: 0.4rem; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      font-size: 15px;
+    }
+    th, td {
+      border: 1px solid #d0d0da;
+      padding: 0.6rem 1rem;
+      text-align: left;
+    }
+    th {
+      background: #f4f4f8;
+      font-weight: 600;
+    }
+    tr:nth-child(even) { background: #fafafa; }
+    .table-wrapper { overflow-x: auto; }
+
+    figure {
+      margin: 1.5rem 0;
+      text-align: center;
+    }
+    figcaption {
+      font-size: 14px;
+      font-style: italic;
+      color: #555;
+      margin-top: 0.5rem;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      background: #333;
+      color: #fff;
+      margin-top: 3rem;
+    }
+
+    @media (max-width: 600px) {
+      header, main { padding: 0 1rem; }
+      h1 { font-size: 1.5rem; }
+    }
+
+    nav ul { align-items: center; }
+    #dark-toggle {
+      background: none;
+      border: 1px solid rgba(255,255,255,0.4);
+      color: #fff;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 14px;
+      border-radius: 4px;
+    }
+    #dark-toggle:hover { background: rgba(255,255,255,0.15); }
+    body.dark { background: #12121e; color: #d0d0e0; }
+    body.dark nav ul { background: #222; }
+    body.dark h1, body.dark h2, body.dark h3, body.dark h4 { color: #b8c8d8; }
+    body.dark h2 { border-bottom-color: #3a3a5e; }
+    body.dark header { border-top-color: #4a7abf; }
+    body.dark a { color: #6aabf7; }
+    body.dark code { background: #2a2a3e; color: #d0d0e0; }
+    body.dark pre { background: #2a2a3e; border-color: #3a3a5e; color: #d0d0e0; }
+    body.dark .callout-definition { background: #1a2a3e; }
+    body.dark .callout-example { background: #1a2e1a; }
+    body.dark .callout-note, body.dark .callout-warning { background: #2e2a14; }
+    body.dark th { background: #2a2a3e; }
+    body.dark th, body.dark td { border-color: #3a3a5e; }
+    body.dark tr:nth-child(even) { background: #1e1e2e; }
+    body.dark .meta { color: #9090a0; }
+    body.dark figcaption { color: #666; }
+    body.dark footer { background: #111; }
+  </style>
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+<body>
+  <script>if(localStorage.getItem('dark')==='1')document.body.classList.add('dark');</script>
+<nav>
+  <ul>
+    <li><a href="https://piotr-marciniak.com/#about">About</a></li>
+    <li><a href="https://piotr-marciniak.com/#projects">Projects</a></li>
+    <li><a href="https://piotr-marciniak.com/#contact">Contact</a></li>
+    <li><button id="dark-toggle" onclick="toggleDark()">Dark</button></li>
+  </ul>
+</nav>
+
+<header>
+  <h1>Graphical Models and the Road to Uncertainty Quantification</h1>
+  <div class="meta">
+    <span>Course: Statistics for High-Dimensional Data</span>
+    <span>Lecture 8</span>
+    <span>Based on Bühlmann &amp; van de Geer (2011), Ch. 13 &amp; Ch. 10/11</span>
+  </div>
+</header>
+
+<main>
+
+<section>
+<p>This lecture makes a conceptual shift: instead of predicting a response $Y$ from covariates $X$, we ask how the covariates themselves relate to each other. We develop <strong>undirected graphical models</strong>, where an edge between two variables encodes a genuine statistical dependence that cannot be explained away by the other variables. We then turn the Lasso loose on this problem (the <em>Graphical Lasso</em> and <em>nodewise regression</em>) and close the lecture by confronting a hard question that will dominate the next chapter: once the Lasso has told us which coefficients are non-zero, <em>how confident are we?</em> Classical p-values and confidence intervals are built on smooth asymptotics, but the Lasso is sparse — a fundamentally non-smooth object. This sets up the <strong>de-sparsified (de-biased) Lasso</strong>.</p>
+</section>
+
+<section>
+<h2>1. Recap: High-Dimensional Additive Models</h2>
+
+<p>Before diving into graphs, recall where the previous lecture left off. The additive model for a response $Y$ with $p \gg n$ covariates is</p>
+
+<div class="math-block">
+$$Y_i = \mu + \sum_{j=1}^{p} f_j^0\!\left(X_i^{(j)}\right) + \varepsilon_i, \qquad i = 1, \ldots, n,$$
+</div>
+
+<p>where each $f_j^0 : \mathbb{R} \to \mathbb{R}$ is a smooth univariate function with $\mathbb{E}[f_j^0(X_i^{(j)})] = 0$. The goal is a sparse-and-smooth estimator: each $\hat f_j$ is either identically zero or a non-trivial smooth function.</p>
+
+<p>This becomes a <em>Group Lasso</em>-type problem once each $f_j$ is expanded in a basis. The key theoretical takeaway: if only a few $f_j^0$ are non-zero and those that are non-zero are twice continuously differentiable, then</p>
+
+<div class="math-block">
+$$\|\hat f - f^0\|_n^2 = O_P\!\left( s_0 \sqrt{\log(p)}\, n^{-4/5} \right),$$
+</div>
+
+<p>where $s_0$ is the number of non-zero components. We recover the optimal nonparametric rate $n^{-4/5}$ up to a $\sqrt{\log p}$ factor — this $\sqrt{\log p}$ is the <em>price of not knowing which components are active</em>, and it is the hallmark of high-dimensional theory.</p>
+
+<div class="callout-note">
+<div class="callout-title">Intuition</div>
+The model has effectively $O(pn)$ parameters (each smooth function needs $O(n)$ basis coefficients), but $\log(pn)/n = O((\log p + \log n)/n)$ is still small. Sparsity plus smoothness lets us pay only for the few active functions, not all $p$ of them.
+</div>
+
+<p>We now move to a setting where the <em>covariates themselves</em> are the object of study.</p>
+</section>
+
+<section>
+<h2>2. Graphical Models: Vocabulary</h2>
+
+<p>A <strong>graph</strong> $G = (V, E)$ is a pair where $V$ is a set of vertices and $E \subseteq V \times V$ is a set of edges. An edge is <em>undirected</em> if $(j,k) \in E$ and $(k,j) \in E$ both hold. Throughout this lecture we consider only undirected graphs.</p>
+
+<p>In a <strong>graphical model</strong>, vertices correspond to random variables: $V = \{1, \ldots, p\}$ is identified with the components of a random vector</p>
+
+<div class="math-block">
+$$X = (X^{(1)}, \ldots, X^{(p)}) \sim P.$$
+</div>
+
+<p>The pair $(G, P)$ is a graphical model. The edges will encode <em>conditional independence</em> relations among the $X^{(j)}$.</p>
+
+<figure>
+<svg width="340" height="160" viewBox="0 0 340 160" xmlns="http://www.w3.org/2000/svg">
+  <line x1="60" y1="80" x2="170" y2="40" stroke="#0f3460" stroke-width="2"/>
+  <line x1="170" y1="40" x2="280" y2="80" stroke="#0f3460" stroke-width="2"/>
+  <line x1="60" y1="80" x2="170" y2="130" stroke="#0f3460" stroke-width="2"/>
+  <line x1="170" y1="130" x2="280" y2="80" stroke="#0f3460" stroke-width="2"/>
+  <circle cx="60" cy="80" r="18" fill="#eef6ff" stroke="#1a73e8" stroke-width="2"/>
+  <text x="60" y="85" text-anchor="middle" font-family="Inter" font-size="14" fill="#1a1a2e">1</text>
+  <circle cx="170" cy="40" r="18" fill="#eef6ff" stroke="#1a73e8" stroke-width="2"/>
+  <text x="170" y="45" text-anchor="middle" font-family="Inter" font-size="14" fill="#1a1a2e">2</text>
+  <circle cx="280" cy="80" r="18" fill="#eef6ff" stroke="#1a73e8" stroke-width="2"/>
+  <text x="280" y="85" text-anchor="middle" font-family="Inter" font-size="14" fill="#1a1a2e">3</text>
+  <circle cx="170" cy="130" r="18" fill="#eef6ff" stroke="#1a73e8" stroke-width="2"/>
+  <text x="170" y="135" text-anchor="middle" font-family="Inter" font-size="14" fill="#1a1a2e">4</text>
+</svg>
+<figcaption>A simple undirected graph on four variables. Missing edges — for instance, between 1 and 3 — will carry statistical meaning once we impose a Markov property.</figcaption>
+</figure>
+</section>
+
+<section>
+<h2>3. Markov Properties and Conditional Independence Graphs</h2>
+
+<p>Given a graph, what does a missing edge <em>mean</em> for the distribution? That is the content of a Markov property.</p>
+
+<div class="callout-definition">
+<div class="callout-title">Definition — Pairwise Markov Property</div>
+$P$ satisfies the <strong>pairwise Markov property</strong> with respect to $G$ if, for every pair of unconnected vertices $(j, k) \notin E$ with $j \neq k$,
+<div class="math-block">
+$$X^{(j)} \perp X^{(k)} \,\big|\, X^{(V \setminus \{j, k\})}.$$
+</div>
+In words: if there is no edge between $j$ and $k$, then $X^{(j)}$ and $X^{(k)}$ are independent once we condition on every other variable.
+</div>
+
+<p>There is also a stronger, more geometric version. A <em>path</em> is a sequence of vertices $(j_1, \ldots, j_\ell)$ connected by edges in sequence. A set $C$ <strong>separates</strong> two disjoint sets $A$ and $B$ if every path from $A$ to $B$ passes through some vertex in $C$.</p>
+
+<div class="callout-definition">
+<div class="callout-title">Definition — Global Markov Property</div>
+$P$ satisfies the <strong>global Markov property</strong> with respect to $G$ if for every triple of disjoint sets $A, B, C \subseteq V$ with $C$ separating $A$ and $B$,
+<div class="math-block">
+$$X^{(A)} \perp X^{(B)} \,\big|\, X^{(C)}.$$
+</div>
+</div>
+
+<p>Global $\Rightarrow$ pairwise in general; the converse holds when $P$ has a positive, continuous Lebesgue density (Lauritzen, 1996). The graphical models we work with — where the pairwise property holds — are called <strong>Conditional Independence Graphs (CIGs)</strong>.</p>
+
+<div class="callout-note">
+<div class="callout-title">Why the conditioning set matters</div>
+Pairwise (conditional) independence is not the same as marginal independence. Two variables can be marginally dependent yet conditionally independent given a third — the third is doing all the explaining. A CIG is a map of which dependencies remain <em>after we account for everything else</em>.
+</div>
+</section>
+
+<section>
+<h2>4. Gaussian Graphical Models</h2>
+
+<p>Now specialise to the Gaussian setting. Assume</p>
+
+<div class="math-block">
+$$X = (X^{(1)}, \ldots, X^{(p)}) \sim \mathcal{N}_p(0, \Sigma),$$
+</div>
+
+<p>with $\Sigma$ positive definite. A <strong>Gaussian Graphical Model (GGM)</strong> is a CIG whose distribution $P$ is Gaussian. For Gaussians the pairwise and global Markov properties coincide, and — crucially — we can read off edges directly from the matrix $K = \Sigma^{-1}$:</p>
+
+<div class="callout-definition">
+<div class="callout-title">Edge characterisation in a GGM</div>
+<div class="math-block">
+$$(j, k) \in E \iff X^{(j)} \perp X^{(k)} \,\big|\, X^{(V \setminus \{j, k\})} \;\iff\; \Sigma^{-1}_{j,k} \neq 0.$$
+</div>
+</div>
+
+<p>So the edges of a GGM are exactly the <em>non-zero off-diagonal entries of the precision matrix</em> $\Sigma^{-1}$. This is a beautiful reduction: estimating the conditional independence graph becomes estimating the support of a sparse matrix.</p>
+
+<h3>4.1 Connection to partial correlations and regression</h3>
+
+<p>The precision matrix also encodes <strong>partial correlations</strong>. Let $C_{j,k} = K_{j,k} / \sqrt{K_{j,j} K_{k,k}}$. Then the partial correlation between $X^{(j)}$ and $X^{(k)}$ given all others is</p>
+
+<div class="math-block">
+$$\rho_{jk \mid V \setminus \{j,k\}} = -C_{j,k}.$$
+</div>
+
+<p>And if we regress $X^{(j)}$ on all other variables,</p>
+
+<div class="math-block">
+$$X^{(j)} = \sum_{r \neq j} \beta^{(j)}_r X^{(r)} + \varepsilon^{(j)},$$
+</div>
+
+<p>then the regression coefficient is $\beta^{(j)}_k = -K_{j,k} / K_{j,j}$. Chain these identities together:</p>
+
+<div class="math-block">
+$$(j, k) \in E \;\iff\; \Sigma^{-1}_{j,k} \neq 0 \;\iff\; \rho_{jk \mid V \setminus \{j,k\}} \neq 0 \;\iff\; \beta^{(j)}_k \neq 0 \text{ and } \beta^{(k)}_j \neq 0.$$
+</div>
+
+<div class="callout-note">
+<div class="callout-title">The payoff</div>
+Estimating a graph edge is the same as doing a variable selection in a regression — and we already have a powerful tool for that: the Lasso. This equivalence is exactly what makes the whole machinery of Chapter 2 portable to graphical modelling.
+</div>
+
+<h3>4.2 The Graphical Lasso (GLasso)</h3>
+
+<p>The Gaussian negative log-likelihood (after plugging in $\hat\mu$) is, up to a constant,</p>
+
+<div class="math-block">
+$$-n^{-1} \ell(\Sigma^{-1}) = -\log\det(\Sigma^{-1}) + \text{trace}(\hat\Sigma_{\text{MLE}} \Sigma^{-1}),$$
+</div>
+
+<p>where $\hat\Sigma_{\text{MLE}}$ is the sample covariance. To impose sparsity on $\Sigma^{-1}$, just as we did on $\beta$, we add an $\ell_1$ penalty on the off-diagonal entries:</p>
+
+<div class="callout-definition">
+<div class="callout-title">Definition — Graphical Lasso (GLasso)</div>
+<div class="math-block">
+$$\hat\Sigma^{-1}(\lambda) = \arg\min_{\Sigma^{-1} \succ 0} \left\{ -\log\det(\Sigma^{-1}) + \text{trace}(\hat\Sigma_{\text{MLE}} \Sigma^{-1}) + \lambda \|\Sigma^{-1}\|_1 \right\},$$
+</div>
+where $\|\Sigma^{-1}\|_1 = \sum_{j < k} |\Sigma^{-1}_{j,k}|$ and the minimisation is over positive-definite matrices. The estimated edge set is
+<div class="math-block">
+$$\hat E(\lambda) = \{(j, k) : \hat\Sigma^{-1}_{j,k}(\lambda) \neq 0\}.$$
+</div>
+</div>
+
+<p>This is a convex problem — efficient algorithms exist (Friedman et al. 2007, Banerjee et al. 2008). Typically, some off-diagonal entries are shrunk exactly to zero, producing a sparse graph. The diagonal is left unpenalised because $1/\Sigma^{-1}_{j,j} = \text{Var}(\varepsilon^{(j)})$, and penalising it would distort the error variances.</p>
+
+<h3>4.3 Nodewise Regression (Meinshausen–Bühlmann)</h3>
+
+<p>The regression identity at the end of §4.1 suggests a completely different approach: rather than estimating $\Sigma^{-1}$ as a whole, run $p$ separate Lasso regressions, one per node.</p>
+
+<div class="callout-definition">
+<div class="callout-title">Nodewise regression procedure</div>
+For each $j = 1, \ldots, p$, regress $X^{(j)}$ on all other variables $\{X^{(r)} : r \neq j\}$ with the Lasso:
+<div class="math-block">
+$$\hat S^{(j)} = \{r : \hat\beta^{(j)}_r(\lambda) \neq 0\}.$$
+</div>
+Then combine the $p$ estimated neighbourhoods into a graph using one of two rules:
+<ul>
+  <li><strong>OR-rule</strong>: edge $(j, k)$ if $k \in \hat S^{(j)}$ <em>or</em> $j \in \hat S^{(k)}$ — more liberal.</li>
+  <li><strong>AND-rule</strong>: edge $(j, k)$ if $k \in \hat S^{(j)}$ <em>and</em> $j \in \hat S^{(k)}$ — more conservative.</li>
+</ul>
+</div>
+
+<p>At the population level (true parameters), the two rules coincide. On samples they disagree, and which one you prefer depends on your tolerance for false positives versus false negatives.</p>
+
+<div class="callout-example">
+<div class="callout-title">Example — which method when?</div>
+Both GLasso and nodewise regression can consistently recover the edge set, but under different conditions. GLasso needs a fairly restrictive <em>irrepresentable condition</em> on $\Sigma^{-1}$ and $\Sigma$ plus large enough non-zero entries. Nodewise regression works under weaker conditions because each regression is a standard Lasso problem.
+<br><br>
+In practice: GLasso gives you a positive-definite $\hat\Sigma^{-1}$ for free, which is great for prediction and Kullback–Leibler divergence. Nodewise regression is more robust for <em>edge recovery</em>. A common hybrid is to estimate the graph $\hat G$ by nodewise regression and then refit $\hat\Sigma^{-1}$ by MLE under that graph constraint.
+</div>
+</section>
+
+<section>
+<h2>5. Ising Model: Binary Variables</h2>
+
+<p>Gaussians are not the only game in town. For binary variables $X^{(j)} \in \{0, 1\}$, the analogue is the <strong>Ising model</strong>:</p>
+
+<div class="math-block">
+$$p(x^{(1)}, \ldots, x^{(p)}) = \frac{1}{Z(\gamma)} \exp\!\left( \sum_{j,k} \gamma^{(j)}_k x^{(k)} x^{(j)} \right),$$
+</div>
+
+<p>with $Z(\gamma)$ a normalising constant. The conditional independence structure mirrors the Gaussian case:</p>
+
+<div class="math-block">
+$$X^{(j)} \perp X^{(k)} \,\big|\, X^{(V \setminus \{j,k\})} \iff \gamma^{(j)}_k \neq 0 \text{ and } \gamma^{(k)}_j \neq 0.$$
+</div>
+
+<p>And there is an analogous regression identity — but this time through <em>logistic</em> regression:</p>
+
+<div class="math-block">
+$$\text{logit}\,\mathbb{P}[X^{(j)} = 1 \mid X^{(V \setminus \{j\})}] = \sum_{k \neq j} \beta^{(j)}_k X^{(k)}, \qquad \beta^{(j)}_k = 2\gamma^{(j)}_k.$$
+</div>
+
+<p>So we can recover the Ising graph by running $p$ nodewise <em>logistic</em> Lasso regressions, using the same OR/AND rules to combine neighbourhoods. The general principle — reduce graph estimation to many regressions — is remarkably robust.</p>
+</section>
+
+<section>
+<h2>6. Stability Selection with the GLasso</h2>
+
+<p>Choosing $\lambda$ for the GLasso is as delicate as for any $\ell_1$ method. Cross-validation gives you the $\lambda$ that predicts well under the negative Gaussian log-likelihood, but that is usually <em>too small</em> — it yields a graph with many spurious edges. Enter <strong>stability selection</strong> (from Lecture 7).</p>
+
+<div class="callout-example">
+<div class="callout-title">Example — Riboflavin gene expression</div>
+With $p = 160$ gene expressions and $n = 115$ samples, there are $\binom{160}{2} = 12{,}720$ possible edges. The GLasso at its cross-validated $\lambda$ selects far too many. But when combined with stability selection controlling $\mathbb{E}[V] \leq 30$ (expected number of falsely chosen edges), the estimated edge set becomes remarkably stable across $\lambda$ and is much sparser.
+<br><br>
+As a sanity check: after permuting each variable independently, the <em>true</em> graph is empty. Stability selection correctly returns essentially no edges, whereas plain GLasso still finds hundreds. This is exactly the regime where stability selection shines — it flags unstable edges as artefacts.
+</div>
+</section>
+
+<section>
+<h2>7. Uncertainty Quantification: The Problem</h2>
+
+<p>So far we have been estimating: point estimates of graphs, point estimates of regression coefficients, variable selection. A Lasso coefficient $\hat\beta_j$ is either zero or non-zero, and that is our answer. But a user reasonably asks: <em>how sure are you?</em></p>
+
+<p>The classical answer uses p-values and confidence intervals — frequentist uncertainty quantification. The setup is the usual linear model:</p>
+
+<div class="math-block">
+$$Y = X\beta^0 + \varepsilon, \qquad p \gg n,$$
+</div>
+
+<p>and we want to test, for each $j$ (or group $G$),</p>
+
+<div class="math-block">
+$$H_{0,j}: \beta^0_j = 0 \quad \text{versus} \quad H_{A,j}: \beta^0_j \neq 0.$$
+</div>
+
+<p>To get p-values, we would need the asymptotic distribution of the Lasso estimator $\hat\beta(\lambda)$ under $H_0$. That turns out to be <strong>very hard</strong>.</p>
+
+<h3>7.1 Why the Lasso's distribution is pathological</h3>
+
+<p>For fixed $p < \infty$ and $n \to \infty$, Knight and Fu (2000) derived the Lasso's asymptotic distribution. It has <em>point mass at zero</em>: with positive probability, the estimator is exactly zero for truly-zero coefficients. This is the sparsity we prized — but it also makes the distribution fundamentally non-smooth and non-Gaussian.</p>
+
+<p>This phenomenon is called <strong>super-efficiency</strong> (Hodges, 1951): the estimator is more accurate than any unbiased estimator at certain parameter values (here, $\beta^0_j = 0$), but this comes at a cost of irregular behaviour.</p>
+
+<div class="callout-warning">
+<div class="callout-title">Bootstrap fails</div>
+The natural fallback — bootstrap or subsampling to approximate the Lasso's distribution — <em>does not work</em>. Formally, if $a_n(\hat\beta_{\text{Lasso},j} - \beta^0_j) \Rightarrow Z$ with $Z$ non-Gaussian, then the bootstrapped version
+<div class="math-block">
+$$a_n(\hat\beta^*_{\text{Lasso},j} - \hat\beta_{\text{Lasso},j}) \;\not\Rightarrow\; Z \text{ in probability}.$$
+</div>
+The resampled distribution does not converge to the target distribution. Standard bootstrap inference is off the table.
+</div>
+
+<h3>7.2 The cure: desparsify</h3>
+
+<p>The fix is to abandon the sparsity of the estimator — at least for inference. We build a <strong>de-sparsified</strong> (or <strong>de-biased</strong>) Lasso: a modification that is never exactly zero, but whose distribution is asymptotically Gaussian. We can then use classical Wald-style intervals.</p>
+</section>
+
+<section>
+<h2>8. The De-Sparsified Lasso</h2>
+
+<p>The idea is clever and worth dissecting slowly. It is essentially <em>partialling-out</em> — the classical Frisch–Waugh–Lovell idea — but with a Lasso instead of OLS to handle the $p \gg n$ case.</p>
+
+<h3>8.1 Constructing a probe direction</h3>
+
+<p>To isolate $\beta^0_j$, we first find a direction that is "as orthogonal as possible" to all other covariates. Run a Lasso of $X^{(j)}$ on $X^{(-j)} = \{X^{(k)} : k \neq j\}$:</p>
+
+<div class="math-block">
+$$\hat\gamma^{(j)} = \arg\min_{\gamma} \left\{ \|X^{(j)} - X^{(-j)}\gamma\|_2^2 + \lambda_j \|\gamma\|_1 \right\},$$
+</div>
+
+<p>and let</p>
+
+<div class="math-block">
+$$Z^{(j)} = X^{(j)} - X^{(-j)} \hat\gamma^{(j)}$$
+</div>
+
+<p>be the residual. Intuitively $Z^{(j)}$ is the part of $X^{(j)}$ that the other covariates cannot predict — a "purified" instrument for the $j$-th direction.</p>
+
+<h3>8.2 Projecting $Y$ onto the probe</h3>
+
+<p>Compute the inner product $Y^T Z^{(j)} / (X^{(j)})^T Z^{(j)}$. Using $Y = X\beta^0 + \varepsilon$:</p>
+
+<div class="math-block">
+$$\frac{Y^T Z^{(j)}}{(X^{(j)})^T Z^{(j)}} = \beta^0_j + \underbrace{\sum_{k \neq j} \frac{(X^{(k)})^T Z^{(j)}}{(X^{(j)})^T Z^{(j)}} \beta^0_k}_{\text{bias}} + \frac{\varepsilon^T Z^{(j)}}{(X^{(j)})^T Z^{(j)}}.$$
+</div>
+
+<p>The first term is what we want. The last term is noise — mean-zero, Gaussian (under Gaussian $\varepsilon$), tractable. The middle term is the <strong>bias</strong>: in low dimensions (OLS residual), it would be exactly zero by orthogonality, but with the Lasso residual it does not vanish.</p>
+
+<h3>8.3 Subtracting the bias</h3>
+
+<p>The bias involves the true unknown $\beta^0_k$. Estimate it with the standard Lasso $\hat\beta$ and subtract:</p>
+
+<div class="callout-definition">
+<div class="callout-title">Definition — De-sparsified Lasso</div>
+<div class="math-block">
+$$\hat b_j = \frac{Y^T Z^{(j)}}{(X^{(j)})^T Z^{(j)}} - \sum_{k \neq j} \frac{(X^{(k)})^T Z^{(j)}}{(X^{(j)})^T Z^{(j)}} \hat\beta_k, \qquad j = 1, \ldots, p.$$
+</div>
+Equivalently,
+<div class="math-block">
+$$\hat b_j = \hat\beta_j + \frac{(Y - X\hat\beta)^T Z^{(j)}}{(X^{(j)})^T Z^{(j)}}.$$
+</div>
+</div>
+
+<p>The second form is the most enlightening: <em>the de-sparsified Lasso is the standard Lasso, plus a one-step correction using the residuals</em>. The correction undoes the $\ell_1$ shrinkage.</p>
+
+<div class="callout-note">
+<div class="callout-title">Why this works</div>
+The Lasso shrinks coefficients toward zero, introducing bias. The correction step projects the residual $Y - X\hat\beta$ onto the purified direction $Z^{(j)}$, which recovers the missing signal along that direction. The result is not sparse — almost surely $\hat b_j \neq 0$ for every $j$ — but it <em>is</em> asymptotically Gaussian, which is exactly what we need for p-values and confidence intervals.
+</div>
+
+<h3>8.4 Asymptotic distribution</h3>
+
+<p>One can show that, under appropriate conditions,</p>
+
+<div class="math-block">
+$$\sigma^{-1} \sqrt{n}\; \frac{(X^{(j)})^T Z^{(j)} / n}{\|Z^{(j)}\|_2 / \sqrt{n}} (\hat b_j - \beta^0_j) = W_j + \Delta_j,$$
+</div>
+
+<p>with $(W_1, \ldots, W_p)^T \sim \mathcal{N}_p(0, \Omega)$ and $\max_j |\Delta_j| = o_P(1)$. The "nice" term $W_j$ is Gaussian; the remainder $\Delta_j$ vanishes uniformly.</p>
+
+<p>This gives the confidence interval:</p>
+
+<div class="math-block">
+$$\hat b_j \pm \hat\sigma\, n^{-1/2}\, \frac{\|Z^{(j)}\|_2 / \sqrt{n}}{|(X^{(j)})^T Z^{(j)} / n|}\, \Phi^{-1}(1 - \alpha/2),$$
+</div>
+
+<p>where $\hat\sigma^2$ can be estimated as $\|Y - X\hat\beta\|_2^2 / n$ or $\|Y - X\hat\beta\|_2^2 / (n - \|\hat\beta\|_0)$. Once you have the machinery, it really is that easy.</p>
+
+<h3>8.5 Choosing the tuning parameter $\lambda_j$</h3>
+
+<p>For $\hat\beta$ itself we use the usual cross-validated $\hat\lambda_{CV}$. But what about $\lambda_j$ for the nodewise regression of $X^{(j)}$ on $X^{(-j)}$? There is an interesting trade-off:</p>
+
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Quantity</th><th>Scales like</th><th>Behaviour as $\lambda_j \downarrow$</th></tr>
+</thead>
+<tbody>
+<tr><td>Variance of $\hat b_j$</td><td>$\sigma^2 / \|Z^{(j)}\|_2^2$</td><td>$\|Z^{(j)}\|_2^2$ shrinks, so variance grows</td></tr>
+<tr><td>Bias estimation error</td><td>$\propto \lambda_j$</td><td>Shrinks</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>So smaller $\lambda_j$ inflates the variance but reduces the error from the bias-correction step. The advice is to <em>inflate the variance a bit</em> to keep the bias-correction error under control — this makes type-I error conservative at a small cost in power. A good default choice is not "minimize CV error" but rather something slightly larger that favours bias control.</p>
+</section>
+
+<section>
+<h2>9. GLasso and De-Biased Lasso Side by Side</h2>
+
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th></th><th>GLasso</th><th>Nodewise regression</th><th>De-sparsified Lasso</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Goal</strong></td><td>Estimate graph / $\Sigma^{-1}$</td><td>Estimate graph</td><td>Inference on $\beta^0_j$</td></tr>
+<tr><td><strong>Produces</strong></td><td>Sparse, PSD precision matrix</td><td>Sparse neighbourhoods</td><td>Dense, asymptotically Gaussian estimator</td></tr>
+<tr><td><strong>Conditions for consistency</strong></td><td>Strong: irrepresentable on $\Sigma^{-1}$</td><td>Weaker: per-regression irrepresentable</td><td>Restricted eigenvalue / compatibility</td></tr>
+<tr><td><strong>Gives p-values?</strong></td><td>No (directly)</td><td>No (directly)</td><td>Yes</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>Three different tools for three adjacent problems, all built from the same $\ell_1$-regularisation idea. The common thread: sparsity is a blessing for estimation and a curse for inference, and clever surgery can reconcile them.</p>
+</section>
+
+<section>
+<h2>Key Takeaways</h2>
+<ul>
+  <li><strong>A graph encodes conditional independence.</strong> In a CIG, a missing edge between $j$ and $k$ means $X^{(j)}$ and $X^{(k)}$ are independent given all other variables — dependencies that <em>remain</em> after adjusting for everything else.</li>
+  <li><strong>For Gaussians, edges live in the precision matrix.</strong> $(j,k) \in E$ if and only if $\Sigma^{-1}_{j,k} \neq 0$. This reduces graph estimation to estimating the support of a sparse matrix, or equivalently (via regression identities), to many variable-selection problems.</li>
+  <li><strong>Two Lasso-based recipes for Gaussian graphs.</strong> GLasso directly $\ell_1$-penalises the Gaussian likelihood over $\Sigma^{-1}$ and gives a positive-definite estimator. Nodewise regression runs $p$ separate Lassos and combines neighbourhoods with AND/OR rules — more robust for edge recovery under weaker conditions. Stability selection tames the tuning-parameter problem.</li>
+  <li><strong>Sparsity breaks classical inference.</strong> The Lasso's asymptotic distribution has a point mass at zero ("super-efficiency"), so bootstrap and subsampling are inconsistent. We cannot naively attach p-values or confidence intervals to Lasso coefficients.</li>
+  <li><strong>The de-sparsified Lasso rescues inference.</strong> Starting from the Lasso $\hat\beta$, add a one-step correction using residuals projected onto a Lasso-purified direction. The result $\hat b_j$ is never exactly zero but <em>is</em> asymptotically Gaussian, enabling Wald-style confidence intervals $\hat b_j \pm \hat\sigma_{\hat b_j} z_{1 - \alpha/2}$.</li>
+  <li><strong>Tuning involves a bias–variance trade-off.</strong> The nodewise regression tuning parameter $\lambda_j$ controls the balance between variance (smaller $\lambda_j$ ⟹ larger variance) and bias-correction error (smaller $\lambda_j$ ⟹ smaller error). A slightly over-regularised $\lambda_j$ trades a bit of power for robust type-I error control.</li>
+</ul>
+</section>
+
+</main>
+
+<footer>
+  <p>&copy; 2026 Piotr Marciniak. All rights reserved.</p>
+</footer>
+
+  <script>
+    function toggleDark() {
+      const d = document.body.classList.toggle('dark');
+      localStorage.setItem('dark', d ? '1' : '0');
+      const btn = document.getElementById('dark-toggle');
+      if (btn) btn.textContent = d ? 'Light' : 'Dark';
+    }
+    (function() {
+      const btn = document.getElementById('dark-toggle');
+      if (btn) btn.textContent = document.body.classList.contains('dark') ? 'Light' : 'Dark';
+    })();
+  </script>
+</body>
+</html>
