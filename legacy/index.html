@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Piotr Marciniak</title>
+  <link rel="icon" type="image/png" href="files/logo.png" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      background-color: #f4f4f4;
+      color: #333;
+    }
+    nav ul {
+      list-style: none;
+      display: flex;
+      justify-content: center;
+      background: #444;
+    }
+    nav ul li {
+      margin: 0 15px;
+    }
+    nav ul li a {
+      color: #fff;
+      text-decoration: none;
+      padding: 14px 20px;
+      display: block;
+    }
+    nav ul li a:hover {
+      background: #555;
+    }
+    section {
+      padding: 40px 20px;
+      max-width: 1000px;
+      margin: auto;
+    }
+    footer {
+      text-align: center;
+      padding: 20px;
+      background: #333;
+      color: #fff;
+    }
+  
+    nav ul { align-items: center; }
+    #dark-toggle {
+      background: none;
+      border: 1px solid rgba(255,255,255,0.4);
+      color: #fff;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 14px;
+      border-radius: 4px;
+    }
+    #dark-toggle:hover { background: rgba(255,255,255,0.15); }
+    body.dark { background-color: #1a1a1a; color: #e0e0e0; }
+    body.dark nav ul { background: #222; }
+    body.dark footer { background: #111; }
+    body.dark a { color: #6aabf7; }
+  </style>
+</head>
+<body>
+  <script>if(localStorage.getItem('dark')==='1')document.body.classList.add('dark');</script>
+  <nav>
+    <ul>
+      <li><a href="#about">About</a></li>
+      <li><a href="#projects">Projects</a></li>
+      <li><a href="#contact">Contact</a></li>
+      <li><button id="dark-toggle" onclick="toggleDark()">Dark</button></li>
+    </ul>
+  </nav>
+
+  <section id="about">
+    <h2>About Me</h2>
+    <a href="files/main.pdf" download>My CV - download</a>
+  </section>
+
+  <section id="projects">
+    <h2>Projects</h2>
+    <p>Here are a few projects I've worked on recently:</p>
+    <ul>
+      <li><a href="https://piotr-marciniak.com/statistics">Statistics</a></li>
+      <li><a href="https://piotr-marciniak.com/studying">Studying</a></li>
+    </ul>
+  </section>
+
+  <section id="contact">
+    <h2>Contact Me</h2>
+    <p>contact@piotr-marciniak.com</p>
+  </section>
+
+  <footer>
+  <p>&copy; 2026 Piotr Marciniak. All rights reserved.</p>
+</footer>
+  <script>
+    function toggleDark() {
+      const d = document.body.classList.toggle('dark');
+      localStorage.setItem('dark', d ? '1' : '0');
+      const btn = document.getElementById('dark-toggle');
+      if (btn) btn.textContent = d ? 'Light' : 'Dark';
+    }
+    (function() {
+      const btn = document.getElementById('dark-toggle');
+      if (btn) btn.textContent = document.body.classList.contains('dark') ? 'Light' : 'Dark';
+    })();
+  </script>
+</body>
+</html>

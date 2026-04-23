@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ Page title }} — Piotr Marciniak</title>
+  <!--
+    SUB-PAGE TEMPLATE
+    -----------------
+    Copy this file to e.g. /your-project-slug/index.html and fill in the
+    {{ placeholders }}. All paths below assume the file sits ONE level below
+    the site root (e.g. /studying/index.html) — adjust the `..` prefixes if
+    you nest deeper.
+
+    Section kinds you can mix and match inside .content:
+      · heading   — § + <h2>
+      · prose     — a paragraph of <p>
+      · list      — <ul> bullets
+      · code      — labeled <pre>
+      · figure    — placeholder box + caption
+      · note      — accent-rule callout
+  -->
+  <script>
+    try { if (localStorage.getItem('dark') === '1') document.documentElement.classList.add('dark'); } catch(e){}
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<div class="topbar">
+  <div class="left">
+    <span class="dot"></span>
+    <span class="host">piotr@marciniak</span>
+    <span class="path">~/{{ project-slug }}/{{ page-slug }}</span>
+  </div>
+  <div class="right">
+    <a href="./">← home</a>
+    <a href="#summary">summary</a>
+    <a href="#content">content</a>
+    <button id="dark-toggle" class="dark-toggle" onclick="toggleDark()">Dark</button>
+  </div>
+</div>
+
+<div class="grid">
+
+  <!-- HEADER -->
+  <section class="cell subhead span-12">
+    <div class="proj-line">
+      <span class="k">project ·</span>
+      <span class="v">{{ project }}</span>
+    </div>
+    <h1>{{ Page title }}</h1>
+    <p class="tagline">{{ One-sentence description, visible at the top of the page. }}</p>
+  </section>
+
+  <!-- MODULES / TAGS — labeled columns. Adjust `repeat(N, 1fr)` to match count. -->
+  <section class="cell modules span-12" style="grid-template-columns: repeat(4, 1fr);">
+    <div class="mod">
+      <div class="micro">Languages</div>
+      <div class="tags">
+        <span class="tag">{{ lang 1 }}</span>
+        <span class="tag">{{ lang 2 }}</span>
+      </div>
+    </div>
+    <div class="mod">
+      <div class="micro">Databases</div>
+      <div class="tags">
+        <span class="tag">{{ db 1 }}</span>
+      </div>
+    </div>
+    <div class="mod">
+      <div class="micro">Tools</div>
+      <div class="tags">
+        <span class="tag">{{ tool 1 }}</span>
+        <span class="tag">{{ tool 2 }}</span>
+      </div>
+    </div>
+    <div class="mod">
+      <div class="micro">Concepts</div>
+      <div class="tags">
+        <span class="tag">{{ concept }}</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- SUMMARY -->
+  <section class="cell sum span-12" id="summary">
+    <div class="micro">01 // summary</div>
+    <p>{{ First paragraph of the summary. Two or three sentences about what this page is and why it exists. }}</p>
+    <p>{{ Second paragraph — context, scope, what a reader will find. Keep it short. }}</p>
+  </section>
+
+  <!-- CONTENT -->
+  <section class="cell content span-12" id="content">
+    <div class="head">
+      <div class="micro">02 // content</div>
+      <div class="micro">{{ N }} sections</div>
+    </div>
+
+    <!-- heading -->
+    <section>
+      <div class="micro">§</div>
+      <h2>{{ Section heading }}</h2>
+    </section>
+
+    <!-- prose -->
+    <section>
+      <p>{{ A paragraph of prose. Plain sentences, no decoration. }}</p>
+    </section>
+
+    <!-- list -->
+    <section>
+      <ul>
+        <li>{{ bullet one }}</li>
+        <li>{{ bullet two }}</li>
+        <li>{{ bullet three }}</li>
+      </ul>
+    </section>
+
+    <!-- code -->
+    <section>
+      <div class="micro">{{ lang }}</div>
+      <pre># {{ code block }}
+def example():
+    return 42</pre>
+    </section>
+
+    <!-- figure -->
+    <section>
+      <div class="micro">fig · {{ figure label }}</div>
+      <div class="figure-box">// figure placeholder //</div>
+      <div class="figcaption">{{ figure caption }}</div>
+    </section>
+
+    <!-- note -->
+    <section class="note">
+      <div class="label">note · {{ note label }}</div>
+      <p>{{ callout text — for asides, warnings, TODOs }}</p>
+    </section>
+  </section>
+
+  <!-- BACK NAV -->
+  <section class="cell subnav span-12">
+    <a href="./">← back to work_log</a>
+    <span class="trail">piotr-marciniak.com / {{ project-slug }}</span>
+  </section>
+
+</div>
+
+<footer>
+  <span>© 2026 piotr-marciniak.com</span>
+  <span>set in Inter &amp; JetBrains Mono</span>
+</footer>
+
+<script src="dark.js"></script>
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Athena — Piotr Marciniak</title>
+  <meta name="description" content="Athena — a personal quantitative research system for S&P 500 equities. Multi-layer feature engineering, XGBoost/LSTM models, walk-forward backtesting, and ranked forecasting." />
+  <script>
+    try { var t=localStorage.getItem('theme')||'grain'; if(t) document.documentElement.setAttribute('data-theme',t); } catch(e){}
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css" />
+</head>
+<body>
+
+<div class="topbar">
+  <div class="left">
+    <div class="theme-switcher">
+      <button class="theme-dot" data-theme="stone" onclick="setTheme('stone')" title="stone"></button>
+      <button class="theme-dot" data-theme="dark"  onclick="setTheme('dark')"  title="dark"></button>
+      <button class="theme-dot" data-theme="ocean" onclick="setTheme('ocean')" title="ocean"></button>
+      <button class="theme-dot" data-theme="grain" onclick="setTheme('grain')" title="grain"></button>
+      <span class="theme-label">themes</span>
+    </div>
+    <span class="host">piotr@marciniak</span>
+    <span class="path">~/projects/athena</span>
+  </div>
+  <div class="right">
+    <a href="../">← home</a>
+    <a href="#summary">summary</a>
+    <a href="#content">system</a>
+  </div>
+</div>
+
+<div class="grid">
+
+  <!-- HEADER -->
+  <section class="cell subhead span-12">
+    <div class="proj-line">
+      <span class="k">type ·</span>
+      <span class="v">Personal Project</span>
+    </div>
+    <h1>Athena</h1>
+    <p class="tagline">A modular quantitative research system for S&P 500 equities — multi-layer feature engineering, stacked ensemble and LSTM models, walk-forward backtesting, and ranked forecasting.</p>
+  </section>
+
+  <!-- MODULES -->
+  <section class="cell modules span-12" style="grid-template-columns: repeat(4, 1fr);">
+    <div class="mod">
+      <div class="micro">Languages</div>
+      <div class="tags">
+        <span class="tag">Python</span>
+      </div>
+    </div>
+    <div class="mod">
+      <div class="micro">Models</div>
+      <div class="tags">
+        <span class="tag">XGBoost</span>
+        <span class="tag">LightGBM</span>
+        <span class="tag">LSTM</span>
+        <span class="tag">FinBERT</span>
+      </div>
+    </div>
+    <div class="mod">
+      <div class="micro">Tools</div>
+      <div class="tags">
+        <span class="tag">PyTorch</span>
+        <span class="tag">Optuna</span>
+        <span class="tag">pandas-ta</span>
+        <span class="tag">pydantic</span>
+      </div>
+    </div>
+    <div class="mod">
+      <div class="micro">Focus</div>
+      <div class="tags">
+        <span class="tag">Quant Research</span>
+        <span class="tag">Feature Engineering</span>
+        <span class="tag">Backtesting</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- SUMMARY -->
+  <section class="cell sum span-12" id="summary">
+    <div class="micro">01 // summary</div>
+    <p>Athena is a research-grade stock prediction pipeline built around S&P 500 equities. It ingests 15 years of OHLCV data from dual sources (yfinance and EODHD), annual fundamental statements, and daily news sentiment, then engineers approximately 145 features across four independent layers before training and evaluating ML models.</p>
+    <p>The system is designed around strict no-leakage principles — walk-forward retraining, point-in-time fundamentals with a 90-day reporting lag, sentiment cut-offs aligned to market close, and transaction costs baked into all backtest results. The CLI exposes 12 commands covering the full lifecycle from data fetching through to ranked daily forecasts and single-ticker equity research.</p>
+  </section>
+
+  <!-- CONTENT -->
+  <section class="cell content span-12" id="content">
+    <div class="head">
+      <div class="micro">02 // system</div>
+      <div class="micro">3 components</div>
+    </div>
+
+    <!-- Feature Engineering -->
+    <section>
+      <div class="micro">§</div>
+      <h2>Data &amp; Feature Engineering</h2>
+    </section>
+    <section>
+      <p>Data is pulled from two independent OHLCV sources, annual fundamental CSVs, and a news sentiment API, then combined into a stacked panel of ~145 features per ticker-day. The four feature layers must be applied in a fixed order — each depends on the output of the previous — and all degrade gracefully when upstream data is absent.</p>
+      <ul>
+        <li><span class="mark">Technical (30+)</span> — trend, momentum, volatility, volume, price structure, and market regime indicators via <code>pandas-ta</code></li>
+        <li><span class="mark">Fundamental (57)</span> — margins, growth, balance sheet health, cash flow quality, Piotroski F-Score, valuation multiples, and 1Y/2Y/3Y valuation momentum from annual FastFS exports; forward-filled with a 90-day reporting lag</li>
+        <li><span class="mark">Sentiment (33)</span> — daily news sentiment aggregated at the 16:00 ET market-close cut-off, with exponential decay fill-forward; rolling lags, momentum, volatility, directional mix, and regime features</li>
+        <li><span class="mark">Peer-relative (22)</span> — cross-sectional rankings and ratios against industry and sector peers; composite value, quality, and momentum scores</li>
+      </ul>
+    </section>
+
+    <!-- Models & Backtesting -->
+    <section>
+      <div class="micro">§</div>
+      <h2>Models &amp; Backtesting</h2>
+    </section>
+    <section>
+      <p>Two model architectures are implemented behind a common interface. The stacked ensemble uses Optuna TPE search to tune four XGBoost and LightGBM base learners, whose out-of-fold predictions are fed to logistic regression and ridge meta-learners. The LSTM uses a dual classification/regression head over 30-day sliding windows and trains with cosine-annealing LR on CUDA when available. Both support resumable checkpoints and a versioned model registry.</p>
+      <p>The walk-forward backtester retrains a fresh model per window on historical-only data, applies one of three position strategies (long-only, market-neutral, threshold), and reports Sharpe, Sortino, max drawdown, CAGR, win rate, and Spearman IC — with transaction costs and slippage configurable in basis points.</p>
+      <ul>
+        <li>Stacked ensemble: XGBoost + LightGBM → LogisticRegression + Ridge meta-learners, tuned with Optuna</li>
+        <li>PyTorch LSTM: dual-head (BCE classification + MSE regression), sequence length 30, CUDA-aware</li>
+        <li>Walk-forward engine: expanding or rolling windows, per-window retraining, full trade log output</li>
+        <li>250+ tests across 9 modules using synthetic data; CI on Python 3.11 and 3.12</li>
+      </ul>
+    </section>
+
+    <!-- Forecasting & Research -->
+    <section>
+      <div class="micro">§</div>
+      <h2>Forecasting &amp; Equity Research</h2>
+    </section>
+    <section>
+      <p>The forecast pipeline runs the full feature stack end-to-end and outputs a ranked table of S&P 500 tickers with predicted return, direction probability, bootstrap confidence intervals, and a conviction score. A separate research command queries the xAI Grok API for a structured market summary, then re-scores it independently with a local Ollama model and FinBERT for positive/negative/neutral probabilities.</p>
+      <ul>
+        <li>Ranked daily forecast: predicted return, direction probability, bootstrap CIs, conviction</li>
+        <li>Equity research pipeline: Grok (live web access) → Ollama sentiment score → FinBERT classification</li>
+        <li>Trade visualisation: annotated two-panel price + volume charts with entry/exit markers and P&amp;L shading</li>
+      </ul>
+    </section>
+
+  </section>
+
+  <!-- BACK NAV -->
+  <section class="cell subnav span-12">
+    <a href="../">← back to work_log</a>
+    <span class="trail">piotr-marciniak.com / athena</span>
+  </section>
+
+</div>
+
+<footer>
+  <span>© 2026 piotr-marciniak.com</span>
+  <span>set in Inter &amp; JetBrains Mono</span>
+</footer>
+
+<script src="../dark.js"></script>
+</body>
+</html>

@@ -1,0 +1,701 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IntroML – Lecture 16: Dimension Reduction</title>
+  <link rel="icon" type="image/png" href="../../files/logo.png" />
+  <script>
+    try { var t=localStorage.getItem('theme')||'grain'; if(t) document.documentElement.setAttribute('data-theme',t); } catch(e){}
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../styles.css" />
+  <link rel="stylesheet" href="../../lecture.css" />
+  <script>
+      MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\(', '\)']],
+          displayMath: [['$$', '$$'], ['\[', '\]']]
+        },
+        svg: { fontCache: 'global' }
+      };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+<body>
+<div class="topbar">
+  <div class="left">
+    <div class="theme-switcher">
+      <button class="theme-dot" data-theme="stone" onclick="setTheme('stone')" title="stone"></button>
+      <button class="theme-dot" data-theme="dark"  onclick="setTheme('dark')"  title="dark"></button>
+      <button class="theme-dot" data-theme="ocean" onclick="setTheme('ocean')" title="ocean"></button>
+      <button class="theme-dot" data-theme="grain" onclick="setTheme('grain')" title="grain"></button>
+      <span class="theme-label">themes</span>
+    </div>
+    <span class="host">piotr@marciniak</span>
+    <span class="path">~/files/iml</span>
+  </div>
+  <div class="right">
+    <a href="../../">← home</a>
+    <a href="../../studying/">← notes</a>
+  </div>
+</div>
+
+
+  <header>
+    <h1>Unsupervised Learning: Dimension Reduction</h1>
+    <div class="meta">
+      <span>Course: Introduction to Machine Learning</span>
+      <span>Lecture 16</span>
+      <span>Spring 2026, Prof. Andreas Krause</span>
+    </div>
+  </header>
+
+  <main>
+    <section>
+      <p>
+        This lecture introduces <strong>dimensionality reduction</strong>, the unsupervised
+        counterpart of regression: given high-dimensional data, we want to find low-dimensional
+        representations that preserve as much structure as possible. We focus on three
+        model-based approaches — <strong>Principal Component Analysis (PCA)</strong> as the
+        linear workhorse, <strong>Kernel PCA</strong> as its nonlinear extension via the
+        kernel trick, and <strong>neural network autoencoders</strong> as a flexible
+        parametric nonlinear alternative. The three methods all minimize a reconstruction
+        error, which ties them to a common theme: supervising the model with the data itself.
+      </p>
+    </section>
+
+    <section>
+      <h2>1. Dimensionality Reduction: Motivation</h2>
+
+      <p>
+        Given a dataset $\mathcal{D} = \{x_1, \dots, x_n\} \subseteq \mathbb{R}^d$, the goal is
+        to find low-dimensional embeddings $z_1, \dots, z_n \in \mathbb{R}^k$ with $k \ll d$.
+        A few reasons why this is useful:
+      </p>
+
+      <ul>
+        <li><strong>Compression.</strong> Save memory and speed up downstream computations.</li>
+        <li><strong>Visualization.</strong> With $k \in \{1, 2, 3\}$, we can plot data and gain
+          intuition through exploratory analysis.</li>
+        <li><strong>Feature learning.</strong> Cleaner representations can improve generalization
+          of downstream classifiers and regressors by stripping away noise.</li>
+        <li><strong>Structure discovery.</strong> Embeddings often reveal meaningful latent
+          factors (think: "baldness" or "gender" directions in a face-image latent space).</li>
+      </ul>
+
+      <div class="callout-note">
+        <div class="callout-title">Manifold hypothesis</div>
+        High-dimensional real-world data (images, text, audio) typically lie on or near
+        a much lower-dimensional <em>manifold</em>. Images of faces, for instance, are
+        constrained by symmetries and correlations that drastically reduce the effective
+        degrees of freedom. Dimensionality reduction exploits this structure.
+      </div>
+
+      <h3>1.1 Linear vs. nonlinear methods</h3>
+
+      <p>
+        We focus on <em>model-based</em> approaches: we fit a mapping $f : \mathbb{R}^d
+        \to \mathbb{R}^k$ to the training data and reuse it on new points.
+      </p>
+
+      <ul>
+        <li><strong>Linear:</strong> $f(x) = W x$ for some matrix $W$. Example: PCA.</li>
+        <li><strong>Nonlinear (parametric or non-parametric):</strong> $f$ is a general nonlinear
+          function. Examples: Kernel PCA, neural-network autoencoders.</li>
+      </ul>
+
+      <p>The central design question is: <em>which mappings should we prefer?</em> PCA picks
+      the linear mapping that reconstructs the data best in the Euclidean sense.</p>
+    </section>
+
+    <section>
+      <h2>2. Principal Component Analysis (PCA)</h2>
+
+      <p>
+        PCA is the canonical linear dimension-reduction technique. It answers the question:
+        what is the best $k$-dimensional subspace of $\mathbb{R}^d$ on which to project the
+        data, where "best" means <em>minimum reconstruction error</em>?
+      </p>
+
+      <h3>2.1 The one-dimensional case ($k=1$)</h3>
+
+      <p>
+        Assume the data is <strong>centered</strong>, i.e. $\frac{1}{n}\sum_i x_i = 0$
+        (otherwise we subtract the mean first). For $k=1$ we want to approximate each
+        $x_i \in \mathbb{R}^d$ as a scalar $z_i \in \mathbb{R}$ times a direction
+        $w \in \mathbb{R}^d$:
+      </p>
+
+      <div class="math-block">
+        $$ x_i \approx z_i w. $$
+      </div>
+
+      <p>
+        To fix the scale ambiguity (the pairs $(z, w)$ and $(\alpha z, \alpha^{-1} w)$
+        give identical reconstructions), we require $\|w\|_2 = 1$. PCA then jointly
+        solves:
+      </p>
+
+      <div class="math-block">
+        $$ w^*, z_1^*, \dots, z_n^* \;=\; \arg\min_{\|w\|_2 = 1,\; z_i \in \mathbb{R}}\;
+        \sum_{i=1}^n \|x_i - z_i w\|_2^2. $$
+      </div>
+
+      <p>
+        For a fixed $w$, the optimal scalar is the orthogonal projection
+        $z_i^* = w^\top x_i$. Substituting and simplifying, the problem becomes:
+      </p>
+
+      <div class="math-block">
+        $$ w^* = \arg\max_{\|w\|_2 = 1}\; \sum_{i=1}^n (w^\top x_i)^2
+          = \arg\max_{\|w\|_2 = 1}\; w^\top \Sigma w, $$
+      </div>
+
+      <p>
+        where $\Sigma = \frac{1}{n}\sum_{i=1}^n x_i x_i^\top = \frac{1}{n} X^\top X$ is
+        the <strong>empirical covariance matrix</strong>. So minimizing reconstruction
+        error is the <em>same</em> as maximizing the variance of the projected data —
+        two perspectives, one solution.
+      </p>
+
+      <div class="callout-definition">
+        <div class="callout-title">Lemma 12.1 — First principal component</div>
+        For the problem $w^* = \arg\max_{\|w\|_2=1} w^\top \Sigma w$, the optimum is
+        $w^* = v_1$, the eigenvector of $\Sigma$ associated with its largest eigenvalue
+        $\lambda_1$.
+      </div>
+
+      <div class="callout-example">
+        <div class="callout-title">Sketch of the proof</div>
+        Since $\Sigma$ is symmetric PSD, its eigenvectors $v_1, \dots, v_d$ form an
+        orthonormal basis. Write $w = \sum_i \alpha_i v_i$. Then
+        $w^\top \Sigma w = \sum_i \alpha_i^2 \lambda_i$ and $\|w\|_2^2 = \sum_i \alpha_i^2 = 1$.
+        This means we are distributing "probability mass" $\alpha_i^2$ over the
+        $\lambda_i$'s; the maximum is achieved by putting all mass on the largest
+        eigenvalue, giving $w^* = \pm v_1$.
+      </div>
+
+      <h3>2.2 The general case ($k \geq 1$)</h3>
+
+      <p>
+        For $k > 1$, we want a matrix $W \in \mathbb{R}^{d \times k}$ with orthonormal
+        columns (i.e. $W^\top W = I_k$) and encodings $z_i \in \mathbb{R}^k$ solving:
+      </p>
+
+      <div class="math-block">
+        $$ W^*, z_1^*, \dots, z_n^* \;=\; \arg\min_{W^\top W = I_k,\; z_i \in \mathbb{R}^k}\;
+        \sum_{i=1}^n \|W z_i - x_i\|_2^2. $$
+      </div>
+
+      <div class="callout-definition">
+        <div class="callout-title">Theorem 12.2 — PCA solution</div>
+        Let $\Sigma = \sum_{i=1}^d \lambda_i v_i v_i^\top$ be the eigen-decomposition of
+        the empirical covariance with $\lambda_1 \geq \lambda_2 \geq \cdots \geq \lambda_d$.
+        Then the optimal solution is
+        $$ W^* = (v_1 \mid v_2 \mid \cdots \mid v_k), \qquad z_i^* = W^{*\top} x_i. $$
+        In words: <em>the top $k$ principal components are the top $k$ eigenvectors of
+        $\Sigma$</em>, and the encoding is just the orthogonal projection onto their span.
+      </div>
+
+      <p>
+        The variance explained along direction $v_j$ is exactly the eigenvalue:
+      </p>
+
+      <div class="math-block">
+        $$ \frac{1}{n}\sum_{i=1}^n (v_j^\top x_i)^2 = v_j^\top \Sigma v_j = \lambda_j. $$
+      </div>
+
+      <p>
+        PCA acts as an orthogonal projection $x \mapsto W^* W^{*\top} x$ onto the
+        $k$-dimensional subspace spanned by the top eigenvectors. This operator is
+        idempotent ($P^2 = P$), as any projection must be.
+      </p>
+
+      <figure>
+        <svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto;">
+          <defs>
+            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+              <polygon points="0 0, 10 3.5, 0 7" fill="#0f3460"/>
+            </marker>
+          </defs>
+          <!-- Axes -->
+          <line x1="40" y1="270" x2="380" y2="270" stroke="#999" stroke-width="1"/>
+          <line x1="40" y1="270" x2="40" y2="20" stroke="#999" stroke-width="1"/>
+          <text x="385" y="274" font-size="12" fill="#555">$x_1$</text>
+          <text x="30" y="18" font-size="12" fill="#555">$x_2$</text>
+          <!-- Data cloud (rough ellipse) -->
+          <circle cx="100" cy="230" r="3" fill="#1a1a2e"/>
+          <circle cx="140" cy="210" r="3" fill="#1a1a2e"/>
+          <circle cx="160" cy="195" r="3" fill="#1a1a2e"/>
+          <circle cx="180" cy="175" r="3" fill="#1a1a2e"/>
+          <circle cx="200" cy="165" r="3" fill="#1a1a2e"/>
+          <circle cx="220" cy="155" r="3" fill="#1a1a2e"/>
+          <circle cx="240" cy="135" r="3" fill="#1a1a2e"/>
+          <circle cx="260" cy="120" r="3" fill="#1a1a2e"/>
+          <circle cx="290" cy="100" r="3" fill="#1a1a2e"/>
+          <circle cx="130" cy="225" r="3" fill="#1a1a2e"/>
+          <circle cx="170" cy="205" r="3" fill="#1a1a2e"/>
+          <circle cx="210" cy="175" r="3" fill="#1a1a2e"/>
+          <circle cx="250" cy="145" r="3" fill="#1a1a2e"/>
+          <circle cx="280" cy="115" r="3" fill="#1a1a2e"/>
+          <circle cx="150" cy="195" r="3" fill="#1a1a2e"/>
+          <circle cx="190" cy="185" r="3" fill="#1a1a2e"/>
+          <circle cx="230" cy="150" r="3" fill="#1a1a2e"/>
+          <!-- PC1 -->
+          <line x1="80" y1="245" x2="310" y2="90" stroke="#1a73e8" stroke-width="2.5" marker-end="url(#arrowhead)"/>
+          <text x="315" y="86" font-size="13" fill="#1a73e8" font-weight="bold">PC1 ($v_1$)</text>
+          <!-- PC2 (shorter, orthogonal) -->
+          <line x1="195" y1="167" x2="255" y2="210" stroke="#0f3460" stroke-width="2" marker-end="url(#arrowhead)"/>
+          <text x="260" y="214" font-size="13" fill="#0f3460" font-weight="bold">PC2 ($v_2$)</text>
+        </svg>
+        <figcaption>
+          PCA with $d=2, k=2$: the principal components form an orthonormal basis aligned
+          with the directions of largest data variance.
+        </figcaption>
+      </figure>
+
+      <div class="callout-warning">
+        <div class="callout-title">PCA is not regression</div>
+        The PC1 line differs from a regression line of $x_2$ on $x_1$. Regression minimizes
+        <em>vertical</em> distances (in the direction of the response); PCA minimizes the
+        <em>perpendicular</em> distance to the principal-component line. Both look similar
+        at a glance but answer different questions.
+      </div>
+    </section>
+
+    <section>
+      <h2>3. PCA via Singular Value Decomposition</h2>
+
+      <p>
+        In practice, PCA is almost never computed by forming $\Sigma$ and diagonalizing it.
+        Instead, we use the <strong>Singular Value Decomposition (SVD)</strong> of the
+        data matrix $X \in \mathbb{R}^{n \times d}$:
+      </p>
+
+      <div class="math-block">
+        $$ X = U S V^\top, $$
+      </div>
+
+      <p>
+        where $U \in \mathbb{R}^{n \times n}$ and $V \in \mathbb{R}^{d \times d}$ are
+        orthogonal, and $S \in \mathbb{R}^{n \times d}$ is diagonal with entries
+        (the <strong>singular values</strong>) in decreasing order. Plugging this into
+        the covariance:
+      </p>
+
+      <div class="math-block">
+        $$ n \Sigma = X^\top X = V S^\top U^\top U S V^\top = V S^\top S V^\top = V D V^\top, $$
+      </div>
+
+      <p>
+        where $D = S^\top S$ is diagonal. This is exactly the eigen-decomposition of
+        $n \Sigma$! Therefore:
+      </p>
+
+      <div class="callout-definition">
+        <div class="callout-title">PCA ↔ SVD connection</div>
+        The top $k$ principal components of $X$ are the first $k$ columns of $V$.
+        Eigenvalues of $\Sigma$ satisfy $\lambda_j = \sigma_j^2 / n$ where $\sigma_j$ are
+        the singular values.
+      </div>
+
+      <p>
+        SVD-based implementations (as in <code>scikit-learn</code>) are numerically
+        more stable and often faster than forming $\Sigma$ explicitly.
+      </p>
+
+      <pre><code class="language-python">from sklearn.decomposition import PCA
+pca = PCA(n_components=2)
+pca.fit(X)
+X_transformed = pca.transform(X)</code></pre>
+
+      <h4>Bonus: Eckart–Young</h4>
+
+      <div class="callout-definition">
+        <div class="callout-title">Theorem 12.3 — Eckart–Young</div>
+        Let $X$ have rank $r$ and define the truncated SVD
+        $\tilde X_k = \sum_{j=1}^k \sigma_j u_j v_j^\top$.
+        Then for any $k \leq r$,
+        $$ \tilde X_k \in \arg\min_{\mathrm{rank}(Y) \leq k} \|X - Y\|_F^2. $$
+        Hence PCA provides the best rank-$k$ approximation to $X$ in the Frobenius norm,
+        and the minimum reconstruction error equals $\sum_{j=k+1}^d \lambda_j$ — the
+        variance of the discarded components.
+      </div>
+    </section>
+
+    <section>
+      <h2>4. Choosing the Number of Components $k$</h2>
+
+      <p>
+        How many components should we keep? It depends on what we want to do with them.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Use case</th>
+              <th>Strategy for $k$</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Visualization</td>
+              <td>$k \in \{1, 2, 3\}$ by inspection — you need something you can plot.</td>
+            </tr>
+            <tr>
+              <td>Feature induction for a downstream model</td>
+              <td>Cross-validation on the downstream task.</td>
+            </tr>
+            <tr>
+              <td>Compression</td>
+              <td>Pick $k$ so a fixed fraction (e.g. 95%) of total variance is retained.</td>
+            </tr>
+            <tr>
+              <td>Exploratory</td>
+              <td>Scree plot &amp; look for the "elbow" where the curve flattens.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>
+        The <strong>scree plot</strong> shows explained variance against the number of
+        components. The marginal gain from adding components decreases (diminishing returns),
+        and the "elbow" is a common heuristic choice — analogous to the same trick used
+        for choosing $k$ in $k$-means clustering.
+      </p>
+    </section>
+
+    <section>
+      <h2>5. PCA and k-Means: A Unified View</h2>
+
+      <p>
+        At first glance PCA and $k$-means look unrelated. In fact they solve the
+        <em>same</em> optimization problem with different constraints. Compare:
+      </p>
+
+      <div class="callout-definition">
+        <div class="callout-title">PCA problem</div>
+        $$ (W, z_1, \dots, z_n) = \arg\min_{W^\top W = I_k,\; z \in \mathbb{R}^k}
+        \sum_{i=1}^n \|W z_i - x_i\|_2^2. $$
+      </div>
+
+      <div class="callout-definition">
+        <div class="callout-title">k-Means problem (equivalent form)</div>
+        $$ (W, z_1, \dots, z_n) = \arg\min_{W \text{ arbitrary},\; z_i \in E_k}
+        \sum_{i=1}^n \|W z_i - x_i\|_2^2, $$
+        where $E_k = \{e_1, \dots, e_k\}$ are the standard unit vectors. Here the
+        columns of $W$ are the cluster centroids $\mu_1, \dots, \mu_k$, and $z_i$
+        encodes the hard cluster assignment.
+      </div>
+
+      <p>
+        Both objectives are $\sum_i \|W z_i - x_i\|_2^2$ — the same reconstruction
+        loss. The only difference is the constraint set for $W$ and $z_i$.
+        This insight generalizes to the broader family of <strong>matrix factorization</strong>
+        methods, which aim to write $X \approx W Z$ with various constraints on $W$ and
+        $Z$ (explored in depth in the Computational Intelligence Lab).
+      </p>
+    </section>
+
+    <section>
+      <h2>6. Kernel PCA</h2>
+
+      <p>
+        PCA can only find <em>linear</em> subspaces. But data often lies on a curved
+        manifold where no linear projection captures the structure well (think of points
+        on a circle, or a swiss-roll surface). <strong>Kernel PCA</strong> solves this
+        with the same trick we used for ridge regression and SVMs: <em>run PCA in a
+        high-dimensional feature space implicitly defined by a kernel</em>.
+      </p>
+
+      <h3>6.1 The idea</h3>
+
+      <p>
+        Let $\phi : \mathbb{R}^d \to \mathbb{R}^p$ be a (possibly very high- or
+        infinite-dimensional) feature map, and let $k(x, x') = \langle \phi(x), \phi(x') \rangle$
+        be the associated kernel. We would like to run PCA on the featurized points
+        $\phi(x_1), \dots, \phi(x_n)$ — but $p$ may be enormous or infinite, so we
+        cannot form them explicitly.
+      </p>
+
+      <div class="callout-note">
+        <div class="callout-title">Recap of kernels</div>
+        A function $k : \mathcal{X} \times \mathcal{X} \to \mathbb{R}$ is a valid kernel
+        iff it is symmetric and positive semi-definite. By the representer-style
+        argument we saw earlier, computations that depend only on inner products
+        $\langle \phi(x), \phi(x') \rangle$ can be carried out using $k(x, x')$ directly.
+        Popular choices include polynomial kernels and the Gaussian RBF kernel, which
+        corresponds to an infinite-dimensional feature map.
+      </div>
+
+      <h3>6.2 Recipe</h3>
+
+      <p>
+        Since PCA only uses inner products of the data (through $\Sigma = \frac{1}{n} X^\top X$
+        and its eigenvectors), we can recast everything using the kernel matrix
+        $K \in \mathbb{R}^{n \times n}$ with $K_{ij} = k(x_i, x_j)$. The principal
+        components in feature space can be expressed as linear combinations of the
+        featurized data points, and the corresponding coefficients are obtained from
+        the eigenvectors of a <em>centered</em> version of $K$. The result is a
+        nonlinear embedding $z : \mathbb{R}^d \to \mathbb{R}^k$ that can capture
+        curved structure — at the price of $\mathcal{O}(n^2)$ memory for storing $K$.
+      </p>
+    </section>
+
+    <section>
+      <h2>7. Neural Network Autoencoders</h2>
+
+      <p>
+        Autoencoders take yet a third route: parameterize the nonlinear encoder and
+        decoder directly with neural networks, and train them with gradient descent
+        on the same reconstruction objective.
+      </p>
+
+      <h3>7.1 Architecture</h3>
+
+      <p>
+        An autoencoder is a neural network $f : \mathbb{R}^d \to \mathbb{R}^d$ of the form
+      </p>
+
+      <div class="math-block">
+        $$ f(x) = g_{\text{dec}}\big(g_{\text{enc}}(x)\big), $$
+      </div>
+
+      <p>
+        where
+      </p>
+
+      <ul>
+        <li>the <strong>encoder</strong> $g_{\text{enc}} : \mathbb{R}^d \to \mathbb{R}^k$
+          squeezes the input through a narrow hidden layer — the <em>bottleneck</em> —
+          of dimension $k \ll d$, producing the latent code $z = g_{\text{enc}}(x)$;</li>
+        <li>the <strong>decoder</strong> $g_{\text{dec}} : \mathbb{R}^k \to \mathbb{R}^d$
+          maps $z$ back to the input space, producing the reconstruction $\hat{x} = g_{\text{dec}}(z)$.</li>
+      </ul>
+
+      <p>
+        Training minimizes the reconstruction loss over the parameters of both networks:
+      </p>
+
+      <div class="math-block">
+        $$ \min_{\theta_{\text{enc}},\, \theta_{\text{dec}}}\;
+          \sum_{i=1}^n \|x_i - g_{\text{dec}}(g_{\text{enc}}(x_i))\|_2^2. $$
+      </div>
+
+      <figure>
+        <svg viewBox="0 0 500 220" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto;">
+          <!-- Input layer (d=5) -->
+          <g fill="#1a73e8">
+            <circle cx="50" cy="40" r="10"/>
+            <circle cx="50" cy="75" r="10"/>
+            <circle cx="50" cy="110" r="10"/>
+            <circle cx="50" cy="145" r="10"/>
+            <circle cx="50" cy="180" r="10"/>
+          </g>
+          <text x="50" y="210" text-anchor="middle" font-size="12" fill="#555">$x \in \mathbb{R}^d$</text>
+
+          <!-- Hidden -->
+          <g fill="#0f3460">
+            <circle cx="150" cy="75" r="10"/>
+            <circle cx="150" cy="110" r="10"/>
+            <circle cx="150" cy="145" r="10"/>
+          </g>
+          <text x="150" y="210" text-anchor="middle" font-size="12" fill="#555">encoder</text>
+
+          <!-- Bottleneck (k=2) -->
+          <g fill="#e65100">
+            <circle cx="250" cy="95" r="12"/>
+            <circle cx="250" cy="125" r="12"/>
+          </g>
+          <text x="250" y="210" text-anchor="middle" font-size="12" fill="#e65100" font-weight="bold">$z \in \mathbb{R}^k$</text>
+
+          <!-- Hidden decoder -->
+          <g fill="#0f3460">
+            <circle cx="350" cy="75" r="10"/>
+            <circle cx="350" cy="110" r="10"/>
+            <circle cx="350" cy="145" r="10"/>
+          </g>
+          <text x="350" y="210" text-anchor="middle" font-size="12" fill="#555">decoder</text>
+
+          <!-- Output -->
+          <g fill="#1a73e8">
+            <circle cx="450" cy="40" r="10"/>
+            <circle cx="450" cy="75" r="10"/>
+            <circle cx="450" cy="110" r="10"/>
+            <circle cx="450" cy="145" r="10"/>
+            <circle cx="450" cy="180" r="10"/>
+          </g>
+          <text x="450" y="210" text-anchor="middle" font-size="12" fill="#555">$\hat{x} \approx x$</text>
+
+          <!-- Connections (schematic) -->
+          <g stroke="#ccc" stroke-width="0.7" fill="none">
+            <!-- input to enc hidden -->
+            <line x1="60" y1="40" x2="140" y2="75"/>
+            <line x1="60" y1="40" x2="140" y2="110"/>
+            <line x1="60" y1="75" x2="140" y2="75"/>
+            <line x1="60" y1="75" x2="140" y2="110"/>
+            <line x1="60" y1="110" x2="140" y2="75"/>
+            <line x1="60" y1="110" x2="140" y2="110"/>
+            <line x1="60" y1="110" x2="140" y2="145"/>
+            <line x1="60" y1="145" x2="140" y2="110"/>
+            <line x1="60" y1="145" x2="140" y2="145"/>
+            <line x1="60" y1="180" x2="140" y2="110"/>
+            <line x1="60" y1="180" x2="140" y2="145"/>
+            <!-- enc hidden to bottleneck -->
+            <line x1="160" y1="75" x2="240" y2="95"/>
+            <line x1="160" y1="75" x2="240" y2="125"/>
+            <line x1="160" y1="110" x2="240" y2="95"/>
+            <line x1="160" y1="110" x2="240" y2="125"/>
+            <line x1="160" y1="145" x2="240" y2="95"/>
+            <line x1="160" y1="145" x2="240" y2="125"/>
+            <!-- bottleneck to dec hidden -->
+            <line x1="260" y1="95" x2="340" y2="75"/>
+            <line x1="260" y1="95" x2="340" y2="110"/>
+            <line x1="260" y1="95" x2="340" y2="145"/>
+            <line x1="260" y1="125" x2="340" y2="75"/>
+            <line x1="260" y1="125" x2="340" y2="110"/>
+            <line x1="260" y1="125" x2="340" y2="145"/>
+            <!-- dec hidden to output -->
+            <line x1="360" y1="75" x2="440" y2="40"/>
+            <line x1="360" y1="75" x2="440" y2="75"/>
+            <line x1="360" y1="75" x2="440" y2="110"/>
+            <line x1="360" y1="110" x2="440" y2="75"/>
+            <line x1="360" y1="110" x2="440" y2="110"/>
+            <line x1="360" y1="110" x2="440" y2="145"/>
+            <line x1="360" y1="145" x2="440" y2="110"/>
+            <line x1="360" y1="145" x2="440" y2="145"/>
+            <line x1="360" y1="145" x2="440" y2="180"/>
+          </g>
+        </svg>
+        <figcaption>
+          An autoencoder: the network is trained to reproduce its input while funnelling the
+          signal through a low-dimensional bottleneck $z$.
+        </figcaption>
+      </figure>
+
+      <h3>7.2 The connection to PCA</h3>
+
+      <div class="callout-note">
+        <div class="callout-title">Linear autoencoders recover PCA</div>
+        If both the encoder and decoder are linear (i.e. identity activation), then the
+        reconstruction loss is exactly the PCA objective
+        $\sum_i \|W_{\text{dec}} W_{\text{enc}} x_i - x_i\|_2^2$. The optimal subspace
+        spanned by the learned weights is the PCA subspace — the weights themselves may
+        differ from the PCA eigenvectors (the solution is not unique), but the span
+        matches. In this sense, <em>PCA is a linear autoencoder</em>.
+      </div>
+
+      <p>
+        With nonlinear activations (e.g. ReLU, tanh) the autoencoder can learn a
+        genuinely nonlinear manifold — something PCA cannot do. This is the main
+        advantage.
+      </p>
+
+      <h3>7.3 Use in practice</h3>
+
+      <p>
+        Autoencoders power a wide range of applications: denoising, anomaly detection,
+        pretraining, and — most notably — <strong>variational autoencoders (VAEs)</strong>,
+        whose latent spaces are still used as the representation space of modern
+        generative models like Stable Diffusion. Varying a single coordinate $z_j$ in a
+        well-trained VAE often corresponds to a semantically meaningful direction
+        (e.g. "smile", "hair colour"), illustrating how the learned features can align
+        with human-interpretable factors.
+      </p>
+    </section>
+
+    <section>
+      <h2>8. Comparison of the Three Methods</h2>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Method</th>
+              <th>Mapping</th>
+              <th>Training</th>
+              <th>Handles nonlinearity?</th>
+              <th>Scalability</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>PCA</td>
+              <td>Linear projection $z = W^\top x$</td>
+              <td>Closed form via SVD/eigendecomposition</td>
+              <td>No</td>
+              <td>$\mathcal{O}(\min(n d^2, n^2 d))$, typically cheap</td>
+            </tr>
+            <tr>
+              <td>Kernel PCA</td>
+              <td>Nonlinear via implicit feature map $\phi$</td>
+              <td>Eigendecomposition of centered $K \in \mathbb{R}^{n \times n}$</td>
+              <td>Yes (kernel-defined)</td>
+              <td>$\mathcal{O}(n^2)$ memory — limits $n$</td>
+            </tr>
+            <tr>
+              <td>Autoencoder</td>
+              <td>Nonlinear, learned by SGD</td>
+              <td>Gradient descent; local optima possible</td>
+              <td>Yes (very flexible)</td>
+              <td>Scales to very large $n$; requires more tuning</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>Key Takeaways</h2>
+      <ul>
+        <li>
+          <strong>Dimension reduction finds embeddings that preserve structure.</strong>
+          Useful for compression, visualization, feature learning and interpretability,
+          and motivated by the manifold hypothesis: real-world data lives on
+          low-dimensional manifolds inside high-dimensional spaces.
+        </li>
+        <li>
+          <strong>PCA minimizes reconstruction error equivalently to maximizing
+          projected variance.</strong> The solution is the top $k$ eigenvectors of the
+          empirical covariance matrix $\Sigma$, giving a linear projection with a closed-form
+          optimum.
+        </li>
+        <li>
+          <strong>Use SVD in practice.</strong> The right singular vectors of the data
+          matrix $X$ are precisely the principal components; SVD avoids forming $\Sigma$
+          and is numerically stable. By Eckart–Young, truncated SVD is the best rank-$k$
+          approximation of $X$ in Frobenius norm.
+        </li>
+        <li>
+          <strong>PCA and k-means share a common structure.</strong> Both minimize
+          $\sum_i \|W z_i - x_i\|_2^2$; only the constraints on $W$ and $z_i$ differ.
+          This is the gateway to the matrix-factorization family.
+        </li>
+        <li>
+          <strong>Kernel PCA lifts PCA to nonlinear manifolds.</strong> By running PCA
+          implicitly in the feature space of a kernel, we capture curved structure without
+          ever forming the feature vectors — trading computational scalability for
+          expressiveness.
+        </li>
+        <li>
+          <strong>Autoencoders generalize PCA with neural networks.</strong> A linear
+          autoencoder recovers the PCA subspace; nonlinear activations give the flexibility
+          to learn arbitrary manifolds. They are the foundation for modern representation
+          learning and generative models like VAEs.
+        </li>
+      </ul>
+    </section>
+  </main>
+
+<footer>
+  <span>© 2026 piotr-marciniak.com</span>
+  <span>set in Inter &amp; JetBrains Mono</span>
+</footer>
+<script src="../../dark.js"></script>
+</body>
+</html>

@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IntroML – Lecture 15: Unsupervised Learning – Clustering</title>
+  <link rel="icon" type="image/png" href="../../files/logo.png" />
+  <script>
+    try { var t=localStorage.getItem('theme')||'grain'; if(t) document.documentElement.setAttribute('data-theme',t); } catch(e){}
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../styles.css" />
+  <link rel="stylesheet" href="../../lecture.css" />
+  <script>
+      MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\(', '\)']],
+          displayMath: [['$$', '$$'], ['\[', '\]']]
+        },
+        svg: { fontCache: 'global' }
+      };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+<body>
+<div class="topbar">
+  <div class="left">
+    <div class="theme-switcher">
+      <button class="theme-dot" data-theme="stone" onclick="setTheme('stone')" title="stone"></button>
+      <button class="theme-dot" data-theme="dark"  onclick="setTheme('dark')"  title="dark"></button>
+      <button class="theme-dot" data-theme="ocean" onclick="setTheme('ocean')" title="ocean"></button>
+      <button class="theme-dot" data-theme="grain" onclick="setTheme('grain')" title="grain"></button>
+      <span class="theme-label">themes</span>
+    </div>
+    <span class="host">piotr@marciniak</span>
+    <span class="path">~/files/iml</span>
+  </div>
+  <div class="right">
+    <a href="../../">← home</a>
+    <a href="../../studying/">← notes</a>
+  </div>
+</div>
+
+
+  <header>
+    <h1>Unsupervised Learning: Clustering</h1>
+    <div class="meta">
+      <span>Course: Introduction to Machine Learning</span>
+      <span>Lecture 15</span>
+      <span>Spring 2026, Prof. Andreas Krause</span>
+    </div>
+  </header>
+
+  <main>
+    <section>
+      <p>This lecture opens the unsupervised learning part of the course, where we drop target labels and instead look for structure inside raw data. The central question is clustering: given a set of points, how can we group them so that similar points end up together and dissimilar ones stay apart? We focus on the <strong>k-means</strong> algorithm — its problem formulation, <strong>Lloyd's heuristic</strong>, convergence guarantees, smart initialization via <strong>k-means++</strong>, and finally the hard question of how to pick the number of clusters $k$.</p>
+    </section>
+
+    <section>
+      <h2>1. From Supervised to Unsupervised Learning</h2>
+
+      <p>So far the course has focused on supervised learning: we were given a dataset $\mathcal{D} = \{(x_i, y_i)\}_{i=1}^n$ and learned a map from inputs $x_i$ to targets $y_i$. In unsupervised learning we drop the $y_i$'s entirely and work with</p>
+
+      <div class="math-block">
+        $$\mathcal{D} = \{x_i \in \mathbb{R}^d : i = 1, \dots, n\}.$$
+      </div>
+
+      <p>The goal is to discover structure that was never explicitly labelled. Typical tasks include clustering (unsupervised classification), dimensionality reduction (unsupervised regression), and generative modeling / density estimation.</p>
+
+      <div class="callout-note">
+        <div class="callout-title">Why bother without labels?</div>
+        Labels are expensive. In many real datasets — user logs, genomic measurements, raw text scraped from the web — we have billions of observations but zero annotations. Unsupervised methods let us compress data, discover latent groups, find anomalies, learn useful features for downstream supervised tasks, and explore a dataset before committing to a model.
+      </div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Supervised task</th><th>Unsupervised analog</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Classification (discrete $y$)</td><td>Clustering</td></tr>
+            <tr><td>Regression (continuous $y$)</td><td>Dimensionality reduction</td></tr>
+            <tr><td>Conditional $p(y \mid x)$</td><td>Density estimation / generative modeling</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>2. What is Clustering?</h2>
+
+      <div class="callout-definition">
+        <div class="callout-title">Clustering (informal)</div>
+        Given data points $x_1, \dots, x_n$, partition them into groups (<em>clusters</em>) such that
+        <ul>
+          <li><strong>similar</strong> points lie in the same cluster, and</li>
+          <li><strong>dissimilar</strong> points lie in different clusters.</li>
+        </ul>
+        Points are typically embedded in a Euclidean space $\mathbb{R}^d$, with the $\ell_2$ distance $\|x_i - x_j\|_2$ measuring dissimilarity. Other metrics or similarity functions work too.
+      </div>
+
+      <p>A closely related task is <strong>anomaly / outlier detection</strong>: identifying points that "don't fit well" into any cluster.</p>
+
+      <h3>2.1 Three broad families of clustering methods</h3>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr><th>Family</th><th>Idea</th><th>Examples</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Hierarchical</strong></td>
+              <td>Build a tree (bottom-up or top-down) recording distances among points.</td>
+              <td>Single-linkage, average-linkage clustering</td>
+            </tr>
+            <tr>
+              <td><strong>Partitioning</strong></td>
+              <td>Define a cost over partitions of a graph and optimise it.</td>
+              <td>Spectral clustering, graph-cut methods</td>
+            </tr>
+            <tr>
+              <td><strong>Model-based</strong></td>
+              <td>Maintain explicit cluster "models" and assign each point to the one it fits best.</td>
+              <td>k-means, Gaussian Mixture Models (GMMs)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout-note">
+        <div class="callout-title">Why model-based?</div>
+        Hierarchical and partitioning methods are designed for a fixed dataset — they give you a clustering of the points you had, but no natural rule for assigning <em>new</em> points. Model-based methods learn an object (e.g. centroids) that generalises to unseen data. This is why the lecture concentrates on k-means.
+      </div>
+    </section>
+
+    <section>
+      <h2>3. The k-Means Problem</h2>
+
+      <p>In k-means, each cluster is represented by a single point — its <strong>center</strong> or <strong>centroid</strong> $\mu_j \in \mathbb{R}^d$. Every data point is assigned to the closest center, and we denote the assignment of $x_i$ by $z_i \in \{1, \dots, k\}$:</p>
+
+      <div class="math-block">
+        $$z_i = \arg\min_{j \in \{1, \dots, k\}} \|x_i - \mu_j\|_2.$$
+      </div>
+
+      <p>Since this rule applies to <em>any</em> $x \in \mathbb{R}^d$, not only the training points, the centers induce a partition of the whole space known as a <strong>Voronoi partition</strong>. That's what lets us generalise the clustering model to new points.</p>
+
+      <div class="callout-definition">
+        <div class="callout-title">Definition: The k-means objective</div>
+        Given centers $\mu = (\mu_1, \dots, \mu_k)$, the k-means cost (empirical risk) is
+        $$\hat{R}(\mu) = \sum_{i=1}^{n} \min_{j \in \{1, \dots, k\}} \|x_i - \mu_j\|_2^2 = \sum_{i=1}^{n} \|x_i - \mu_{z_i}\|_2^2.$$
+        The k-means problem is
+        $$\mu^\star \in \arg\min_{\mu_1, \dots, \mu_k \in \mathbb{R}^d} \hat{R}(\mu_1, \dots, \mu_k).$$
+      </div>
+
+      <div class="callout-warning">
+        <div class="callout-title">Warning: Non-convex & NP-hard</div>
+        Although the squared distance $\|x_i - \mu_j\|_2^2$ is convex in $\mu_j$ individually, the objective $\hat{R}(\mu)$ is <strong>non-convex</strong> because of the outer $\min_j$ (which couples the assignments to the centers). In fact the problem is <strong>NP-hard</strong> in general, so we cannot expect to solve it optimally. Practical implementations therefore rely on heuristics — most famously Lloyd's.
+      </div>
+
+      <figure>
+        <svg viewBox="0 0 520 320" xmlns="http://www.w3.org/2000/svg" aria-label="Voronoi partition illustration">
+          <defs>
+            <style>
+              .vor-line { stroke: #b00020; stroke-width: 1.5; stroke-dasharray: 5 4; fill: none; }
+              .dot { fill: #1a1a2e; }
+              .center { fill: #0f3460; stroke: #1a73e8; stroke-width: 2; }
+              .lbl { font-family: 'Inter', sans-serif; font-size: 13px; fill: #0f3460; }
+            </style>
+          </defs>
+          <!-- Voronoi-like boundaries -->
+          <path class="vor-line" d="M 260 170 L 80 30" />
+          <path class="vor-line" d="M 260 170 L 460 50" />
+          <path class="vor-line" d="M 260 170 L 260 310" />
+          <!-- Cluster 1 (upper left) -->
+          <circle class="dot" cx="140" cy="80" r="3" />
+          <circle class="dot" cx="155" cy="95" r="3" />
+          <circle class="dot" cx="125" cy="100" r="3" />
+          <circle class="dot" cx="160" cy="75" r="3" />
+          <polygon class="center" points="145,85 150,93 143,99 136,93 139,85" transform="translate(-3,-3)"/>
+          <text class="lbl" x="90" y="60">Cluster 1</text>
+          <!-- Cluster 2 (upper right) -->
+          <circle class="dot" cx="370" cy="120" r="3" />
+          <circle class="dot" cx="395" cy="130" r="3" />
+          <circle class="dot" cx="380" cy="145" r="3" />
+          <circle class="dot" cx="410" cy="115" r="3" />
+          <circle class="dot" cx="355" cy="140" r="3" />
+          <polygon class="center" points="380,125 385,133 378,139 371,133 374,125" transform="translate(-2,-2)"/>
+          <text class="lbl" x="420" y="100">Cluster 2</text>
+          <!-- Cluster 3 (bottom) -->
+          <circle class="dot" cx="220" cy="250" r="3" />
+          <circle class="dot" cx="245" cy="265" r="3" />
+          <circle class="dot" cx="205" cy="270" r="3" />
+          <circle class="dot" cx="235" cy="245" r="3" />
+          <polygon class="center" points="225,258 230,266 223,272 216,266 219,258" transform="translate(-2,-2)"/>
+          <text class="lbl" x="170" y="295">Cluster 3</text>
+        </svg>
+        <figcaption>Voronoi partition induced by three centers (stars). Every point in $\mathbb{R}^2$ is assigned to its closest center; the red dashed lines are the decision boundaries.</figcaption>
+      </figure>
+    </section>
+
+    <section>
+      <h2>4. Lloyd's Heuristic</h2>
+
+      <p>Lloyd's heuristic is the standard iterative algorithm for k-means. It alternates between two cheap steps: freeze the centers and update the assignments, then freeze the assignments and update the centers.</p>
+
+      <div class="callout-definition">
+        <div class="callout-title">Algorithm: Lloyd's heuristic</div>
+        <ol>
+          <li><strong>Initialize</strong> cluster centers $\mu^{(0)} = (\mu_1^{(0)}, \dots, \mu_k^{(0)})$.</li>
+          <li>For $t = 1, 2, \dots$ until convergence:
+            <ol>
+              <li><em>Assignment step.</em> Assign each point to its closest center:
+                $$z_i^{(t)} \leftarrow \arg\min_{j \in \{1, \dots, k\}} \|x_i - \mu_j^{(t-1)}\|_2, \quad i = 1, \dots, n.$$
+              </li>
+              <li><em>Update step.</em> Recompute each center as the mean of the points assigned to it:
+                $$\mu_j^{(t)} \leftarrow \frac{1}{n_j^{(t)}} \sum_{i : z_i^{(t)} = j} x_i, \quad j = 1, \dots, k,$$
+                where $n_j^{(t)} = |\{i : z_i^{(t)} = j\}|$.
+              </li>
+            </ol>
+          </li>
+        </ol>
+      </div>
+
+      <p>Each iteration costs $\mathcal{O}(n k d)$: for each of the $n$ points you compute $k$ distances in $\mathbb{R}^d$.</p>
+
+      <h3>4.1 Why does step 2 use the mean?</h3>
+
+      <p>The update rule isn't arbitrary — the mean is the <em>optimal</em> center for a fixed assignment. This is a basic fact worth stating explicitly.</p>
+
+      <div class="callout-definition">
+        <div class="callout-title">Lemma 11.1 — Center of mass minimises squared distances</div>
+        Given points $x_1, \dots, x_n \in \mathbb{R}^d$, the function
+        $$L(\mu) = \frac{1}{n} \sum_{i=1}^n \|x_i - \mu\|_2^2$$
+        is minimized by the center of mass $\mu^\star = \frac{1}{n} \sum_{i=1}^n x_i$.
+      </div>
+
+      <h4>Proof sketch</h4>
+
+      <p>Add and subtract $\mu^\star$ and expand the square:</p>
+
+      <div class="math-block">
+        $$
+        \begin{aligned}
+          L(\mu) &= \frac{1}{n}\sum_{i=1}^n \|(x_i - \mu^\star) + (\mu^\star - \mu)\|_2^2 \\
+                 &= \frac{1}{n}\sum_{i=1}^n \|x_i - \mu^\star\|_2^2 + \frac{2}{n}\sum_{i=1}^n (x_i - \mu^\star)^\top (\mu^\star - \mu) + \|\mu^\star - \mu\|_2^2.
+        \end{aligned}
+        $$
+      </div>
+
+      <p>The cross term vanishes because $\sum_i (x_i - \mu^\star) = 0$ by definition of the mean. What remains is</p>
+
+      <div class="math-block">
+        $$L(\mu) = \underbrace{\frac{1}{n}\sum_{i=1}^n \|x_i - \mu^\star\|_2^2}_{= L(\mu^\star)} + \|\mu^\star - \mu\|_2^2 \geq L(\mu^\star),$$
+      </div>
+
+      <p>with equality iff $\mu = \mu^\star$. $\blacksquare$</p>
+
+      <div class="callout-note">
+        <div class="callout-title">Intuition</div>
+        Both steps of Lloyd are <em>greedy local moves</em> on the joint cost $\hat{R}(\mu, z) = \sum_i \|x_i - \mu_{z_i}\|_2^2$: the assignment step optimises $\hat{R}$ over $z$ with $\mu$ fixed, and the update step optimises $\hat{R}$ over $\mu$ with $z$ fixed. This is a form of <strong>coordinate descent</strong>.
+      </div>
+    </section>
+
+    <section>
+      <h2>5. Convergence and Limitations</h2>
+
+      <h3>5.1 Monotone decrease of the cost</h3>
+
+      <div class="callout-definition">
+        <div class="callout-title">Theorem 11.2 — Lloyd's heuristic monotonically decreases the cost</div>
+        Let $z^{(t)}, \mu^{(t)}$ denote the assignments and centers at iteration $t$. Define
+        $$\hat{R}(\mu, z) = \sum_{i=1}^n \|x_i - \mu_{z_i}\|_2^2.$$
+        Then for every $t \geq 1$,
+        $$\hat{R}(\mu^{(t)}, z^{(t)}) \geq \hat{R}(\mu^{(t+1)}, z^{(t+1)}).$$
+      </div>
+
+      <h4>Proof idea (two inequalities, one per step)</h4>
+
+      <p>The assignment step gives</p>
+
+      <div class="math-block">
+        $$\hat{R}(\mu^{(t)}, z^{(t)}) \geq \min_{z} \hat{R}(\mu^{(t)}, z) = \hat{R}(\mu^{(t)}, z^{(t+1)}),$$
+      </div>
+
+      <p>because by construction each $z_i^{(t+1)}$ is chosen to minimise $\|x_i - \mu_j^{(t)}\|_2$. The update step gives</p>
+
+      <div class="math-block">
+        $$\hat{R}(\mu^{(t)}, z^{(t+1)}) \geq \min_{\mu} \hat{R}(\mu, z^{(t+1)}) = \hat{R}(\mu^{(t+1)}, z^{(t+1)}),$$
+      </div>
+
+      <p>because Lemma 11.1 tells us that the cluster-wise mean is the optimal center for any fixed assignment. Chaining the two inequalities finishes the proof. $\blacksquare$</p>
+
+      <p>Because the cost is a non-negative, monotonically decreasing sequence, the algorithm must converge. But it converges only to a <strong>local</strong> optimum — and possibly a bad one.</p>
+
+      <h3>5.2 What can go wrong</h3>
+
+      <div class="callout-warning">
+        <div class="callout-title">Challenges with k-means</div>
+        <ul>
+          <li><strong>Local optima only.</strong> The algorithm converges but not necessarily to the global minimum. Performance strongly depends on initialization.</li>
+          <li><strong>Worst-case runtime.</strong> The number of iterations required can be exponential in the worst case, even in the plane. In practice, however, convergence is usually fast.</li>
+          <li><strong>Wrong inductive bias.</strong> The $\ell_2$ cost imposes spherical, roughly equally-sized clusters. Elongated, curved, or density-varying clusters are modelled badly.</li>
+          <li><strong>Choosing $k$ is hard.</strong> There is no $k$ that is "objectively" right.</li>
+        </ul>
+        Kernel k-means can partially fix the shape issue; for $k$ we need heuristics (next section).
+      </div>
+    </section>
+
+    <section>
+      <h2>6. Initialization: k-means++</h2>
+
+      <p>Since Lloyd's heuristic only finds a local optimum, smart initialization matters a lot. Three common schemes:</p>
+
+      <ol>
+        <li><strong>Multiple random restarts.</strong> Run Lloyd with many random initializations and keep the lowest-cost result. Simple, but expensive.</li>
+        <li><strong>Farthest points heuristic.</strong> Pick the first center uniformly at random, then repeatedly pick the point <em>farthest</em> from the currently chosen centers. Often works well but is very sensitive to outliers (an isolated outlier is almost guaranteed to become a center).</li>
+        <li><strong>k-means++ seeding.</strong> A randomised version of the farthest-points idea that is robust to outliers.</li>
+      </ol>
+
+      <div class="callout-definition">
+        <div class="callout-title">Algorithm: k-means++ initialization</div>
+        <ol>
+          <li>Sample the first center uniformly among the data points:
+            $$\mu_1^{(0)} = x_i, \quad i \sim \operatorname{Uniform}(\{1, \dots, n\}).$$
+          </li>
+          <li>For $j = 2, \dots, k$, draw the $j$-th center $\mu_j^{(0)} = x_i$ with probability
+            $$p(i) \propto \min_{m \in \{1, \dots, j-1\}} \|x_i - \mu_m^{(0)}\|_2^2.$$
+          </li>
+          <li>Then run Lloyd's heuristic starting from these centers.</li>
+        </ol>
+      </div>
+
+      <div class="callout-note">
+        <div class="callout-title">Why is k-means++ clever?</div>
+        The probability is <em>proportional</em> to squared distance, not <em>maximised</em> over it. Far-away points are more likely to be picked — so cluster centers spread out — but a lone outlier no longer gets chosen with probability one. Randomness + the squared distance weighting = robust, balanced coverage.
+      </div>
+
+      <h4>Theoretical guarantee</h4>
+
+      <p>One of the appealing features of k-means++ is that, unlike plain Lloyd, it comes with a provable approximation guarantee:</p>
+
+      <div class="math-block">
+        $$\mathbb{E}\big[\hat{R}(\mu^{\text{k-means++}})\big] \leq \mathcal{O}(\log k) \cdot \min_{\mu} \hat{R}(\mu).$$
+      </div>
+
+      <p>In words: the expected cost after k-means++ seeding is within a logarithmic factor in $k$ of the true optimum. This is why scikit-learn and most other libraries use it as the default <code>init</code>.</p>
+
+      <pre><code class="language-python">from sklearn.cluster import KMeans
+
+# k-means++ is the default initialization scheme
+kmeans = KMeans(n_clusters=3, init="k-means++", n_init=10)
+kmeans.fit(X_train)
+predictions = kmeans.predict(X_test)</code></pre>
+    </section>
+
+    <section>
+      <h2>7. Model Selection: Choosing k</h2>
+
+      <p>Choosing $k$ is the clustering analog of choosing model complexity in supervised learning — and it's much harder here.</p>
+
+      <div class="callout-warning">
+        <div class="callout-title">Why cross-validation fails</div>
+        Increasing $k$ always decreases $\hat{R}$. Even on a held-out validation set, adding more centers gives strictly lower cost (in the limit $k = n$, every point has its own center and $\hat{R} = 0$). So there is no U-shape to cross-validate against. Traditional model selection by validation loss simply does not work.
+      </div>
+
+      <h3>7.1 The elbow heuristic</h3>
+
+      <p>Plot $\hat{R}$ against $k$. The curve is typically concave-decreasing with diminishing returns: sharp improvement for small $k$, then it flattens. Choose $k$ at the <em>elbow</em> — the kink beyond which additional clusters barely help.</p>
+
+      <figure>
+        <svg viewBox="0 0 480 280" xmlns="http://www.w3.org/2000/svg" aria-label="Elbow plot schematic">
+          <defs>
+            <style>
+              .axis { stroke: #1a1a2e; stroke-width: 1.5; fill: none; }
+              .curve { stroke: #1a73e8; stroke-width: 2.5; fill: none; }
+              .elbow { fill: #0f3460; }
+              .guide { stroke: #b00020; stroke-width: 1; stroke-dasharray: 4 3; fill: none; }
+              .lbl { font-family: 'Inter', sans-serif; font-size: 13px; fill: #16213e; }
+              .lbl-red { font-family: 'Inter', sans-serif; font-size: 12px; fill: #b00020; font-style: italic; }
+            </style>
+          </defs>
+          <!-- Axes -->
+          <path class="axis" d="M 60 40 L 60 240 L 440 240" />
+          <!-- Curve (elbow around k=4) -->
+          <path class="curve" d="M 80 70 Q 130 110, 175 175 T 260 220 T 420 235" />
+          <!-- Elbow point -->
+          <circle class="elbow" cx="200" cy="200" r="5" />
+          <!-- Guides -->
+          <path class="guide" d="M 200 200 L 200 240" />
+          <path class="guide" d="M 200 200 L 60 200" />
+          <!-- Labels -->
+          <text class="lbl" x="230" y="200">Elbow</text>
+          <text class="lbl" x="240" y="270" text-anchor="middle">k (number of clusters)</text>
+          <text class="lbl" x="25" y="140" transform="rotate(-90 25 140)" text-anchor="middle">k-means cost $\hat R$</text>
+          <text class="lbl-red" x="185" y="258">k*</text>
+        </svg>
+        <figcaption>Schematic elbow plot. Cost decreases sharply, then flattens; the "kink" at $k^\star$ is the heuristic choice.</figcaption>
+      </figure>
+
+      <h3>7.2 Regularization</h3>
+
+      <p>A more principled-looking alternative is to add a complexity penalty proportional to $k$:</p>
+
+      <div class="math-block">
+        $$\hat{R}_\lambda(\mu_1, \dots, \mu_k) = \hat{R}(\mu_1, \dots, \mu_k) + \lambda \cdot k,$$
+      </div>
+
+      <p>where $\lambda \geq 0$ balances fit against complexity. Choose $\lambda$, then pick the $k$ that minimises this regularised loss. This is often easier to tune than picking $k$ directly, because many $\lambda$'s map to the same optimal $k$.</p>
+
+      <div class="callout-note">
+        <div class="callout-title">Elbow vs regularization — formally equivalent</div>
+        Finding the elbow on the $\hat{R}$-vs-$k$ curve is exactly the same as finding the tangent of slope $-\lambda$ to that curve. The two heuristics are different visual framings of the same procedure.
+      </div>
+
+      <h3>7.3 Information-theoretic criteria</h3>
+
+      <p>For probabilistic cluster models (e.g. Gaussian Mixture Models, which come next lecture), we can use classical model-selection criteria that balance likelihood against parameter count:</p>
+
+      <div class="math-block">
+        $$\operatorname{AIC}(k) = k - \log L, \qquad \operatorname{BIC}(k) = k \log n - \log L,$$
+      </div>
+
+      <p>where $\log L$ is the maximised log-likelihood. Smaller is better. BIC penalises complexity more strongly than AIC because of the $\log n$ factor.</p>
+    </section>
+
+    <section>
+      <h2>8. Worked Example: One iteration of Lloyd's Heuristic</h2>
+
+      <div class="callout-example">
+        <div class="callout-title">Example: k = 2, six points in $\mathbb{R}^1$</div>
+        <p>Take the one-dimensional dataset $\mathcal{D} = \{1, 2, 3, 8, 9, 10\}$ and suppose we initialize $\mu_1^{(0)} = 2$, $\mu_2^{(0)} = 9$.</p>
+
+        <p><strong>Assignment step.</strong> Assign each point to its closest center:</p>
+
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>$x_i$</th><th>$|x_i - 2|$</th><th>$|x_i - 9|$</th><th>$z_i$</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>1</td><td>8</td><td>1</td></tr>
+              <tr><td>2</td><td>0</td><td>7</td><td>1</td></tr>
+              <tr><td>3</td><td>1</td><td>6</td><td>1</td></tr>
+              <tr><td>8</td><td>6</td><td>1</td><td>2</td></tr>
+              <tr><td>9</td><td>7</td><td>0</td><td>2</td></tr>
+              <tr><td>10</td><td>8</td><td>1</td><td>2</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p><strong>Update step.</strong> Recompute each center as the mean of its assigned points:</p>
+
+        <div class="math-block">
+          $$\mu_1^{(1)} = \frac{1 + 2 + 3}{3} = 2, \qquad \mu_2^{(1)} = \frac{8 + 9 + 10}{3} = 9.$$
+        </div>
+
+        <p>The centers didn't move, so Lloyd has converged in one iteration. Final cost:</p>
+
+        <div class="math-block">
+          $$\hat{R}(\mu^{(1)}) = (1^2 + 0^2 + 1^2) + (1^2 + 0^2 + 1^2) = 4.$$
+        </div>
+
+        <p>This is the global optimum for this (easy) dataset. But had we initialised with, say, $\mu_1^{(0)} = 1, \mu_2^{(0)} = 2$, Lloyd would still converge — possibly to a different, worse local optimum. That's exactly the motivation for k-means++.</p>
+      </div>
+    </section>
+
+    <section>
+      <h2>Key Takeaways</h2>
+      <ul>
+        <li><strong>Clustering is structured guessing without labels.</strong> It partitions data into groups so similar points stay together and dissimilar ones separate. It is one of three big unsupervised tasks, alongside dimensionality reduction and density estimation.</li>
+        <li><strong>k-means = fixed cost, hard optimization.</strong> The objective $\hat{R}(\mu) = \sum_i \min_j \|x_i - \mu_j\|_2^2$ is clean and intuitive, but non-convex and NP-hard — so we rely on heuristics instead of exact solvers.</li>
+        <li><strong>Lloyd's heuristic is coordinate descent.</strong> Alternating assignment and mean-update steps monotonically decreases the cost (Theorem 11.2), guaranteeing convergence to a <em>local</em> optimum in $\mathcal{O}(nkd)$ per iteration.</li>
+        <li><strong>Initialization matters enormously.</strong> k-means++ combines randomness with squared-distance weighting to spread centers while resisting outliers, and comes with an $\mathcal{O}(\log k)$ expected-cost guarantee. It is now the default in scikit-learn.</li>
+        <li><strong>Choosing $k$ has no textbook answer.</strong> Cross-validation fails because cost monotonically decreases with $k$. The elbow heuristic and the regularised objective $\hat{R}(\mu) + \lambda k$ are two views of the same workaround; information criteria (AIC, BIC) apply once we have a probabilistic model.</li>
+        <li><strong>k-means bakes in strong assumptions.</strong> Using Euclidean distance forces spherical, comparable-size clusters. Elongated or curved shapes are misread — a limitation addressed by kernel k-means and (next lecture) Gaussian mixture models.</li>
+      </ul>
+    </section>
+  </main>
+
+<footer>
+  <span>© 2026 piotr-marciniak.com</span>
+  <span>set in Inter &amp; JetBrains Mono</span>
+</footer>
+<script src="../../dark.js"></script>
+</body>
+</html>

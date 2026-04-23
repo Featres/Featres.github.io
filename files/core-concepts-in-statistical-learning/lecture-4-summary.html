@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Core Concepts in Statistical Learning – Lecture 4: MLE Properties, Method of Moments & EM</title>
+  <link rel="icon" type="image/png" href="../../files/logo.png" />
+  <script>
+    try { var t=localStorage.getItem('theme')||'grain'; if(t) document.documentElement.setAttribute('data-theme',t); } catch(e){}
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../styles.css" />
+  <link rel="stylesheet" href="../../lecture.css" />
+
+</head>
+<body>
+<div class="topbar">
+  <div class="left">
+    <div class="theme-switcher">
+      <button class="theme-dot" data-theme="stone" onclick="setTheme('stone')" title="stone"></button>
+      <button class="theme-dot" data-theme="dark"  onclick="setTheme('dark')"  title="dark"></button>
+      <button class="theme-dot" data-theme="ocean" onclick="setTheme('ocean')" title="ocean"></button>
+      <button class="theme-dot" data-theme="grain" onclick="setTheme('grain')" title="grain"></button>
+      <span class="theme-label">themes</span>
+    </div>
+    <span class="host">piotr@marciniak</span>
+    <span class="path">~/files/ccsl</span>
+  </div>
+  <div class="right">
+    <a href="../../">← home</a>
+    <a href="../../studying/">← notes</a>
+  </div>
+</div>
+
+
+
+<header>
+  <h1>Lecture 4 — Properties of the MLE, Method of Moments & the EM Algorithm</h1>
+  <div class="meta">
+    <span>Course: Core Concepts in Statistical Learning</span>
+    <span>Lecture 4</span>
+    <span>Date: 2026-04-13</span>
+  </div>
+</header>
+
+<main>
+
+<section>
+  <p><strong>Overview.</strong> This lecture deepens our understanding of the Maximum Likelihood Estimator (MLE). We first see an alternative (and often more convenient) formula for the Fisher Information, then extend the asymptotic normality result to the multivariate case. We then answer a natural question: <em>why</em> is maximizing the likelihood a good idea? The answer involves the Kullback–Leibler divergence and Jensen's inequality. Finally, we introduce two more estimation techniques: the <strong>Method of Moments</strong>, a simple alternative to MLE, and the <strong>EM Algorithm</strong>, a powerful trick for maximizing likelihoods that are otherwise hard to handle (e.g. in mixture models).</p>
+</section>
+
+<section>
+  <h2>1. An Alternative Formula for the Fisher Information</h2>
+
+  <p>Recall from Lecture 3 that the Fisher Information $I(\theta_0)$ governs how precisely we can estimate a parameter: the larger $I(\theta_0)$, the smaller the asymptotic variance of the MLE. It was defined as the variance of the score function:</p>
+
+  <div class="math-block">
+    $$I(\theta_0) = \mathbb{V}_{\theta_0}(s(X; \theta_0)) = \mathbb{E}_{\theta_0}\!\left[s(X; \theta_0)^2\right].$$
+  </div>
+
+  <p>If the log-density $\theta \mapsto \log f(x, \theta)$ is <strong>twice</strong> continuously differentiable, we can rewrite it using the second derivative:</p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Alternative Formula for Fisher Information</div>
+    <div class="math-block">
+      $$I(\theta_0) = -\mathbb{E}_{\theta_0}\!\left[\left.\frac{\partial^2 \log f(X, \theta)}{\partial \theta^2}\right|_{\theta = \theta_0}\right].$$
+    </div>
+    <p>In words: the Fisher Information equals the <em>negative expected curvature</em> of the log-likelihood at the true parameter.</p>
+  </div>
+
+  <div class="callout-note">
+    <div class="callout-title">Intuition — curvature = information</div>
+    <p>Think about what the log-likelihood looks like near its maximum $\theta_0$. If it is <em>sharply peaked</em> (large negative second derivative, i.e. high curvature), then the data strongly pinpoint $\theta_0$ — small changes in $\theta$ cause big drops in likelihood. If it is <em>flat</em>, many values of $\theta$ are nearly as plausible and we have little information. The Fisher Information measures exactly this "sharpness".</p>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Example — Bernoulli revisited</div>
+    <p>For $f(x;\theta) = \theta^x(1-\theta)^{1-x}$, we already computed</p>
+    <div class="math-block">
+      $$\frac{\partial \log f(x,\theta)}{\partial \theta} = \frac{x}{\theta} - \frac{1-x}{1-\theta}.$$
+    </div>
+    <p>Differentiating again:</p>
+    <div class="math-block">
+      $$\frac{\partial^2 \log f(x,\theta)}{\partial \theta^2} = -\frac{x}{\theta^2} - \frac{1-x}{(1-\theta)^2}.$$
+    </div>
+    <p>Taking expectations with $\mathbb{E}_{\theta_0}(X) = \theta_0$:</p>
+    <div class="math-block">
+      $$-\mathbb{E}_{\theta_0}\!\left[\frac{\partial^2 \log f}{\partial \theta^2}\right]_{\theta_0} = \frac{\theta_0}{\theta_0^2} + \frac{1-\theta_0}{(1-\theta_0)^2} = \frac{1}{\theta_0} + \frac{1}{1-\theta_0} = \frac{1}{\theta_0(1-\theta_0)}.$$
+    </div>
+    <p>Same answer as before — but notice how much cleaner the computation was. This is the practical reason we care about the second-derivative form.</p>
+  </div>
+</section>
+
+<section>
+  <h2>2. Asymptotic Normality of the MLE in the Multivariate Case</h2>
+
+  <p>So far we treated $\theta$ as a single real number. In practice, models often have several parameters (e.g. both a mean and a variance). Assume now that $\Theta \subseteq \mathbb{R}^k$ for some $k \geq 2$.</p>
+
+  <p>The <strong>score function</strong> is now a vector — the gradient of the log-density:</p>
+
+  <div class="math-block">
+    $$s(x, \theta_0) = \nabla_\theta \log f(x, \theta)\big|_{\theta = \theta_0} = \left(\frac{\partial \log f}{\partial \theta_1}, \dots, \frac{\partial \log f}{\partial \theta_k}\right)^{\!\top}_{\!\theta = \theta_0}.$$
+  </div>
+
+  <p>Under regularity assumptions, $\mathbb{E}_{\theta_0}[s(X,\theta_0)] = 0$ (the score has mean zero at the truth), and:</p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Multivariate Asymptotic Normality of the MLE</div>
+    <div class="math-block">
+      $$\sqrt{n}(\hat{\theta}_n - \theta_0) \xrightarrow{d} \mathcal{N}\!\left(0,\, I(\theta_0)^{-1}\right)$$
+    </div>
+    <p>where the <strong>Fisher Information Matrix</strong> is the $k \times k$ matrix</p>
+    <div class="math-block">
+      $$I(\theta_0) = \mathbb{E}_{\theta_0}\!\left[s(X,\theta_0)\, s(X,\theta_0)^\top\right] = \mathbb{V}_{\theta_0}\!\left(s(X,\theta_0)\right).$$
+    </div>
+    <p>If the log-density is twice continuously differentiable:</p>
+    <div class="math-block">
+      $$I(\theta_0) = -\mathbb{E}_{\theta_0}\!\left[\left(\frac{\partial^2 \log f(X,\theta)}{\partial \theta_i \partial \theta_j}\right)_{1 \leq i,j \leq k}\right]_{\theta_0}.$$
+    </div>
+  </div>
+
+  <div class="callout-note">
+    <div class="callout-title">Why the inverse?</div>
+    <p>In one dimension, a <em>larger</em> $I(\theta_0)$ meant a <em>smaller</em> asymptotic variance $1/I(\theta_0)$. In several dimensions, "dividing" becomes "inverting a matrix". High information (sharp log-likelihood in every direction) means a small covariance matrix. The off-diagonal entries of $I(\theta_0)^{-1}$ tell us how estimates of different parameters are <em>correlated</em>.</p>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Example — Gaussian with unknown mean and variance</div>
+    <p>Let $X_1, \dots, X_n \stackrel{\text{i.i.d.}}{\sim} \mathcal{N}(\mu_0, \sigma_0^2)$ with $\theta_0 = (\mu_0, \sigma_0^2) \in \mathbb{R} \times (0, \infty)$.</p>
+    <p>The MLE can be shown to be</p>
+    <div class="math-block">
+      $$\hat{\theta}_n = \left(\bar{X}_n,\; \tfrac{1}{n}\sum_{i=1}^n (X_i - \bar{X}_n)^2\right),$$
+    </div>
+    <p>i.e. the sample mean and sample variance. The Fisher Information Matrix is diagonal:</p>
+    <div class="math-block">
+      $$I(\theta_0) = \begin{pmatrix} \dfrac{1}{\sigma_0^2} & 0 \\[6pt] 0 & \dfrac{2}{\sigma_0^2} \end{pmatrix}, \qquad I(\theta_0)^{-1} = \begin{pmatrix} \sigma_0^2 & 0 \\[6pt] 0 & \dfrac{\sigma_0^2}{2} \end{pmatrix}.$$
+    </div>
+    <p>Therefore</p>
+    <div class="math-block">
+      $$\sqrt{n}(\hat{\theta}_n - \theta_0) \xrightarrow{d} \mathcal{N}\!\left(0, \begin{pmatrix}\sigma_0^2 & 0 \\ 0 & \sigma_0^2/2\end{pmatrix}\right).$$
+    </div>
+    <p>The <em>diagonal</em> form is meaningful: asymptotically, the errors in estimating $\mu_0$ and $\sigma_0^2$ are <strong>uncorrelated</strong>. The first entry $\sigma_0^2$ is exactly the CLT's answer for the sample mean.</p>
+  </div>
+</section>
+
+<section>
+  <h2>3. Why is the MLE a Good Estimator?</h2>
+
+  <p>We have claimed several times that the MLE is "good". But <em>why</em> should maximizing a product of densities produce a sensible estimate of the truth? The argument uses a beautiful application of Jensen's inequality and links the MLE to the <strong>Kullback–Leibler divergence</strong>.</p>
+
+  <h3>A sharper Jensen</h3>
+
+  <div class="callout-definition">
+    <div class="callout-title">Jensen's Inequality under strict convexity</div>
+    <p>If $g$ is a strictly convex function and $X$ is a random variable, then</p>
+    <div class="math-block">
+      $$\mathbb{E}[g(X)] \geq g(\mathbb{E}[X]),$$
+    </div>
+    <p>with <strong>equality if and only if</strong> $\mathbb{P}(X = \mathbb{E}[X]) = 1$ (i.e. $X$ is almost surely constant).</p>
+  </div>
+
+  <p>The "equality-iff-constant" part is what makes the argument below work. It turns an inequality into a useful characterization.</p>
+
+  <h3>Identifiability</h3>
+
+  <div class="callout-definition">
+    <div class="callout-title">Identifiability</div>
+    <p>A parameter $\theta_0$ is <strong>identifiable</strong> if different parameters give rise to different distributions:</p>
+    <p>if $\theta \in \Theta$ satisfies $\mathbb{P}_{\theta_0}\!\left(f(X,\theta) = f(X,\theta_0)\right) = 1$, then $\theta = \theta_0$.</p>
+  </div>
+
+  <div class="callout-note">
+    <div class="callout-title">Intuition — you can't estimate what you can't distinguish</div>
+    <p>If two different parameter values $\theta \neq \theta_0$ produce the <em>exact same distribution</em> of the data, no amount of data can ever tell them apart. Identifiability is the minimal assumption that makes estimation meaningful.</p>
+  </div>
+
+  <h3>The main argument</h3>
+
+  <p>Maximizing $\ell_n(\theta)$ is the same as maximizing $\tfrac{1}{n}(\ell_n(\theta) - \ell_n(\theta_0))$ (we just subtracted a constant in $\theta$). For any fixed $\theta$:</p>
+
+  <div class="math-block">
+    $$\frac{1}{n}\bigl(\ell_n(\theta) - \ell_n(\theta_0)\bigr) = \frac{1}{n}\sum_{i=1}^n \log\!\left(\frac{f(X_i,\theta)}{f(X_i,\theta_0)}\right) \xrightarrow{\ \mathbb{P}\ } \mathbb{E}_{\theta_0}\!\left[\log\!\left(\frac{f(X,\theta)}{f(X,\theta_0)}\right)\right].$$
+  </div>
+
+  <p>by the Weak Law of Large Numbers. The right-hand side is (minus) the <strong>Kullback–Leibler divergence</strong> from $f(\cdot,\theta_0)$ to $f(\cdot,\theta)$.</p>
+
+  <p>Now apply Jensen's inequality to the <em>concave</em> function $\log$ (equivalently, convex $-\log$):</p>
+
+  <div class="math-block">
+    $$\mathbb{E}_{\theta_0}\!\left[\log\frac{f(X,\theta)}{f(X,\theta_0)}\right] \leq \log \mathbb{E}_{\theta_0}\!\left[\frac{f(X,\theta)}{f(X,\theta_0)}\right].$$
+  </div>
+
+  <p>But the inner expectation equals 1:</p>
+
+  <div class="math-block">
+    $$\mathbb{E}_{\theta_0}\!\left[\frac{f(X,\theta)}{f(X,\theta_0)}\right] = \int \frac{f(x,\theta)}{f(x,\theta_0)} f(x,\theta_0)\, d\mu(x) = \int f(x,\theta)\, d\mu(x) = 1.$$
+  </div>
+
+  <p>So we have, for every $\theta \in \Theta$:</p>
+
+  <div class="math-block">
+    $$\mathbb{E}_{\theta_0}\!\left[\log\frac{f(X,\theta)}{f(X,\theta_0)}\right] \leq \log(1) = 0.$$
+  </div>
+
+  <p>The strict-convexity clause says equality holds <strong>if and only if</strong> the ratio $f(X,\theta)/f(X,\theta_0)$ is almost surely constant (and hence equal to 1, since its expectation is 1). By identifiability, this happens only at $\theta = \theta_0$.</p>
+
+  <div class="callout-definition">
+    <div class="callout-title">The conclusion</div>
+    <p>The limit in probability of $\frac{1}{n}(\ell_n(\theta) - \ell_n(\theta_0))$ is</p>
+    <ul>
+      <li>$\leq 0$ for all $\theta$, and</li>
+      <li>$= 0$ uniquely at $\theta = \theta_0$.</li>
+    </ul>
+    <p>So asymptotically, the thing we are maximizing is uniquely maximized at the truth. This justifies the strategy "pick $\theta$ that maximizes $\ell_n$".</p>
+  </div>
+
+  <div class="callout-note">
+    <div class="callout-title">Intuition — KL divergence as a "distance"</div>
+    <p>$\mathrm{KL}(f_{\theta_0} \,\|\, f_\theta) := -\mathbb{E}_{\theta_0}\!\left[\log \tfrac{f(X,\theta)}{f(X,\theta_0)}\right]$ is a non-negative quantity measuring how different two distributions are, equal to zero only when they coincide. Maximizing the likelihood is, in the limit, equivalent to minimizing the KL divergence from the true distribution to the model. The MLE is picking the model distribution <em>closest</em> to reality in the KL sense.</p>
+  </div>
+</section>
+
+<section>
+  <h2>4. Method of Moments</h2>
+
+  <p>MLE is powerful but can be computationally nasty (no closed form, tricky optimization). The <strong>Method of Moments</strong> is a simpler alternative that often provides a quick first estimator — and sometimes even matches the MLE.</p>
+
+  <h3>The idea</h3>
+
+  <p>If a distribution has $k$ unknown parameters $\theta = (\theta_1, \dots, \theta_k)$, it is usually characterized by its first $k$ moments. The strategy is:</p>
+
+  <ol>
+    <li>Compute the theoretical moments $m_j(\theta) = \mathbb{E}_\theta[X^j]$ for $j = 1, \dots, k$ as functions of $\theta$.</li>
+    <li>Estimate the moments empirically: $\hat{m}_j = \tfrac{1}{n}\sum_{i=1}^n X_i^j$.</li>
+    <li>Solve the system $m_j(\theta) = \hat{m}_j$ for $j = 1, \dots, k$ to get the estimator $\hat{\theta}_n$.</li>
+  </ol>
+
+  <div class="callout-definition">
+    <div class="callout-title">Method of Moments Estimator</div>
+    <p>The moment estimator $\hat{\theta}_n$ is any solution of the system</p>
+    <div class="math-block">
+      $$\begin{cases} m_1(\theta) = \bar{X}_n \\ \quad \vdots \\ m_k(\theta) = \frac{1}{n}\sum_{i=1}^n X_i^k \end{cases}$$
+    </div>
+    <p>i.e. we equate theoretical moments to empirical moments, and solve for $\theta$.</p>
+  </div>
+
+  <div class="callout-note">
+    <div class="callout-title">Intuition — match what you see to what the model predicts</div>
+    <p>If your model is correct with parameter $\theta_0$, then by the LLN the sample mean should be close to $\mathbb{E}_{\theta_0}(X)$, the sample second moment close to $\mathbb{E}_{\theta_0}(X^2)$, and so on. So just <em>pretend</em> they are equal and solve for $\theta$. It's a "plug and chug" approach: no optimization, just algebra.</p>
+  </div>
+
+  <h3>Examples</h3>
+
+  <div class="callout-example">
+    <div class="callout-title">Example 1 — Bernoulli</div>
+    <p>For $X \sim \mathrm{Bernoulli}(\theta)$, the first moment is $m_1(\theta) = \mathbb{E}_\theta(X) = \theta$. Setting $m_1(\hat{\theta}_n) = \bar{X}_n$ gives</p>
+    <div class="math-block">
+      $$\hat{\theta}_n = \bar{X}_n.$$
+    </div>
+    <p>This matches the MLE exactly! For Bernoulli, the two methods agree.</p>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Example 2 — Gaussian with unknown mean and variance</div>
+    <p>For $X \sim \mathcal{N}(\mu, \sigma^2)$, set $\theta = (\mu, \sigma)$. We have</p>
+    <div class="math-block">
+      $$m_1(\theta) = \mu, \qquad m_2(\theta) = \mathbb{V}_\theta(X) + \mathbb{E}_\theta(X)^2 = \sigma^2 + \mu^2.$$
+    </div>
+    <p>The system is</p>
+    <div class="math-block">
+      $$\begin{cases}(1)\quad \mu = \bar{X}_n \\ (2)\quad \sigma^2 + \mu^2 = \frac{1}{n}\sum_{i=1}^n X_i^2\end{cases}$$
+    </div>
+    <p>Plug (1) into (2) and solve:</p>
+    <div class="math-block">
+      $$\hat{\sigma}_n^2 = \frac{1}{n}\sum_{i=1}^n X_i^2 - \bar{X}_n^2 = \frac{1}{n}\sum_{i=1}^n (X_i - \bar{X}_n)^2.$$
+    </div>
+    <p>So $\hat{\theta}_n = \left(\bar{X}_n,\sqrt{\tfrac{1}{n}\sum (X_i - \bar{X}_n)^2}\right)$ — again, the same as the MLE.</p>
+  </div>
+
+  <h3>Consistency and asymptotic normality</h3>
+
+  <p>Suppose the map $\mathbf{m}(\theta) = (m_1(\theta), \dots, m_k(\theta))^\top$ has a continuously differentiable inverse $g = \mathbf{m}^{-1}$. Then the method of moments estimator can be written as</p>
+
+  <div class="math-block">
+    $$\hat{\theta}_n = g\!\left(\bar{X}_n,\, \tfrac{1}{n}\sum X_i^2,\, \dots,\, \tfrac{1}{n}\sum X_i^k\right).$$
+  </div>
+
+  <p>By the LLN and the Continuous Mapping Theorem, this converges in probability to $g(\mathbf{m}(\theta_0)) = \theta_0$ — so the estimator is <strong>consistent</strong>.</p>
+
+  <p>By the multivariate CLT, the empirical moments satisfy</p>
+
+  <div class="math-block">
+    $$\sqrt{n}\!\left(\begin{pmatrix}\bar{X}_n \\ \vdots \\ \tfrac{1}{n}\sum X_i^k\end{pmatrix} - \begin{pmatrix}m_1(\theta_0) \\ \vdots \\ m_k(\theta_0)\end{pmatrix}\right) \xrightarrow{d} \mathcal{N}(0, \Sigma),$$
+  </div>
+
+  <p>where $\Sigma = \mathbb{V}\!\left((X, X^2, \dots, X^k)^\top\right)$. Applying the <strong>delta method</strong> with the smooth function $g$:</p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Asymptotic Normality of the Method of Moments</div>
+    <div class="math-block">
+      $$\sqrt{n}(\hat{\theta}_n - \theta_0) \xrightarrow{d} \mathcal{N}\!\left(0, J_{\theta_0} \Sigma J_{\theta_0}^\top\right)$$
+    </div>
+    <p>where $J_{\theta_0}$ is the Jacobian of $g$ evaluated at $\mathbf{m}(\theta_0)$.</p>
+  </div>
+
+  <div class="callout-note">
+    <div class="callout-title">Trade-off with MLE</div>
+    <p>Method of Moments is typically easier to compute and always gives a closed form. But the MLE is generally more <em>efficient</em>, meaning it has smaller asymptotic variance (this is the Cramér–Rao bound coming into play). For simple models like Bernoulli and Gaussian the two coincide; for more complex models, MLE is usually preferred — provided you can compute it.</p>
+  </div>
+</section>
+
+<section>
+  <h2>5. Special Topic: The EM Algorithm</h2>
+
+  <p>Sometimes the log-likelihood is just too painful to maximize directly. A classical case is <strong>mixture models</strong>, where each observation is drawn from one of several underlying sub-populations, but we don't know which one.</p>
+
+  <h3>Motivating example: a 2-component mixture</h3>
+
+  <p>Consider the density</p>
+
+  <div class="math-block">
+    $$f(x, \theta) = p\,\varphi(x - \mu_1) + (1-p)\,\varphi(x - \mu_2), \quad x \in \mathbb{R},$$
+  </div>
+
+  <p>where $\theta = (p, \mu_1, \mu_2) \in (0,1) \times \mathbb{R}^2$ and $\varphi$ is some known density (think of it as a standard Normal density). Each observation $X_i$ is drawn either from a distribution centered at $\mu_1$ (with probability $p$) or at $\mu_2$ (with probability $1-p$).</p>
+
+  <p>The log-likelihood is</p>
+
+  <div class="math-block">
+    $$\ell_n(\theta) = \sum_{i=1}^n \log\!\bigl(p\,\varphi(X_i - \mu_1) + (1-p)\,\varphi(X_i - \mu_2)\bigr).$$
+  </div>
+
+  <div class="callout-note">
+    <div class="callout-title">Why this is hard</div>
+    <p>The log of a <em>sum</em> doesn't split nicely, so you can't separate the optimization over $\mu_1$, $\mu_2$, and $p$. There's no closed-form maximum. The EM algorithm is the standard workaround.</p>
+  </div>
+
+  <h3>The key idea: latent variables</h3>
+
+  <p>Imagine that for each $X_i$, there is a hidden label $Z_i \in \{1, 2\}$ telling us <em>which component</em> it came from. If we could observe the $Z_i$, optimization would be easy: we'd just compute the mean of the $X_i$ with $Z_i = 1$ to estimate $\mu_1$, and so on.</p>
+
+  <p>The EM algorithm formalizes this "if only we knew the $Z_i$" idea by iterating between:</p>
+  <ul>
+    <li><strong>E-step</strong>: compute the expected value of the hidden labels given current parameters.</li>
+    <li><strong>M-step</strong>: maximize a new, easier objective built from those expectations.</li>
+  </ul>
+
+  <h3>The complete likelihood</h3>
+
+  <p>Suppose $(X, Z)$ has joint density $f((x,z), \theta)$. The conditional density of $Z$ given $X = x$ is</p>
+
+  <div class="math-block">
+    $$f(z \mid x, \theta) = \frac{f((x,z), \theta)}{f(x, \theta)}.$$
+  </div>
+
+  <p>If we <em>had</em> observed the $Z_i$ too, the <strong>complete likelihood</strong> would be</p>
+
+  <div class="math-block">
+    $$L_n(\theta \mid (X_1, Z_1), \dots, (X_n, Z_n)) = \prod_{i=1}^n f((X_i, Z_i), \theta).$$
+  </div>
+
+  <p>Dividing the complete likelihood by the real likelihood and taking logs gives the identity</p>
+
+  <div class="math-block">
+    $$\log L_n(\theta \mid X_1, \dots, X_n) = \log L_n(\theta \mid \text{complete data}) - \log\!\prod_{i=1}^n f(Z_i \mid X_i, \theta).$$
+  </div>
+
+  <p>Fix some parameter $\theta^*$ and take the expectation of <em>both sides</em> with respect to the conditional distribution of the $Z_i$ given $X_i$ under $\theta^*$. The left side is a constant in $Z$, so it stays the same. The right side becomes two functions:</p>
+
+  <div class="callout-definition">
+    <div class="callout-title">The EM decomposition</div>
+    <div class="math-block">
+      $$\log L_n(\theta \mid X_1, \dots, X_n) = Q(\theta \mid \theta^*) - H(\theta \mid \theta^*)$$
+    </div>
+    <p>where</p>
+    <ul>
+      <li>$Q(\theta \mid \theta^*)$ is the expected complete-data log-likelihood, and</li>
+      <li>$H(\theta \mid \theta^*)$ comes from the conditional entropy of the latent variables.</li>
+    </ul>
+    <p>The function $Q$ is the <em>easy</em> one; $H$ is ignored during optimization.</p>
+  </div>
+
+  <h3>The algorithm</h3>
+
+  <div class="callout-definition">
+    <div class="callout-title">EM Algorithm</div>
+    <ol>
+      <li><strong>Initialize</strong> with some guess $\hat\theta^{(0)}$.</li>
+      <li><strong>E-step</strong> (at iteration $j$): compute the function $\theta \mapsto Q(\theta \mid \hat\theta^{(j)})$ — the expected complete-data log-likelihood given the current parameters.</li>
+      <li><strong>M-step</strong>: set $\hat\theta^{(j+1)} = \arg\max_{\theta \in \Theta} Q(\theta \mid \hat\theta^{(j)})$.</li>
+      <li><strong>Stop</strong> when $\|\hat\theta^{(j+1)} - \hat\theta^{(j)}\| < \varepsilon$ for some tolerance $\varepsilon &gt; 0$.</li>
+    </ol>
+  </div>
+
+  <h3>Why it works — monotone improvement</h3>
+
+  <p>The remarkable property of EM is that every iteration <strong>never decreases</strong> the likelihood:</p>
+
+  <div class="math-block">
+    $$L_n(\hat\theta^{(j+1)} \mid X_1, \dots, X_n) \geq L_n(\hat\theta^{(j)} \mid X_1, \dots, X_n).$$
+  </div>
+
+  <p>Using the decomposition with $\theta^* = \hat\theta^{(j)}$:</p>
+
+  <div class="math-block">
+    $$\log L_n(\hat\theta^{(j+1)}) - \log L_n(\hat\theta^{(j)}) = \underbrace{[Q(\hat\theta^{(j+1)} \mid \hat\theta^{(j)}) - Q(\hat\theta^{(j)} \mid \hat\theta^{(j)})]}_{\geq 0 \text{ by the M-step}} - \underbrace{[H(\hat\theta^{(j+1)} \mid \hat\theta^{(j)}) - H(\hat\theta^{(j)} \mid \hat\theta^{(j)})]}_{\leq 0 \text{ by Jensen}}.$$
+  </div>
+
+  <p>The first bracket is non-negative because the M-step explicitly maximizes $Q(\cdot \mid \hat\theta^{(j)})$. The second bracket is non-positive by Jensen's inequality applied to $\log$ (again!). Both signs combine to give $\geq 0$ — the likelihood is monotonically non-decreasing.</p>
+
+  <div class="callout-note">
+    <div class="callout-title">Intuition — climbing the likelihood</div>
+    <p>Think of $Q(\theta \mid \hat\theta^{(j)})$ as a <em>surrogate</em> objective that is easier than the real log-likelihood and <em>lower-bounds</em> it (up to a constant). The M-step maximizes this surrogate. Because the surrogate touches the true log-likelihood at $\hat\theta^{(j)}$, moving up on the surrogate guarantees at least as much progress on the real log-likelihood. Repeating this climbs steadily up the likelihood surface.</p>
+  </div>
+
+  <div class="callout-note">
+    <div class="callout-title">Caveat — local maxima only</div>
+    <p>EM only guarantees <em>non-decrease</em>, not convergence to the global maximum. Different starting points $\hat\theta^{(0)}$ may lead to different local maxima, especially for mixture models. It's standard practice to run EM several times from random initializations and keep the best result.</p>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Example — Gaussian mixture</div>
+    <p>If $\varphi$ is the density of $\mathcal{N}(0,1)$, the E-step reduces to computing, for each $i$, the "responsibility"</p>
+    <div class="math-block">
+      $$\gamma_i^{(j)} = \mathbb{P}\!\left(Z_i = 1 \mid X_i,\, \hat\theta^{(j)}\right) = \frac{\hat{p}^{(j)}\varphi(X_i - \hat\mu_1^{(j)})}{\hat{p}^{(j)}\varphi(X_i - \hat\mu_1^{(j)}) + (1-\hat{p}^{(j)})\varphi(X_i - \hat\mu_2^{(j)})},$$
+    </div>
+    <p>i.e. the current best guess of the probability that $X_i$ came from component 1. The M-step then updates</p>
+    <div class="math-block">
+      $$\hat{p}^{(j+1)} = \frac{1}{n}\sum_i \gamma_i^{(j)}, \qquad \hat\mu_1^{(j+1)} = \frac{\sum_i \gamma_i^{(j)} X_i}{\sum_i \gamma_i^{(j)}}, \qquad \hat\mu_2^{(j+1)} = \frac{\sum_i (1-\gamma_i^{(j)}) X_i}{\sum_i (1-\gamma_i^{(j)})}.$$
+    </div>
+    <p>Beautifully intuitive: each $\mu_k$ is a <em>weighted</em> mean of the data, where the weights are the soft labels from the E-step.</p>
+  </div>
+</section>
+
+<section>
+  <h2>Key Takeaways</h2>
+  <ul>
+    <li><strong>Fisher Information has two faces</strong>: variance of the score $\equiv$ negative expected curvature of the log-likelihood. The second form is often easier to compute.</li>
+    <li><strong>Multivariate MLE is asymptotically normal</strong> with covariance matrix $I(\theta_0)^{-1}$ — the matrix generalization of $1/I(\theta_0)$.</li>
+    <li><strong>The MLE works because it minimizes KL divergence</strong> asymptotically: by Jensen's inequality plus identifiability, the rescaled log-likelihood is uniquely maximized at the truth.</li>
+    <li><strong>Method of Moments</strong> is a simpler alternative: match empirical moments to theoretical moments and solve. Consistent and asymptotically normal (via LLN, CMT, and delta method), but typically less efficient than MLE.</li>
+    <li><strong>EM</strong> makes intractable likelihoods (like mixtures) tractable by introducing latent variables and iterating E-step / M-step. Each iteration monotonically increases the likelihood — but only guarantees convergence to a <em>local</em> maximum.</li>
+  </ul>
+</section>
+
+</main>
+
+<footer>
+  <span>© 2026 piotr-marciniak.com</span>
+  <span>set in Inter &amp; JetBrains Mono</span>
+</footer>
+<script src="../../dark.js"></script>
+</body>
+</html>

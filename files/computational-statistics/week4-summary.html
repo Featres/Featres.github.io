@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CompStat – Lecture 4: Density Estimation Theory & Regression Theory</title>
+  <link rel="icon" type="image/png" href="../../files/logo.png" />
+  <script>
+    try { var t=localStorage.getItem('theme')||'grain'; if(t) document.documentElement.setAttribute('data-theme',t); } catch(e){}
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../styles.css" />
+  <link rel="stylesheet" href="../../lecture.css" />
+  <script>
+      MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\(', '\)']],
+          displayMath: [['$$', '$$'], ['\[', '\]']]
+        },
+        svg: { fontCache: 'global' }
+      };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+<body>
+<div class="topbar">
+  <div class="left">
+    <div class="theme-switcher">
+      <button class="theme-dot" data-theme="stone" onclick="setTheme('stone')" title="stone"></button>
+      <button class="theme-dot" data-theme="dark"  onclick="setTheme('dark')"  title="dark"></button>
+      <button class="theme-dot" data-theme="ocean" onclick="setTheme('ocean')" title="ocean"></button>
+      <button class="theme-dot" data-theme="grain" onclick="setTheme('grain')" title="grain"></button>
+      <span class="theme-label">themes</span>
+    </div>
+    <span class="host">piotr@marciniak</span>
+    <span class="path">~/files/comp-stats</span>
+  </div>
+  <div class="right">
+    <a href="../../">← home</a>
+    <a href="../../studying/">← notes</a>
+  </div>
+</div>
+
+
+<header>
+  <h1>Density Estimation Theory &amp; Introduction to Regression Theory</h1>
+  <div class="meta">
+    <span>Course: Computational Statistics (401-3632-00L)</span>
+    <span>Week 4</span>
+    <span>Date: 2026-03-13</span>
+    <span>Dr. Jonathan Koh, ETH Zürich</span>
+  </div>
+</header>
+
+<main>
+
+<section>
+  <p>
+    This week wraps up the theory behind <strong>non-parametric density estimation</strong> (Chapter 2 of the lecture notes) — focusing on the role of the bandwidth, the bias–variance tradeoff for the MSE, the curse of dimensionality, and smoothness-based minimax rates. The second half of the lecture introduces <strong>regression theory</strong> (Chapter 3): loss functions, the regression function as the risk minimizer, the error decomposition into reducible and irreducible parts, and the concept of consistency.
+  </p>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <h2>1. Non-Parametric Density Estimation (continued)</h2>
+
+  <p>Recall from Week 3: given i.i.d. observations $X_1, \ldots, X_n$ from an unknown density $f$, the <strong>kernel density estimator (KDE)</strong> is</p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition — Kernel Density Estimator</div>
+    <p>
+      $$\hat{f}_h(x) = \frac{1}{nh}\sum_{i=1}^{n} K\!\left(\frac{x - X_i}{h}\right),$$
+      where $h > 0$ is the <em>bandwidth</em> (smoothing parameter) and $K$ is a kernel satisfying $K(x) \geq 0$, $\int K(x)\,dx = 1$, and $K(x) = K(-x)$.
+    </p>
+    <p>
+      <strong>Intuition:</strong> each observation contributes a "bump" of width $h$ centred at $X_i$. Summing and renormalising these bumps yields a smooth density estimate.
+    </p>
+  </div>
+
+  <h3>1.1 Kernel Choice vs. Bandwidth Choice</h3>
+  <p>
+    Two popular kernels are the <strong>Gaussian</strong> kernel $K(x) = \varphi(x) = (2\pi)^{-1/2}e^{-x^2/2}$ and the <strong>Epanechnikov</strong> kernel $K(x) = \tfrac{3}{4}(1 - x^2)\,\mathbf{1}\{|x| \leq 1\}$, which is MSE-optimal among compactly supported kernels. However, the key practical message is:
+  </p>
+
+  <div class="callout-warning">
+    <div class="callout-title">Key Insight</div>
+    <p>In practice, the choice of bandwidth $h$ matters <strong>far more</strong> than the choice of kernel shape. A large $h$ oversmooths (high bias, low variance); a small $h$ undersmooths (low bias, high variance, wiggly estimate).</p>
+  </div>
+
+  <h3>1.2 The Role of the Bandwidth</h3>
+  <p>
+    The bandwidth $h$ is the smoothing parameter. As $h \to 0$, the estimate $\hat{f}_h$ approaches a sum of delta-spikes at each observation. As $h$ grows, $\hat{f}_h$ becomes increasingly smooth. For consistency of the estimator (meaning $\hat{f}_h \to f$ in some sense), we need the <em>asymptotic regime</em>:
+  </p>
+  <div class="math-block">
+    $$h = h_n \to 0 \quad \text{and} \quad n h_n \to \infty \quad \text{as } n \to \infty.$$
+  </div>
+  <p>
+    The first condition ensures the bias vanishes (the window shrinks), and the second ensures the variance also vanishes (each window still contains enough data points).
+  </p>
+
+  <h3>1.3 The Bias–Variance Tradeoff and MSE</h3>
+  <p>
+    The mean squared error at a point $x$ decomposes as:
+  </p>
+  <div class="math-block">
+    $$\text{MSE}(x) = \mathbb{E}\!\left[\left(\hat{f}_h(x) - f(x)\right)^2\right] = \underbrace{\left(\mathbb{E}[\hat{f}_h(x)] - f(x)\right)^2}_{\text{Bias}^2(x)} + \underbrace{\text{Var}\!\left(\hat{f}_h(x)\right)}_{\text{Variance}}.$$
+  </div>
+  <p>
+    Instead of optimising at a single point, we can consider the <strong>mean integrated squared error (MISE)</strong>:
+  </p>
+  <div class="math-block">
+    $$\text{MISE} = \mathbb{E}\!\left[\int \left(\hat{f}_h(x) - f(x)\right)^2 dx\right].$$
+  </div>
+
+  <div class="callout-definition">
+    <div class="callout-title">Theorem — Asymptotic Bias and Variance of the KDE</div>
+    <p>Under smoothness assumptions on $f$ and standard kernel conditions:</p>
+    <div class="math-block">
+      $$\text{Bias}(x) = \frac{1}{2}h^2 f''(x)\int z^2 K(z)\,dz + o(h^2),$$
+    </div>
+    <div class="math-block">
+      $$\text{Var}\!\left(\hat{f}_h(x)\right) = \frac{1}{nh}\,f(x)\int K^2(z)\,dz + o\!\left((nh)^{-1}\right).$$
+    </div>
+  </div>
+
+  <p>
+    <strong>Reading these formulas:</strong> The bias grows like $h^2$ — a larger bandwidth means more smoothing and more bias (proportional to the curvature $f''(x)$). The variance shrinks like $1/(nh)$ — more data and wider windows both reduce variance. This is the fundamental tradeoff: you cannot reduce both simultaneously with $h$ alone.
+  </p>
+
+  <h4>Optimal Bandwidth</h4>
+  <p>
+    Balancing these two leading terms (setting the derivative of the asymptotic MISE to zero) gives the optimal global bandwidth order and the resulting optimal MISE rate:
+  </p>
+  <div class="math-block">
+    $$h_{\text{opt}} \asymp n^{-1/5}, \qquad \text{MISE} \asymp n^{-4/5}.$$
+  </div>
+  <p>
+    The notation $\asymp$ means "of the same order as." Both the squared-bias and variance terms end up being $O(n^{-4/5})$ at the optimum — neither dominates. This $n^{-4/5}$ rate is the best achievable rate for density estimation in one dimension (for twice-differentiable densities).
+  </p>
+
+  <h4>Bandwidth Selection in Practice</h4>
+  <p>
+    The exact optimal $h$ depends on unknown quantities like $R(f'') = \int (f''(x))^2 dx$. In practice, <strong>plug-in methods</strong> estimate these unknown features using a pilot bandwidth. A widely-used implementation is the <strong>Sheather–Jones</strong> selector, available in R as <code>density(x, bw = "SJ")</code>.
+  </p>
+
+  <div class="callout-example">
+    <div class="callout-title">Remark — Higher-Order Kernels</div>
+    <p>
+      If $\int z^2 K(z)\,dz = 0$ (a "bias-reducing" or higher-order kernel), the leading bias term vanishes. So why not always use these? The catch is that we still need the underlying density to be sufficiently smooth, and we generally don't know this in advance. Also, higher-order kernels can take negative values, which means $\hat{f}_h$ may go negative — not a valid density.
+    </p>
+  </div>
+
+  <h3>1.4 Higher Dimensions and the Curse of Dimensionality</h3>
+  <p>
+    For $d$-dimensional data $X_i \in \mathbb{R}^d$, the multivariate KDE becomes:
+  </p>
+  <div class="math-block">
+    $$\hat{f}_h(\mathbf{x}) = \frac{1}{nh^d}\sum_{i=1}^{n} K\!\left(\frac{\mathbf{x} - X_i}{h}\right),$$
+  </div>
+  <p>
+    where $K$ is now a $d$-dimensional kernel (often a product of univariate kernels: $K(\mathbf{u}) = \prod_{j=1}^d K_{\text{univ}}(u_j)$). The crucial issue is that in high dimensions, local neighbourhoods become empty unless $n$ is enormous.
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">The Curse of Dimensionality</div>
+    <p>
+      For twice-differentiable densities in $d$ dimensions, the best possible MSE rate for <em>any</em> nonparametric density estimator is:
+      $$n^{-4/(4+d)}.$$
+      As $d$ increases, this rate deteriorates dramatically — convergence becomes painfully slow.
+    </p>
+  </div>
+
+  <p>The following table illustrates just how severe this effect is:</p>
+
+  <div class="table-wrapper">
+    <table>
+      <tr>
+        <th>$n^{-4/(4+d)}$</th><th>$d=1$</th><th>$d=2$</th><th>$d=3$</th><th>$d=5$</th><th>$d=10$</th>
+      </tr>
+      <tr><td>$n=100$</td><td>0.025</td><td>0.046</td><td>0.072</td><td>0.129</td><td>0.268</td></tr>
+      <tr><td>$n=1{,}000$</td><td>0.004</td><td>0.010</td><td>0.019</td><td>0.046</td><td>0.139</td></tr>
+      <tr><td>$n=100{,}000$</td><td>$1.0 \times 10^{-4}$</td><td>$4.6 \times 10^{-4}$</td><td>$13.9 \times 10^{-4}$</td><td>0.006</td><td>0.037</td></tr>
+    </table>
+  </div>
+
+  <p>
+    To improve the MSE by a factor of 10 in $d = 1$, you need roughly 17× more data. In $d = 10$, you need about 3,160× more data. The practical takeaway: standard kernel density estimation is essentially limited to $d \leq 2$ or $3$ without additional structural assumptions.
+  </p>
+
+  <h3>1.5 Smoothness Assumptions and the General Minimax Rate</h3>
+  <p>
+    To derive convergence rates at all, we must impose <strong>smoothness conditions</strong> on $f$. Without them, uniform rates are impossible.
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition — Hölder Smoothness Class $\Sigma(\alpha, L)$</div>
+    <p>
+      For $\alpha > 0$ and $L > 0$, the Hölder class $\Sigma(\alpha, L)$ consists of functions whose derivatives up to order $\lfloor \alpha \rfloor$ exist, and whose highest-order derivatives satisfy a Hölder condition of order $\alpha - \lfloor \alpha \rfloor$. Functions in $\Sigma(\alpha, L)$ have a Taylor remainder bounded by:
+      $$|f(u) - f_{x,\alpha}(u)| \leq L \|u - x\|^\alpha.$$
+    </p>
+    <p><strong>In plain terms:</strong> the parameter $\alpha$ controls how "smooth" the function is. Higher $\alpha$ means smoother, which makes estimation easier.</p>
+  </div>
+
+  <p>
+    Under these smoothness assumptions, the MISE decomposes as:
+  </p>
+  <div class="math-block">
+    $$\text{MISE}(h) = \underbrace{O(h^{2\alpha})}_{\text{squared bias}} + \underbrace{O\!\left(\frac{1}{nh^d}\right)}_{\text{variance}}.$$
+  </div>
+  <p>
+    Balancing these gives $h \asymp n^{-1/(2\alpha + d)}$, and the <strong>minimax rate</strong>:
+  </p>
+  <div class="math-block">
+    $$\sup_{f \in \Sigma(\alpha, L)} \mathbb{E}\!\left[\int \left(\hat{f}_h(x) - f(x)\right)^2 dx\right] \leq C\, n^{-2\alpha/(2\alpha + d)}.$$
+  </div>
+  <p>
+    This is the best rate achievable by <em>any</em> estimator, uniformly over the class $\Sigma(\alpha, L)$. Setting $\alpha = 2$ (twice-differentiable densities) recovers the rate $n^{-4/(4+d)}$ from the curse of dimensionality discussion above.
+  </p>
+
+  <div class="callout-warning">
+    <div class="callout-title">The Two Enemies of Convergence</div>
+    <p>The rate $n^{-2\alpha/(2\alpha+d)}$ reveals two factors that make estimation harder: (1) <strong>higher dimension $d$</strong> — more dimensions mean sparser data and slower rates, and (2) <strong>lower smoothness $\alpha$</strong> — rougher functions are harder to estimate. This generalises the curse of dimensionality beyond just the $\alpha = 2$ case.</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <h2>2. Regression Theory (Introduction)</h2>
+
+  <p>
+    The second part of the lecture transitions back to the <strong>supervised learning</strong> setting where we have both predictors $X$ and responses $Y$. The goal: formalise what it means to make a "good" prediction and identify the optimal prediction function.
+  </p>
+
+  <h3>2.1 Setting and Loss Functions</h3>
+  <p>
+    We observe i.i.d. training data $\mathcal{D}_n = \{(X_i, Y_i)\}_{i=1}^n$ drawn from some unknown joint distribution $\Pr(X, Y)$. From this data, we construct a predictive model $\hat{f}: \mathbb{R}^p \to \mathbb{R}$.
+  </p>
+  <p>
+    To judge the quality of any prediction function $f$, we use a <strong>loss function</strong> $L: (y, \hat{y}) \mapsto L(y, \hat{y}) \in [0, \infty)$.
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition — Common Loss Functions</div>
+    <ul>
+      <li><strong>Squared error loss</strong> (regression): $L(y, \hat{y}) = (y - \hat{y})^2$, where $y, \hat{y} \in \mathbb{R}$.</li>
+      <li><strong>0–1 loss</strong> (classification): $L(y, \hat{y}) = \mathbf{1}(y \neq \hat{y})$, where $y, \hat{y} \in \mathcal{G}$ (a set of class labels).</li>
+    </ul>
+  </div>
+
+  <h3>2.2 Expected Squared Prediction Error (Risk)</h3>
+  <p>
+    Focusing on squared error loss, the <strong>expected squared prediction error</strong> (also called the <em>risk</em>) of a function $f$ is:
+  </p>
+  <div class="math-block">
+    $$\text{Err}_f = \mathbb{E}\!\left[\{Y - f(X)\}^2\right],$$
+  </div>
+  <p>
+    where the expectation is over $(X, Y) \sim \Pr(X, Y)$. The key question is: what function $f^*$ minimises this risk?
+  </p>
+  <div class="math-block">
+    $$f^* = \arg\min_f \text{Err}_f.$$
+  </div>
+  <p>
+    Note that we are searching over <em>all</em> functions — this is a fundamentally infinite-dimensional optimisation problem (unlike parametric regression where we only optimise over a finite-dimensional $\beta$).
+  </p>
+
+  <h3>2.3 The Regression Function as Risk Minimizer</h3>
+
+  <div class="callout-definition">
+    <div class="callout-title">Theorem — The Regression Function Minimises the Squared Error Risk</div>
+    <p>
+      The function that minimises $\text{Err}_f = \mathbb{E}[(Y - f(X))^2]$ is the <strong>regression function</strong>:
+      $$f^*(x) = \mathbb{E}(Y \mid X = x).$$
+    </p>
+  </div>
+
+  <h4>Proof Sketch</h4>
+  <p>
+    Using the tower property (law of iterated expectations):
+  </p>
+  <div class="math-block">
+    $$\mathbb{E}[\{Y - f(X)\}^2] = \mathbb{E}\!\left(\mathbb{E}[\{Y - f(X)\}^2 \mid X]\right) = \int_{\mathbb{R}^p} \mathbb{E}[\{Y - f(x)\}^2 \mid X = x]\, P_X(dx).$$
+  </div>
+  <p>
+    Since the integrand is non-negative for every $x$, it suffices to minimise pointwise. For each fixed $x$, we want to find $c = c(x)$ minimising $\mathbb{E}[(Y - c)^2 \mid X = x]$. Expanding:
+  </p>
+  <div class="math-block">
+    $$\mathbb{E}[(Y - c)^2 \mid X = x] = \mathbb{E}[Y^2 \mid X = x] - 2c\,\mathbb{E}[Y \mid X = x] + c^2.$$
+  </div>
+  <p>
+    This is a quadratic in $c$, minimised by taking the derivative and setting it to zero: $c^* = \mathbb{E}(Y \mid X = x)$. This is exactly the conditional expectation — the regression function.
+  </p>
+
+  <h3>2.4 The Error Decomposition</h3>
+  <p>
+    A fundamental decomposition connects any prediction function $f$ to the optimal $f^*$:
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Theorem — Reducible + Irreducible Error Decomposition</div>
+    <div class="math-block">
+      $$\mathbb{E}[\{Y - f(X)\}^2] = \underbrace{\mathbb{E}[\{f(X) - f^*(X)\}^2]}_{\text{reducible error (}L^2\text{ error of }f\text{)}} + \underbrace{\mathbb{E}[\{Y - f^*(X)\}^2]}_{\text{irreducible error } = \text{Err}_{f^*}}.$$
+    </div>
+  </div>
+
+  <p>
+    The <strong>first term</strong> measures how far your chosen $f$ is from the ideal $f^*$. This is the part you can improve by choosing a better model. The <strong>second term</strong> is the irreducible prediction error — it only vanishes if $Y$ is a deterministic function of $X$ (no noise). No model, no matter how sophisticated, can eliminate this noise floor.
+  </p>
+
+  <div class="callout-example">
+    <div class="callout-title">Example — Bivariate Normal</div>
+    <p>
+      Let $(X, Y)$ be bivariate normal with zero means, unit variances, and correlation $\rho$. Then $Y \mid X = x \sim \mathcal{N}(\rho x, 1 - \rho^2)$, so $f^*(x) = \rho x$ (a linear function!) and the irreducible error is $1 - \rho^2$. This is a case where linear regression is actually the optimal nonparametric solution.
+    </p>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Remark — Absolute Loss</div>
+    <p>
+      If we replace the squared loss with the absolute loss $L(y, \hat{y}) = |y - \hat{y}|$, the risk minimizer becomes the <strong>conditional median</strong> of $Y$ given $X$, rather than the conditional mean. This highlights that what $f^*$ is depends on your choice of loss function.
+    </p>
+  </div>
+
+  <h3>2.5 Consistency of Predictive Methods</h3>
+  <p>
+    Given a sequence of estimators $\hat{f}_n$ (one for each sample size $n$), we want $\hat{f}_n$ to converge to $f^*$ as $n \to \infty$.
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition — Weak Consistency</div>
+    <p>
+      A sequence $\{\hat{f}_n\}$ is <strong>weakly consistent</strong> for a distribution $\Pr(X, Y)$ if:
+      $$\lim_{n \to \infty} \mathbb{E}\!\left[\int_{\mathbb{R}^p} \{\hat{f}_n(x) - f^*(x)\}^2\, P_X(dx)\right] = 0.$$
+    </p>
+    <p>In words: the expected $L^2$ distance between $\hat{f}_n$ and $f^*$ goes to zero.</p>
+  </div>
+
+  <div class="callout-warning">
+    <div class="callout-title">"No Free Lunch"</div>
+    <p>
+      Without structural assumptions on $\Pr(X, Y)$, convergence rates can be <strong>arbitrarily slow</strong>. There is no single model that works best for every problem. To obtain meaningful rates, you must assume something about the target — for example, that $f^*$ is smooth. This idea connects directly to the Hölder smoothness classes we saw in density estimation.
+    </p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <h2>3. Key Takeaways</h2>
+  <ul>
+    <li><strong>Bandwidth is king:</strong> For KDE, the bandwidth $h$ controls the bias–variance tradeoff. The optimal rate $h_{\text{opt}} \asymp n^{-1/5}$ yields $\text{MISE} \asymp n^{-4/5}$ in 1D. The kernel shape matters much less.</li>
+    <li><strong>Curse of dimensionality:</strong> In $d$ dimensions, the best MSE rate degrades to $n^{-4/(4+d)}$ (for $\alpha=2$), and more generally $n^{-2\alpha/(2\alpha+d)}$. Practical KDE is limited to very low dimensions without structural assumptions.</li>
+    <li><strong>Smoothness buys speed:</strong> Smoother functions (higher $\alpha$) are easier to estimate. Convergence rates improve with $\alpha$ in the minimax rate $n^{-2\alpha/(2\alpha+d)}$.</li>
+    <li><strong>The regression function $f^*(x) = \mathbb{E}(Y \mid X = x)$</strong> is the unique minimizer of the expected squared prediction error. Any other function incurs additional reducible error on top of the irreducible noise floor.</li>
+    <li><strong>No Free Lunch:</strong> Without assumptions on the data-generating process (like smoothness of $f^*$), no estimator can guarantee fast convergence. Structural assumptions are the price we pay for provable rates.</li>
+  </ul>
+</section>
+
+</main>
+
+<footer>
+  <span>© 2026 piotr-marciniak.com</span>
+  <span>set in Inter &amp; JetBrains Mono</span>
+</footer>
+<script src="../../dark.js"></script>
+</body>
+</html>

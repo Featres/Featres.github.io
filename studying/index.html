@@ -1,300 +1,213 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Studying</title>
-  <link rel="icon" type="image/png" href="../files/logo.png" />
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      line-height: 1.6;
-      background-color: #f4f4f4;
-      color: #333;
-    }
-    nav ul {
-      list-style: none;
-      display: flex;
-      justify-content: center;
-      background: #444;
-    }
-    nav ul li {
-      margin: 0 15px;
-    }
-    nav ul li a {
-      color: #fff;
-      text-decoration: none;
-      padding: 14px 20px;
-      display: block;
-    }
-    nav ul li a:hover {
-      background: #555;
-    }
-    section {
-      padding: 40px 20px;
-      max-width: 1000px;
-      margin: auto;
-    }
-    h2 {
-      margin-bottom: 20px;
-    }
-    .subject {
-      margin-bottom: 14px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      background: #fff;
-    }
-    .subject summary {
-      cursor: pointer;
-      padding: 12px 16px;
-      font-weight: 600;
-      background: #ececec;
-    }
-    .subject ul {
-      margin: 12px 20px 16px 34px;
-    }
-    .subject li {
-      margin-bottom: 6px;
-    }
-    .search-wrapper {
-      margin-bottom: 24px;
-    }
-    #search {
-      width: 100%;
-      padding: 10px 14px;
-      font-size: 15px;
-      font-family: inherit;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      background: #fff;
-      color: #333;
-      outline: none;
-    }
-    #search:focus {
-      border-color: #888;
-    }
-    .subject[hidden] {
-      display: none;
-    }
-    .snippet {
-      display: block;
-      font-size: 12px;
-      color: #666;
-      margin-top: 2px;
-    }
-    .snippet mark {
-      background: #fff3cd;
-      color: inherit;
-      border-radius: 2px;
-      padding: 0 2px;
-    }
-    footer {
-      text-align: center;
-      padding: 20px;
-      background: #333;
-      color: #fff;
-    }
-  
-    nav ul { align-items: center; }
-    #dark-toggle {
-      background: none;
-      border: 1px solid rgba(255,255,255,0.4);
-      color: #fff;
-      padding: 6px 12px;
-      cursor: pointer;
-      font-family: inherit;
-      font-size: 14px;
-      border-radius: 4px;
-    }
-    #dark-toggle:hover { background: rgba(255,255,255,0.15); }
-    body.dark { background-color: #1a1a1a; color: #e0e0e0; }
-    body.dark nav ul { background: #222; }
-    body.dark footer { background: #111; }
-    body.dark a { color: #6aabf7; }
-    body.dark .subject { border-color: #3a3a5e; background: #1e1e2e; }
-    body.dark .subject summary { background: #2a2a3e; color: #d0d0e0; }
-    body.dark #search { background: #2a2a3e; border-color: #3a3a5e; color: #d0d0e0; }
-    body.dark #search::placeholder { color: #7070a0; }
-    body.dark .snippet { color: #9090a0; }
-    body.dark .snippet mark { background: #5a4a00; }
-  </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Study Notes — Piotr Marciniak</title>
+  <meta name="description" content="Public lecture notes covering Introduction to Machine Learning, Convex Optimization, Computational Statistics, High-Dimensional Statistics, and Core Concepts in Statistical Learning." />
+  <script>
+    try { var t=localStorage.getItem('theme')||'grain'; if(t) document.documentElement.setAttribute('data-theme',t); } catch(e){}
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css" />
 </head>
 <body>
-  <script>if(localStorage.getItem('dark')==='1')document.body.classList.add('dark');</script>
-  <nav>
-    <ul>
-      <li><a href="https://piotr-marciniak.com/#about">About</a></li>
-      <li><a href="https://piotr-marciniak.com/#projects">Projects</a></li>
-      <li><a href="https://piotr-marciniak.com/#contact">Contact</a></li>
-      <li><button id="dark-toggle" onclick="toggleDark()">Dark</button></li>
-    </ul>
-  </nav>
 
-  <section id="studying-overview">
-    <h2>Studying</h2>
-
-    <div class="search-wrapper">
-      <input type="search" id="search" placeholder="Search notes…" autocomplete="off" />
+<div class="topbar">
+  <div class="left">
+    <div class="theme-switcher">
+      <button class="theme-dot" data-theme="stone" onclick="setTheme('stone')" title="stone"></button>
+      <button class="theme-dot" data-theme="dark"  onclick="setTheme('dark')"  title="dark"></button>
+      <button class="theme-dot" data-theme="ocean" onclick="setTheme('ocean')" title="ocean"></button>
+      <button class="theme-dot" data-theme="grain" onclick="setTheme('grain')" title="grain"></button>
+      <span class="theme-label">themes</span>
     </div>
+    <span class="host">piotr@marciniak</span>
+    <span class="path">~/studying</span>
+  </div>
+  <div class="right">
+    <a href="../">← home</a>
+    <a href="#summary">summary</a>
+    <a href="#content">notes</a>
+  </div>
+</div>
 
-    <details class="subject" open>
-      <summary>Introduction to Machine Learning</summary>
-      <ul>
-        <li><a href="introduction-to-machine-learning/lecture1-summary.html">Lecture 1 - Introduction to Machine Learning</a></li>
-        <li><a href="introduction-to-machine-learning/lecture2-summary.html">Lecture 2 - Linear Regression</a></li>
-        <li><a href="introduction-to-machine-learning/lecture3-summary.html">Lecture 3 - Nonlinear Regression &amp; Optimization I</a></li>
-        <li><a href="introduction-to-machine-learning/lecture4-summary.html">Lecture 4 - Optimization II</a></li>
-        <li><a href="introduction-to-machine-learning/lecture5-summary.html">Lecture 5 - Generalization</a></li>
-        <li><a href="introduction-to-machine-learning/lecture6-regularization.html">Lecture 6 - Regularization</a></li>
-        <li><a href="introduction-to-machine-learning/lecture7-classification.html">Lecture 7 - Classification</a></li>
-        <li><a href="introduction-to-machine-learning/lecture8-classification2.html">Lecture 8 - Classification 2</a></li>
-        <li><a href="introduction-to-machine-learning/lecture9-kernels.html">Lecture 9 - The Kernel Trick</a></li>
-        <li><a href="introduction-to-machine-learning/lecture10-kernels2.html">Lecture 10 - Kernels and Other Methods</a></li>
-        <li><a href="introduction-to-machine-learning/lecture11-nn.html">Lecture 11 - Introduction to Neural Networks</a></li>
-        <li><a href="introduction-to-machine-learning/lecture12-nn2.html">Lecture 12 - Neural Networks 2</a></li>
-        <li><a href="introduction-to-machine-learning/lecture13-nn3.html">Lecture 13 - Neural Networks 3</a></li>
-        <li><a href="introduction-to-machine-learning/lecture-14-cnn.html">Lecture 14 - Convolutional Neural Networks</a></li>
-        <li><a href="introduction-to-machine-learning/lecture-15-clustering.html">Lecture 15 - Unsupervised Learning: Clustering</a></li>
-        <li><a href="introduction-to-machine-learning/lecture-16-summary.html">Lecture 16 - Unsupervised Learning: Dimension Reduction</a></li>
-      </ul>
-    </details>
+<div class="grid">
 
-    <details class="subject">
-      <summary>Convex Optimization</summary>
-      <ul>
-        <li><a href="convex-optimization/chapter1-background-knowledge.html">Chapter 1 - Background Knowledge</a></li>
-        <li><a href="convex-optimization/chapter2-convex-optimization-problems.html">Chapter 2 - Convex Optimization Problems</a></li>
-        <li><a href="convex-optimization/chapter3-duality.html">Chapter 3 - Duality</a></li>
-        <li><a href="convex-optimization/chapter4-unconstrained-optimization.html">Chapter 4 - Unconstrained Optimization</a></li>
-        <li><a href="convex-optimization/ch5-summary.html">Chapter 5 - Constrained Optimization</a></li>
-        <li><a href="convex-optimization/chapter6-socp.html">Chapter 6 - Second-Order Cone Programs</a></li>
-      </ul>
-    </details>
-
-    <details class="subject">
-      <summary>Computational Statistics</summary>
-      <ul>
-        <li><a href="computational-statistics/week1-summary.html">Lecture 1 - Introduction &amp; Linear Regression</a></li>
-        <li><a href="computational-statistics/week2-summary.html">Lecture 2 - Properties of OLS &amp; Inference</a></li>
-        <li><a href="computational-statistics/week3-summary.html">Lecture 3 - Model Diagnostics, Selection &amp; Density Estimation</a></li>
-        <li><a href="computational-statistics/week4-summary.html">Lecture 4 - Density Estimation Theory &amp; Regression Theory</a></li>
-        <li><a href="computational-statistics/week5-summary.html">Lecture 5 - Regression Theory &amp; Nonparametric Regression</a></li>
-        <li><a href="computational-statistics/lecture6-summary.html">Lecture 6 - Splines &amp; Model Assessment</a></li>
-        <li><a href="computational-statistics/week7-summary.html">Lecture 7 - Cross-Validation &amp; Introduction to the Bootstrap</a></li>
-        <li><a href="computational-statistics/week8-summary.html">Lecture 8 - The Bootstrap</a></li>
-      </ul>
-    </details>
-
-    <details class="subject">
-      <summary>High-Dimensional Statistics</summary>
-      <ul>
-        <li><a href="high-dimensional-statistics/lecture1-summary.html">Lecture 1</a></li>
-        <li><a href="high-dimensional-statistics/lecture2-summary.html">Lecture 2</a></li>
-        <li><a href="high-dimensional-statistics/lecture3-summary.html">Lecture 3</a></li>
-        <li><a href="high-dimensional-statistics/lecture4-summary.html">Lecture 4</a></li>
-        <li><a href="high-dimensional-statistics/lecture5-summary.html">Lecture 5</a></li>
-        <li><a href="high-dimensional-statistics/lecture6-summary.html">Lecture 6</a></li>
-        <li><a href="high-dimensional-statistics/lecture7-summary.html">Lecture 7</a></li>
-        <li><a href="high-dimensional-statistics/lecture8-summary.html">Lecture 8</a></li>
-        <li><a href="high-dimensional-statistics/lecture9-summary.html">Lecture 9</a></li>
-      </ul>
-    </details>
-
-    <details class="subject">
-      <summary>Core Concepts in Statistical Learning</summary>
-      <ul>
-        <li><a href="core-concepts-in-statistical-learning/lecture1-summary.html">Lecture 1</a></li>
-        <li><a href="core-concepts-in-statistical-learning/lecture2-summary.html">Lecture 2</a></li>
-        <li><a href="core-concepts-in-statistical-learning/lecture3-summary.html">Lecture 3</a></li>
-        <li><a href="core-concepts-in-statistical-learning/lecture-4-summary.html">Lecture 4 - MLE Properties, Method of Moments &amp; EM</a></li>
-        <li><a href="core-concepts-in-statistical-learning/lecture-5-hypothesis-testing.html">Lecture 5 - Hypothesis Testing Foundations</a></li>
-        <li><a href="core-concepts-in-statistical-learning/lecture-6-summary.html">Lecture 6 - Chi-Square and Likelihood Ratio Tests</a></li>
-        <li><a href="core-concepts-in-statistical-learning/lecture-7-summary.html">Lecture 7 - Testing Independence, p-values, and Multiple Testing</a></li>
-      </ul>
-    </details>
+  <!-- HEADER -->
+  <section class="cell subhead span-12">
+    <div class="proj-line">
+      <span class="k">project ·</span>
+      <span class="v">Studying</span>
+    </div>
+    <h1>Study Notes</h1>
+    <p class="tagline">Public lecture notes from five graduate courses at ETH Zürich — written to make the math stick.</p>
   </section>
 
-  <script>
-    // Map href -> content text, populated after index loads
-    const contentIndex = {};
+  <!-- QUICK STATS -->
+  <section class="cell modules span-12" style="grid-template-columns: repeat(4, 1fr);">
+    <div class="mod">
+      <div class="micro">Courses</div>
+      <div class="tags">
+        <span class="tag">Intro ML</span>
+        <span class="tag">Convex Opt</span>
+        <span class="tag">Comp Stats</span>
+        <span class="tag">HDS</span>
+        <span class="tag">CCSL</span>
+      </div>
+    </div>
+    <div class="mod">
+      <div class="micro">Topics</div>
+      <div class="tags">
+        <span class="tag">Optimization</span>
+        <span class="tag">Inference</span>
+        <span class="tag">Neural Networks</span>
+        <span class="tag">Kernel Methods</span>
+      </div>
+    </div>
+    <div class="mod">
+      <div class="micro">Format</div>
+      <div class="tags">
+        <span class="tag">HTML notes</span>
+        <span class="tag">Math typeset</span>
+      </div>
+    </div>
+    <div class="mod">
+      <div class="micro">Institution</div>
+      <div class="tags">
+        <span class="tag">ETH Zurich</span>
+        <span class="tag">MSc Statistics</span>
+      </div>
+    </div>
+  </section>
 
-    fetch('search-index.json')
-      .then(r => r.json())
-      .then(entries => {
-        for (const e of entries) contentIndex[e.href] = e.content;
-      });
+  <!-- SUMMARY -->
+  <section class="cell sum span-12" id="summary">
+    <div class="micro">01 // summary</div>
+    <p>Notes written lecture-by-lecture as I work through the core curriculum of the ETH Statistics MSc. Each page is a self-contained summary: definitions, key results, proof sketches, and worked examples — just enough to rebuild intuition from scratch.</p>
+    <p>Five courses so far: Introduction to Machine Learning, Convex Optimization, Computational Statistics, High-Dimensional Statistics, and Core Concepts in Statistical Learning.</p>
+    <p>Each page is drafted as a structured lecture summary with the help of Claude (Anthropic). The goal is coverage and clarity.</p>
+  </section>
 
-    function excerpt(text, q, context = 60) {
-      const lo = text.toLowerCase();
-      const i = lo.indexOf(q);
-      if (i === -1) return null;
-      const start = Math.max(0, i - context);
-      const end = Math.min(text.length, i + q.length + context);
-      let snip = (start > 0 ? '…' : '') + text.slice(start, end) + (end < text.length ? '…' : '');
-      // Highlight the match
-      const re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-      snip = snip.replace(re, m => `<mark>${m}</mark>`);
-      return snip;
-    }
+  <!-- CONTENT -->
+  <section class="cell content span-12" id="content">
+    <div class="head">
+      <div class="micro">02 // notes</div>
+      <div class="micro">5 courses</div>
+    </div>
 
-    const search = document.getElementById('search');
-    search.addEventListener('input', () => {
-      const q = search.value.trim().toLowerCase();
+    <!-- Introduction to Machine Learning -->
+    <section>
+      <div class="micro">§</div>
+      <h2>Introduction to Machine Learning</h2>
+    </section>
+    <section>
+      <ul>
+        <li><a href="../files/introduction-to-machine-learning/lecture1-summary.html">Lecture 1 — Introduction to Machine Learning</a></li>
+        <li><a href="../files/introduction-to-machine-learning/lecture2-summary.html">Lecture 2 — Linear Regression</a></li>
+        <li><a href="../files/introduction-to-machine-learning/lecture3-summary.html">Lecture 3 — Nonlinear Regression &amp; Optimization I</a></li>
+        <li><a href="../files/introduction-to-machine-learning/lecture4-summary.html">Lecture 4 — Optimization II</a></li>
+        <li><a href="../files/introduction-to-machine-learning/lecture5-summary.html">Lecture 5 — Generalization</a></li>
+        <li><a href="../files/introduction-to-machine-learning/lecture6-regularization.html">Lecture 6 — Regularization</a></li>
+        <li><a href="../files/introduction-to-machine-learning/lecture7-classification.html">Lecture 7 — Classification</a></li>
+        <li><a href="../files/introduction-to-machine-learning/lecture8-classification2.html">Lecture 8 — Classification 2</a></li>
+        <li><a href="../files/introduction-to-machine-learning/lecture9-kernels.html">Lecture 9 — The Kernel Trick</a></li>
+        <li><a href="../files/introduction-to-machine-learning/lecture10-kernels2.html">Lecture 10 — Kernels and Other Methods</a></li>
+        <li><a href="../files/introduction-to-machine-learning/lecture11-nn.html">Lecture 11 — Introduction to Neural Networks</a></li>
+        <li><a href="../files/introduction-to-machine-learning/lecture12-nn2.html">Lecture 12 — Neural Networks 2</a></li>
+        <li><a href="../files/introduction-to-machine-learning/lecture13-nn3.html">Lecture 13 — Neural Networks 3</a></li>
+        <li><a href="../files/introduction-to-machine-learning/lecture-14-cnn.html">Lecture 14 — Convolutional Neural Networks</a></li>
+        <li><a href="../files/introduction-to-machine-learning/lecture-15-clustering.html">Lecture 15 — Unsupervised Learning: Clustering</a></li>
+        <li><a href="../files/introduction-to-machine-learning/lecture-16-summary.html">Lecture 16 — Unsupervised Learning: Dimension Reduction</a></li>
+      </ul>
+    </section>
 
-      // Remove any existing snippets
-      document.querySelectorAll('.snippet').forEach(s => s.remove());
+    <!-- Convex Optimization -->
+    <section>
+      <div class="micro">§</div>
+      <h2>Convex Optimization</h2>
+    </section>
+    <section>
+      <ul>
+        <li><a href="../files/convex-optimization/chapter1-background-knowledge.html">Chapter 1 — Background Knowledge</a></li>
+        <li><a href="../files/convex-optimization/chapter2-convex-optimization-problems.html">Chapter 2 — Convex Optimization Problems</a></li>
+        <li><a href="../files/convex-optimization/chapter3-duality.html">Chapter 3 — Duality</a></li>
+        <li><a href="../files/convex-optimization/chapter4-unconstrained-optimization.html">Chapter 4 — Unconstrained Optimization</a></li>
+        <li><a href="../files/convex-optimization/ch5-summary.html">Chapter 5 — Constrained Optimization</a></li>
+        <li><a href="../files/convex-optimization/chapter6-socp.html">Chapter 6 — Second-Order Cone Programs</a></li>
+      </ul>
+    </section>
 
-      document.querySelectorAll('.subject').forEach(details => {
-        let anyVisible = false;
-        const subjectMatch = !q || details.querySelector('summary').textContent.toLowerCase().includes(q);
+    <!-- Computational Statistics -->
+    <section>
+      <div class="micro">§</div>
+      <h2>Computational Statistics</h2>
+    </section>
+    <section>
+      <ul>
+        <li><a href="../files/computational-statistics/week1-summary.html">Lecture 1 — Introduction &amp; Linear Regression</a></li>
+        <li><a href="../files/computational-statistics/week2-summary.html">Lecture 2 — Properties of OLS &amp; Inference</a></li>
+        <li><a href="../files/computational-statistics/week3-summary.html">Lecture 3 — Model Diagnostics, Selection &amp; Density Estimation</a></li>
+        <li><a href="../files/computational-statistics/week4-summary.html">Lecture 4 — Density Estimation Theory &amp; Regression Theory</a></li>
+        <li><a href="../files/computational-statistics/week5-summary.html">Lecture 5 — Regression Theory &amp; Nonparametric Regression</a></li>
+        <li><a href="../files/computational-statistics/lecture6-summary.html">Lecture 6 — Splines &amp; Model Assessment</a></li>
+        <li><a href="../files/computational-statistics/week7-summary.html">Lecture 7 — Cross-Validation &amp; Introduction to the Bootstrap</a></li>
+        <li><a href="../files/computational-statistics/week8-summary.html">Lecture 8 — The Bootstrap</a></li>
+      </ul>
+    </section>
 
-        details.querySelectorAll('li').forEach(li => {
-          const a = li.querySelector('a');
-          const href = a ? a.getAttribute('href') : '';
-          const titleMatch = !q || li.textContent.toLowerCase().includes(q);
-          const content = contentIndex[href] || '';
-          const contentMatch = q && content.toLowerCase().includes(q);
+    <!-- High-Dimensional Statistics -->
+    <section>
+      <div class="micro">§</div>
+      <h2>High-Dimensional Statistics</h2>
+    </section>
+    <section>
+      <ul>
+        <li><a href="../files/high-dimensional-statistics/lecture1-summary.html">Lecture 1 — Introduction &amp; The Lasso</a></li>
+        <li><a href="../files/high-dimensional-statistics/lecture2-summary.html">Lecture 2 — Theory for the Lasso: Prediction</a></li>
+        <li><a href="../files/high-dimensional-statistics/lecture3-summary.html">Lecture 3 — Lasso Theory: From Slow to Fast Rates &amp; Beyond</a></li>
+        <li><a href="../files/high-dimensional-statistics/lecture4-summary.html">Lecture 4 — Lasso: Prediction, Computation, Screening &amp; the Adaptive Lasso</a></li>
+        <li><a href="../files/high-dimensional-statistics/lecture5-summary.html">Lecture 5 — GLMs, Group Lasso &amp; Additive Models</a></li>
+        <li><a href="../files/high-dimensional-statistics/lecture6-summary.html">Lecture 6 — Group Lasso &amp; High-Dimensional Additive Models</a></li>
+        <li><a href="../files/high-dimensional-statistics/lecture7-summary.html">Lecture 7 — Uncertainty Quantification: P-values and Confidence Intervals</a></li>
+        <li><a href="../files/high-dimensional-statistics/lecture8-summary.html">Lecture 8 — Graphical Models and Uncertainty Quantification</a></li>
+        <li><a href="../files/high-dimensional-statistics/lecture9-summary.html">Lecture 9 — Stability Selection &amp; Multi Sample Splitting</a></li>
+      </ul>
+    </section>
 
-          const visible = !q || subjectMatch || titleMatch || contentMatch;
-          li.hidden = !visible;
-          if (visible) anyVisible = true;
+    <!-- Core Concepts in Statistical Learning -->
+    <section>
+      <div class="micro">§</div>
+      <h2>Core Concepts in Statistical Learning</h2>
+    </section>
+    <section>
+      <ul>
+        <li><a href="../files/core-concepts-in-statistical-learning/lecture1-summary.html">Lecture 1 — Sample Space, Random Variables, and Distributions</a></li>
+        <li><a href="../files/core-concepts-in-statistical-learning/lecture2-summary.html">Lecture 2 — Quantiles, Multivariate Distributions, Moments &amp; Convergence</a></li>
+        <li><a href="../files/core-concepts-in-statistical-learning/lecture3-summary.html">Lecture 3 — Estimation, Confidence Sets, Empirical CDF, Bootstrap &amp; MLE</a></li>
+        <li><a href="../files/core-concepts-in-statistical-learning/lecture-4-summary.html">Lecture 4 — MLE Properties, Method of Moments &amp; EM</a></li>
+        <li><a href="../files/core-concepts-in-statistical-learning/lecture-5-hypothesis-testing.html">Lecture 5 — Hypothesis Testing Foundations</a></li>
+        <li><a href="../files/core-concepts-in-statistical-learning/lecture-6-summary.html">Lecture 6 — Chi-Square and Likelihood Ratio Tests</a></li>
+        <li><a href="../files/core-concepts-in-statistical-learning/lecture-7-summary.html">Lecture 7 — Testing Independence, p-values, and Multiple Testing</a></li>
+      </ul>
+    </section>
+  </section>
 
-          if (q && !subjectMatch && !titleMatch && contentMatch) {
-            const snip = excerpt(content, q);
-            if (snip) {
-              const span = document.createElement('span');
-              span.className = 'snippet';
-              span.innerHTML = snip;
-              li.appendChild(span);
-            }
-          }
-        });
+  <!-- BACK NAV -->
+  <section class="cell subnav span-12">
+    <a href="../">← back to work_log</a>
+    <span class="trail">piotr-marciniak.com / studying</span>
+  </section>
 
-        details.hidden = !anyVisible;
-        if (q) details.open = anyVisible;
-      });
-    });
-  </script>
+</div>
 
-  <footer>
-    <p>&copy; 2026 Piotr Marciniak. All rights reserved.</p>
-  </footer>
-  <script>
-    function toggleDark() {
-      const d = document.body.classList.toggle('dark');
-      localStorage.setItem('dark', d ? '1' : '0');
-      const btn = document.getElementById('dark-toggle');
-      if (btn) btn.textContent = d ? 'Light' : 'Dark';
-    }
-    (function() {
-      const btn = document.getElementById('dark-toggle');
-      if (btn) btn.textContent = document.body.classList.contains('dark') ? 'Light' : 'Dark';
-    })();
-  </script>
+<footer>
+  <span>© 2026 piotr-marciniak.com</span>
+  <span>set in Inter &amp; JetBrains Mono</span>
+</footer>
+
+<script src="../dark.js"></script>
 </body>
 </html>

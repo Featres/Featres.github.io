@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Comp Stats – Lecture 6: Splines & Model Assessment</title>
+  <link rel="icon" type="image/png" href="../../files/logo.png" />
+  <script>
+    try { var t=localStorage.getItem('theme')||'grain'; if(t) document.documentElement.setAttribute('data-theme',t); } catch(e){}
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../styles.css" />
+  <link rel="stylesheet" href="../../lecture.css" />
+  <script>
+      MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\(', '\)']],
+          displayMath: [['$$', '$$'], ['\[', '\]']]
+        },
+        svg: { fontCache: 'global' }
+      };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+<body>
+<div class="topbar">
+  <div class="left">
+    <div class="theme-switcher">
+      <button class="theme-dot" data-theme="stone" onclick="setTheme('stone')" title="stone"></button>
+      <button class="theme-dot" data-theme="dark"  onclick="setTheme('dark')"  title="dark"></button>
+      <button class="theme-dot" data-theme="ocean" onclick="setTheme('ocean')" title="ocean"></button>
+      <button class="theme-dot" data-theme="grain" onclick="setTheme('grain')" title="grain"></button>
+      <span class="theme-label">themes</span>
+    </div>
+    <span class="host">piotr@marciniak</span>
+    <span class="path">~/files/comp-stats</span>
+  </div>
+  <div class="right">
+    <a href="../../">← home</a>
+    <a href="../../studying/">← notes</a>
+  </div>
+</div>
+
+
+<header>
+  <h1>Splines, Smoothing & Model Assessment</h1>
+  <div class="meta">
+    <span>Course: Computational Statistics (401-3632-00L)</span>
+    <span>Lecture 6</span>
+    <span>Date: 2026-03-25</span>
+  </div>
+</header>
+
+<main>
+
+<section>
+  <p>
+    This lecture completes the nonparametric regression chapter by covering <strong>global modelling</strong> (regression splines) and <strong>penalized modelling</strong> (smoothing splines) — the last two of the four nonparametric paradigms. It then transitions into <strong>model assessment and selection</strong>, introducing the key ideas of training error, test error, optimism, Mallow's $C_p$, and AIC.
+  </p>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <h2>1. Recap: Local Polynomial Regression</h2>
+
+  <p>
+    Before moving to global methods, the lecture briefly revisits local polynomial regression. Recall that the Nadaraya–Watson estimator fits a <em>local constant</em> at each target point $x$. We can do better by fitting a local polynomial of degree $p-1$:
+  </p>
+
+  <div class="math-block">
+    $$\hat{\boldsymbol\beta}(x) = \arg\min_{\boldsymbol\beta \in \mathbb{R}^p} \sum_{i=1}^{n} K\!\left(\frac{x - x_i}{h}\right) \left(Y_i - \beta_1 - \beta_2(x_i - x) - \cdots - \beta_p(x_i - x)^{p-1}\right)^2$$
+  </div>
+
+  <p>
+    The function estimate is the fitted local intercept: $\hat{f}(x) = \hat{\beta}_1(x)$. Common choices are $p = 2$ (local linear) or $p = 4$. A major advantage of the local polynomial estimator is that it handles boundaries much better than the Nadaraya–Watson estimator, which tends to suffer from <strong>design bias</strong> near the edges of the data. The idea is that by fitting a line (or higher polynomial) rather than a constant, the estimator can "tilt" to follow the true function even when the kernel window extends beyond the data range.
+  </p>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <h2>2. From Local to Global: Regression Splines</h2>
+
+  <p>
+    All the methods seen so far (kNN, kernel regression, local polynomials) are <em>local</em> fitting methods. Regression splines take a fundamentally different approach: they build a <em>global</em> model from piecewise polynomial basis functions. The key idea is to partition the domain of $x$ using <strong>knots</strong> $\xi_1 < \xi_2 < \cdots < \xi_K$ and fit a polynomial on each interval — but crucially, these pieces are connected by smoothness constraints.
+  </p>
+
+  <h3>2.1 Piecewise Constant &amp; Piecewise Linear Models</h3>
+  <p>
+    The simplest approach is a piecewise constant model (essentially a histogram for regression — usually too rough). A step up is the <strong>piecewise linear model</strong>, which fits a separate line on each interval defined by the knots. This model has $2(K+1)$ parameters and is typically <em>discontinuous</em> at the knots, which is undesirable.
+  </p>
+
+  <h3>2.2 Continuous Piecewise Linear Splines</h3>
+  <p>
+    We can enforce continuity at the knots by imposing matching constraints. This reduces the number of free parameters and yields a <strong>continuous piecewise linear model</strong>. A convenient basis representation is:
+  </p>
+
+  <div class="math-block">
+    $$f(x) = \beta_0 + \beta_1 x + \sum_{k=1}^{K} \beta_{k+1}(x - \xi_k)_+$$
+  </div>
+
+  <p>
+    where $(a)_+ = \max(a, 0)$ is the "positive part" function. This is still a <strong>linear model in the parameters $\boldsymbol\beta$</strong>, so we can estimate it with ordinary least squares. The trick is that each basis function $(x - \xi_k)_+$ is zero to the left of knot $\xi_k$ and "turns on" linearly to the right — this automatically ensures the resulting function is continuous everywhere.
+  </p>
+
+  <h3>2.3 Cubic Splines</h3>
+  <p>
+    Piecewise linear fits are still visually rough (you can see the kinks). The natural idea is to increase the polynomial degree to gain flexibility <em>between</em> knots while also demanding more smoothness <em>at</em> the knots.
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition — Cubic Spline</div>
+    <p>
+      A <strong>cubic spline</strong> with knots $\xi_1 < \cdots < \xi_K$ is a function that is a cubic polynomial on each interval, and is twice continuously differentiable everywhere (i.e., $f \in C^2$). This means the function itself, its first derivative, and its second derivative all match at every knot.
+    </p>
+  </div>
+
+  <p>A cubic spline can be written as a linear basis function model with $K + 4$ parameters:</p>
+
+  <div class="math-block">
+    $$f(x) = \beta_0 + \beta_1 x + \beta_2 x^2 + \beta_3 x^3 + \sum_{l=1}^{K} \gamma_l (x - \xi_l)^3_+$$
+  </div>
+
+  <p>
+    The first four terms give a global cubic polynomial, and each additional basis function $(x - \xi_l)^3_+$ "activates" at knot $\xi_l$ and adds a correction. Because we use <em>cubed</em> positive parts, the resulting function automatically satisfies the $C^2$ condition. This is still a linear model in the parameters, so again OLS applies.
+  </p>
+
+  <div class="callout-note">
+    <div class="callout-title">Why cubic and not quadratic or quartic?</div>
+    <p>
+      Cubic splines are the lowest-degree splines for which the knot-discontinuity is not visible to the human eye. This makes them the standard choice in practice. Compared to fitting a single high-degree global polynomial, cubic splines use many low-degree pieces and are generally much more numerically stable.
+    </p>
+  </div>
+
+  <h4>Choosing knots</h4>
+  <p>
+    The number and placement of knots control the bias–variance trade-off: more knots means more flexibility (lower bias, higher variance), fewer knots means a smoother fit (higher bias, lower variance). In practice, knots are often placed at quantiles of the observed $x_i$ values, or the number of knots is chosen by cross-validation. B-splines provide a computationally better basis than the truncated power basis shown above, though they span the same function space.
+  </p>
+
+  <h3>2.4 Natural Cubic Splines</h3>
+  <p>
+    Ordinary cubic splines can behave erratically beyond the boundary knots $\xi_1$ and $\xi_K$: the cubic polynomials in those tails can swing wildly, causing high variance in extrapolation. <strong>Natural cubic splines</strong> fix this by adding the constraint that $f$ must be <em>linear</em> beyond the boundary knots.
+  </p>
+
+  <p>
+    This linearity constraint frees up 4 degrees of freedom (two constraints at each boundary), so a natural cubic spline with $K$ knots has $\text{df} = K$ rather than $K + 4$. The trade-off is slightly more bias near the boundaries but significantly less variance — which is usually a good deal.
+  </p>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <h2>3. Smoothing Splines</h2>
+
+  <p>
+    Regression splines require you to choose the number and location of knots — a modelling decision that can be tricky. Smoothing splines offer an elegant alternative: instead of choosing knots, you let the data decide the smoothness through a <strong>roughness penalty</strong>.
+  </p>
+
+  <h3>3.1 The Penalized Least Squares Criterion</h3>
+
+  <p>Among all twice-differentiable functions $f$, find the one minimizing:</p>
+
+  <div class="math-block">
+    $$\min_f \;\sum_{i=1}^{n} (y_i - f(x_i))^2 + \lambda \int f''(z)^2\, dz$$
+  </div>
+
+  <p>
+    The first term is the usual residual sum of squares — it measures how well $f$ fits the data. The second term is a <strong>roughness penalty</strong>: the integral of the squared second derivative measures the total curvature of $f$. The parameter $\lambda \geq 0$ controls the trade-off between these two objectives.
+  </p>
+
+  <div class="callout-example">
+    <div class="callout-title">Intuition — Extreme Cases of $\lambda$</div>
+    <p>
+      If $\lambda = 0$: no penalty on curvature, so $f$ can interpolate every data point (maximum flexibility, likely overfitting). If $\lambda \to \infty$: the roughness penalty dominates, and since a straight line has $f'' \equiv 0$, the solution approaches ordinary linear regression. So $\lambda$ acts as a smooth dial between interpolation and a straight line.
+    </p>
+  </div>
+
+  <h3>3.2 The Remarkable Solution</h3>
+
+  <p>
+    The optimization above is over an <em>infinite-dimensional</em> function space (all $C^2$ functions). Yet, remarkably, the solution is <strong>finite-dimensional</strong>: the minimizer is always a <em>natural cubic spline</em> with knots at every unique observed value $x_1, \ldots, x_n$. So an infinite-dimensional problem reduces to standard linear algebra!
+  </p>
+
+  <h3>3.3 Basis Representation &amp; Ridge-Type Solution</h3>
+
+  <p>We represent the smoothing spline using natural spline basis functions $B_1, \ldots, B_n$:</p>
+  <div class="math-block">
+    $$f_\lambda(x) = \sum_{j=1}^{n} \beta_j B_j(x)$$
+  </div>
+
+  <p>Substituting into the penalized criterion, it becomes:</p>
+  <div class="math-block">
+    $$\|\mathbf{Y} - \mathbf{B}\boldsymbol\beta\|^2 + \lambda\, \boldsymbol\beta^\top \boldsymbol\Omega\, \boldsymbol\beta$$
+  </div>
+
+  <p>where $\mathbf{B}$ is the $n \times n$ design matrix of basis evaluations and $\Omega_{jk} = \int B_j''(z)\, B_k''(z)\, dz$ is the penalty matrix. The solution is:</p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Smoothing Spline Solution</div>
+    <p>
+      $$\hat{\boldsymbol\beta} = (\mathbf{B}^\top \mathbf{B} + \lambda\, \boldsymbol\Omega)^{-1} \mathbf{B}^\top \mathbf{Y}$$
+    </p>
+    <p>
+      This has exactly the same form as a <strong>Ridge regression</strong> estimator. The penalty matrix $\lambda\boldsymbol\Omega$ shrinks the coefficients toward zero, preventing overfitting despite having $n$ parameters.
+    </p>
+  </div>
+
+  <h3>3.4 Smoothing Splines as Linear Smoothers</h3>
+  <p>
+    The fitted values can be written as $\hat{\mathbf{Y}} = \mathbf{S}_\lambda \mathbf{Y}$, where $\mathbf{S}_\lambda = \mathbf{B}(\mathbf{B}^\top \mathbf{B} + \lambda\boldsymbol\Omega)^{-1}\mathbf{B}^\top$ is a symmetric smoother (hat) matrix. The <strong>effective degrees of freedom</strong> are $\text{df} = \text{tr}(\mathbf{S}_\lambda)$, providing an intuitive measure of model complexity. For example, a smoothing spline with $\text{df} = 5$ is roughly as complex as a degree-4 polynomial.
+  </p>
+
+  <h3>3.5 Equivalent Kernel Interpretation</h3>
+  <p>
+    A smoothing spline can be approximated by a kernel estimator with a <strong>local bandwidth</strong>:
+  </p>
+  <div class="math-block">
+    $$h(x) \propto \lambda^{1/4}\, n^{-1/4}\, f_X(x)^{-1/4}$$
+  </div>
+  <p>
+    This means the smoothing spline automatically adapts: where the data is sparse (low $f_X$), the effective bandwidth is larger (more smoothing), and where data is dense, it uses less smoothing to capture fine detail. This adaptive behaviour is a key advantage over fixed-bandwidth kernel methods.
+  </p>
+
+  <h3>3.6 Comparison: Kernel Regression vs. Smoothing Splines</h3>
+
+  <div class="table-wrapper">
+    <table>
+      <tr><th>Property</th><th>Nadaraya–Watson (Kernel)</th><th>Smoothing Spline</th></tr>
+      <tr><td>Fitting approach</td><td>Local constant</td><td>Global smooth function</td></tr>
+      <tr><td>Tuning parameter</td><td>Bandwidth $h$</td><td>Smoothing parameter $\lambda$ (or df)</td></tr>
+      <tr><td>Adaptivity</td><td>Fixed bandwidth everywhere</td><td>Adapts via equivalent local bandwidth</td></tr>
+      <tr><td>Knots</td><td>Not applicable</td><td>Automatically at all $x_i$</td></tr>
+      <tr><td>Smoother matrix</td><td>Yes (linear smoother)</td><td>Yes (symmetric linear smoother)</td></tr>
+    </table>
+  </div>
+
+  <h3>3.7 Extensions &amp; Outlook</h3>
+  <p>
+    Smoothing splines generalise beyond squared-error loss. For <em>any</em> loss function $L$, the minimizer of $\frac{1}{n}\sum_{i} L\{y_i, f(x_i)\} + \lambda \int f''(t)^2\, dt$ is still a natural cubic spline — though the coefficients may no longer have a closed-form solution. In multiple dimensions, fully nonparametric methods become inefficient due to the curse of dimensionality. <strong>Generalized additive models (GAMs)</strong> address this by assuming an additive structure: $E(Y \mid X_1, \ldots, X_p) = \alpha + f_1(X_1) + \cdots + f_p(X_p)$, where each $f_j$ can be estimated with a univariate smoothing spline.
+  </p>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <h2>4. Model Assessment &amp; Selection</h2>
+
+  <p>
+    With so many nonparametric methods available — each with tuning parameters like $k$, $h$, $\lambda$, or the number of knots — the natural question is: <em>how do we choose?</em> This leads to Chapter 5 of the course: model assessment and selection.
+  </p>
+
+  <h3>4.1 Training Error vs. Test Error</h3>
+  <p>
+    The <strong>training error</strong> measures how well a fitted model $\hat{f}$ predicts the data it was trained on:
+  </p>
+  <div class="math-block">
+    $$\text{err}_{\hat{f}} = \frac{1}{n}\sum_{i=1}^{n} (Y_i - \hat{f}(X_i))^2$$
+  </div>
+  <p>
+    This is always an overly optimistic estimate of how well the model will perform on new data, because the same observations were used for both fitting and evaluation. A complex enough model can drive the training error to zero while performing terribly on unseen data.
+  </p>
+
+  <p>
+    If we had an independent <strong>test set</strong> $\{(X_{\text{new},i}, Y_{\text{new},i})\}_{i=1}^m$, we could estimate the <strong>conditional (extra-sample) error</strong>:
+  </p>
+  <div class="math-block">
+    $$R(\hat{f} \mid \mathcal{D}_n) = E\left[(Y_{\text{new}} - \hat{f}(X_{\text{new}}))^2 \mid \mathcal{D}_n\right]$$
+  </div>
+  <p>
+    Another important quantity is the <strong>generalization error</strong> $E[(Y_{\text{new}} - \hat{f}(X_{\text{new}}))^2]$, which averages over both the test point and the training data. This does not decrease monotonically with complexity — it typically exhibits a U-shape, first decreasing (underfitting regime) then increasing (overfitting regime).
+  </p>
+
+  <h3>4.2 The Optimism of the Training Error</h3>
+  <p>
+    To understand <em>why</em> the training error is optimistic, the lecture introduces the <strong>in-sample error</strong>: the prediction error evaluated at the same input points $X_i$ but with <em>fresh</em> responses $\tilde{Y}_i$ drawn independently from $P(Y \mid X_i)$:
+  </p>
+  <div class="math-block">
+    $$\text{Err}_{\text{in}} = \frac{1}{n}\sum_{i=1}^{n} E_{\tilde{Y}_i}\!\left[(\tilde{Y}_i - \hat{f}(X_i))^2 \mid \mathcal{D}_n\right]$$
+  </div>
+
+  <p>The <strong>optimism</strong> is defined as $\text{op} = \text{Err}_{\text{in}} - \text{err}_{\hat{f}}$. Taking expectations yields the elegant identity:</p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Theorem — Expected Optimism</div>
+    <p>
+      $$\omega = E(\text{op}) = \frac{2}{n}\sum_{i=1}^{n} \text{Cov}(\hat{Y}_i, Y_i)$$
+    </p>
+    <p>
+      where $\hat{Y}_i = \hat{f}(X_i)$. The optimism is governed by how much the fitted values depend on the training responses. The more the model adapts to the specific training outcomes (i.e., the more complex it is), the larger this covariance, and the more optimistic the training error.
+    </p>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Intuition for the Proof</div>
+    <p>
+      Write out $E[(\tilde{Y}_i - \hat{Y}_i)^2]$ and $E[(Y_i - \hat{Y}_i)^2]$ using the bias-variance decomposition. Most terms cancel between the two expressions. The only surviving term is $-2\text{Cov}(Y_i, \hat{Y}_i)$, since $\tilde{Y}_i$ is independent of $\hat{Y}_i$ (so $\text{Cov}(\tilde{Y}_i, \hat{Y}_i) = 0$) but $Y_i$ is not (because $\hat{Y}_i$ was constructed using $Y_i$).
+    </p>
+  </div>
+
+  <h3>4.3 Effective Degrees of Freedom &amp; Mallow's $C_p$</h3>
+  <p>
+    Under the additive error model $Y_i = \mu_i + \varepsilon_i$ with $\text{Var}(\varepsilon_i) = \sigma^2$ and uncorrelated errors, we can write $\sum_{i} \text{Cov}(Y_i, \hat{Y}_i) = \sigma^2\, \text{df}(\hat{\mathbf{Y}})$, connecting the optimism directly to the <strong>effective degrees of freedom</strong> $\text{df} = \text{tr}(\mathbf{S})$ that we defined for linear smoothers last week. This gives:
+  </p>
+  <div class="math-block">
+    $$E(\text{Err}_{\text{in}}) = E(\text{err}_{\hat{f}}) + \frac{2\sigma^2}{n}\,\text{df}(\hat{\mathbf{Y}})$$
+  </div>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition — Mallow's $C_p$</div>
+    <p>
+      $$C_p = \frac{1}{n}\left\{\text{RSS} + 2\hat\sigma^2\, \text{df}(\hat{\mathbf{Y}})\right\}$$
+    </p>
+    <p>
+      where $\hat\sigma^2$ is estimated from a low-bias model. $C_p$ is an unbiased estimator of $E(\text{Err}_{\text{in}})$: among a collection of models, select the one with the smallest $C_p$. It corrects the training error for its optimistic bias by adding a penalty proportional to the model's complexity.
+    </p>
+  </div>
+
+  <h3>4.4 AIC and BIC</h3>
+  <p>
+    Likelihood-based model selection follows the same principle of penalizing complexity. Information criteria take the form:
+  </p>
+  <div class="math-block">
+    $$\text{*IC} = (\text{goodness of fit}) + (\text{model complexity penalty})$$
+  </div>
+  <p>
+    The two most popular choices are the <strong>Akaike Information Criterion (AIC)</strong> $= -2\ell(\hat\theta) + 2p$ and the <strong>Bayesian Information Criterion (BIC)</strong> $= -2\ell(\hat\theta) + \log(n)\, p$, where $\hat\theta$ is the MLE and $p$ is the effective number of parameters. BIC penalizes complexity more heavily for large $n$, and tends to favour simpler models. In Gaussian linear models with known $\sigma^2$, $C_p$ and AIC are equivalent (up to a multiplicative constant).
+  </p>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <h2>Key Takeaways</h2>
+  <ul>
+    <li><strong>Regression splines</strong> are linear basis function models: piecewise polynomials joined at knots with smoothness constraints. Cubic splines ($C^2$ continuity) are the standard, and natural cubic splines add linearity beyond the boundaries for better extrapolation.</li>
+    <li><strong>Smoothing splines</strong> solve a penalized least squares problem (data fit + roughness penalty). The solution is always a natural cubic spline — a remarkable reduction from infinite to finite dimensions — and takes the form of a Ridge-type estimator.</li>
+    <li>Smoothing splines are <strong>adaptive</strong>: their equivalent kernel has a local bandwidth that increases in sparse regions and decreases in dense regions, unlike fixed-bandwidth kernel estimators.</li>
+    <li>The <strong>training error is optimistic</strong>: its expected optimism equals $\frac{2}{n}\sum_i \text{Cov}(\hat{Y}_i, Y_i)$, which under standard assumptions equals $\frac{2\sigma^2}{n}\text{df}$. This motivates Mallow's $C_p$ as a bias-corrected model comparison criterion.</li>
+    <li><strong>AIC and BIC</strong> are likelihood-based counterparts, all sharing the principle of balancing goodness of fit against model complexity.</li>
+  </ul>
+</section>
+
+</main>
+
+<footer>
+  <span>© 2026 piotr-marciniak.com</span>
+  <span>set in Inter &amp; JetBrains Mono</span>
+</footer>
+<script src="../../dark.js"></script>
+</body>
+</html>

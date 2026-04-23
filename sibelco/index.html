@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sibelco — Piotr Marciniak</title>
+  <meta name="description" content="Two-year KE@Work research internship at Sibelco — ball mill energy optimization through data analysis, predictive modeling, and automated setpoint control." />
+  <script>
+    try { var t=localStorage.getItem('theme')||'grain'; if(t) document.documentElement.setAttribute('data-theme',t); } catch(e){}
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css" />
+</head>
+<body>
+
+<div class="topbar">
+  <div class="left">
+    <div class="theme-switcher">
+      <button class="theme-dot" data-theme="stone" onclick="setTheme('stone')" title="stone"></button>
+      <button class="theme-dot" data-theme="dark"  onclick="setTheme('dark')"  title="dark"></button>
+      <button class="theme-dot" data-theme="ocean" onclick="setTheme('ocean')" title="ocean"></button>
+      <button class="theme-dot" data-theme="grain" onclick="setTheme('grain')" title="grain"></button>
+      <span class="theme-label">themes</span>
+    </div>
+    <span class="host">piotr@marciniak</span>
+    <span class="path">~/work/sibelco</span>
+  </div>
+  <div class="right">
+    <a href="../">← home</a>
+    <a href="#summary">summary</a>
+    <a href="#content">work</a>
+  </div>
+</div>
+
+<div class="grid">
+
+  <!-- HEADER -->
+  <section class="cell subhead span-12">
+    <div class="proj-line">
+      <span class="k">role ·</span>
+      <span class="v">Data Science Research Intern</span>
+    </div>
+    <h1>Sibelco</h1>
+    <p class="tagline">Two-year KE@Work research internship — optimizing energy consumption of an industrial ball mill through data analysis, predictive modeling, and automated control. Sep 2023 – Jul 2025.</p>
+  </section>
+
+  <!-- MODULES -->
+  <section class="cell modules span-12" style="grid-template-columns: repeat(4, 1fr);">
+    <div class="mod">
+      <div class="micro">Languages</div>
+      <div class="tags">
+        <span class="tag">Python</span>
+        <span class="tag">Java</span>
+        <span class="tag">LaTeX</span>
+      </div>
+    </div>
+    <div class="mod">
+      <div class="micro">Methods</div>
+      <div class="tags">
+        <span class="tag">Time Series</span>
+        <span class="tag">Outlier Detection</span>
+        <span class="tag">MPC</span>
+        <span class="tag">Optimization</span>
+      </div>
+    </div>
+    <div class="mod">
+      <div class="micro">Tools</div>
+      <div class="tags">
+        <span class="tag">InfluxDB</span>
+        <span class="tag">Graphana</span>
+        <span class="tag">Scikit-learn</span>
+        <span class="tag">TensorFlow</span>
+      </div>
+    </div>
+    <div class="mod">
+      <div class="micro">Type</div>
+      <div class="tags">
+        <span class="tag">Research</span>
+        <span class="tag">KE@Work</span>
+        <span class="tag">BSc Thesis</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- SUMMARY -->
+  <section class="cell sum span-12" id="summary">
+    <div class="micro">01 // summary</div>
+    <p>Two-year research internship at Sibelco as part of the KE@Work honours programme at Maastricht University. The project focused on reducing energy consumption of an industrial ball mill — a grinding machine where a gas burner, controlled by a PID loop, is the dominant energy consumer. The core challenge: a delay between the burner and the temperature sensor causes the controller to operate inefficiently, and no principled method existed for selecting the temperature setpoint.</p>
+    <p>The work progressed from exploratory correlation analysis and setpoint studies, through time-series modeling and data quality improvement, to a final predictive control system that automates setpoint selection. Culminated in a bachelor thesis: <em>Automating Temperature Setpoint Selection For Ball Mill Using Predictive Modeling</em>.</p>
+  </section>
+
+  <!-- CONTENT -->
+  <section class="cell content span-12" id="content">
+    <div class="head">
+      <div class="micro">02 // work</div>
+      <div class="micro">3 phases</div>
+    </div>
+
+    <!-- Phase 1 -->
+    <section>
+      <div class="micro">§</div>
+      <h2>Exploratory Analysis &amp; Setpoint Study</h2>
+    </section>
+    <section>
+      <p>The first phase established which factors drive energy consumption and what constitutes a good temperature setpoint. Pearson correlations were computed across both short (3h) and long (1yr) time windows to identify stable relationships. A dedicated setpoint analysis divided operating conditions into outside-temperature ranges and found local optima for each — the first principled basis for setpoint selection in the installation.</p>
+      <ul>
+        <li>Correlation analysis over short and long time horizons to identify energy-driving features</li>
+        <li>Energy consumption unit transformation and distribution comparison</li>
+        <li>Setpoint optimality study segmented by ambient temperature bands</li>
+        <li>Initial regression model for forecasting process variables at time advance <em>x</em></li>
+      </ul>
+    </section>
+
+    <!-- Phase 2 -->
+    <section>
+      <div class="micro">§</div>
+      <h2>Time-Series Modeling &amp; Data Quality</h2>
+    </section>
+    <section>
+      <p>The second phase attempted mathematical modeling of the system (AR, ARIMA, ARIMAX, LSTM) and found that data quality was the limiting factor — noise from maintenance periods, warm-up cycles, and sensor artefacts obscured most structure. This prompted a systematic data quality improvement effort across three methods.</p>
+      <ul>
+        <li>Compared AR, ARIMA, ARIMAX, and LSTM on five held-out datasets; stationarity verified with Augmented Dickey–Fuller</li>
+        <li>Rule-based filtering using operator field knowledge — 13 rules, reducing the dataset by over 75% while significantly improving signal quality</li>
+        <li>Inverse variance weighting via generalised variance of the covariance matrix to down-weight noisy periods</li>
+        <li>Outlier detection: Isolation Forest, Mahalanobis distance, Local Outlier Factor, and One-Class SVM — algorithms compared on predicted inlier/outlier assignments</li>
+      </ul>
+    </section>
+
+    <!-- Phase 3 -->
+    <section>
+      <div class="micro">§</div>
+      <h2>Predictive Control &amp; Automation</h2>
+    </section>
+    <section>
+      <p>The final phase built a model predictive control (MPC) system to automate setpoint selection. ML models were trained to forecast energy consumption and throughput under different setpoints and weather conditions. An optimizer — comparing gradient descent and adaptive simulated annealing — searched for the setpoint that minimised a combined cost function trading off the two objectives. The result replaced manual operator judgement with a data-driven, weather-aware control policy.</p>
+      <ul>
+        <li>Multivariate regression models (linear, tree-based, neural network) compared for prediction accuracy</li>
+        <li>Weather-conditioned forecasting of energy consumption and throughput at candidate setpoints</li>
+        <li>Cost function design to combine the two production objectives into a single optimisation target</li>
+        <li>Gradient descent vs. adaptive simulated annealing as the optimisation back-end</li>
+        <li>End-to-end pipeline: given weather forecast → predict outcomes → select optimal setpoint</li>
+      </ul>
+    </section>
+
+  </section>
+
+  <!-- BACK NAV -->
+  <section class="cell subnav span-12">
+    <a href="../">← back to work_log</a>
+    <span class="trail">piotr-marciniak.com / sibelco</span>
+  </section>
+
+</div>
+
+<footer>
+  <span>© 2026 piotr-marciniak.com</span>
+  <span>set in Inter &amp; JetBrains Mono</span>
+</footer>
+
+<script src="../dark.js"></script>
+</body>
+</html>

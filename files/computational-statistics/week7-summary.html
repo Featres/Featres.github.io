@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Comp Stats – Lecture 7: Cross-Validation &amp; Introduction to the Bootstrap</title>
+  <link rel="icon" type="image/png" href="../../files/logo.png" />
+  <script>
+    try { var t=localStorage.getItem('theme')||'grain'; if(t) document.documentElement.setAttribute('data-theme',t); } catch(e){}
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../styles.css" />
+  <link rel="stylesheet" href="../../lecture.css" />
+  <script>
+      MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\(', '\)']],
+          displayMath: [['$$', '$$'], ['\[', '\]']]
+        },
+        svg: { fontCache: 'global' }
+      };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+<body>
+<div class="topbar">
+  <div class="left">
+    <div class="theme-switcher">
+      <button class="theme-dot" data-theme="stone" onclick="setTheme('stone')" title="stone"></button>
+      <button class="theme-dot" data-theme="dark"  onclick="setTheme('dark')"  title="dark"></button>
+      <button class="theme-dot" data-theme="ocean" onclick="setTheme('ocean')" title="ocean"></button>
+      <button class="theme-dot" data-theme="grain" onclick="setTheme('grain')" title="grain"></button>
+      <span class="theme-label">themes</span>
+    </div>
+    <span class="host">piotr@marciniak</span>
+    <span class="path">~/files/comp-stats</span>
+  </div>
+  <div class="right">
+    <a href="../../">← home</a>
+    <a href="../../studying/">← notes</a>
+  </div>
+</div>
+
+
+<header>
+    <h1>Cross-Validation &amp; Introduction to the Bootstrap</h1>
+    <div class="meta">
+      <span>Course: Computational Statistics (401-3632-00L), ETH Zürich</span>
+      <span>Week 7</span>
+      <span>Date: 2026-04-03</span>
+    </div>
+  </header>
+
+  <main>
+    <section>
+      <p>
+        This week continues <strong>Chapter 5: Model Assessment and Selection</strong>, diving deeply into cross-validation — the most widely used method in machine learning for estimating prediction error and selecting tuning parameters. We cover the $K$-fold cross-validation algorithm, the bias–variance tradeoff in the choice of $K$, the one-standard-error rule, and computational shortcuts for linear smoothers. The lecture concludes by introducing the <strong>bootstrap</strong> (Chapter 6), one of the most influential ideas in modern statistics.
+      </p>
+    </section>
+
+    <!-- ===== RECAP ===== -->
+    <section>
+      <h2>Recap from Week 6</h2>
+      <p>
+        Last week wrapped up Chapter 4 (non-parametric regression) and began Chapter 5. The key ideas carried forward are:
+      </p>
+      <ul>
+        <li>The four paradigms of non-parametric regression are now complete: local averaging, local modelling, global modelling, and penalized modelling.</li>
+        <li>We defined different types of error for a fitted model $\hat{f}$: training error, conditional (extra-sample) error, generalization error, and in-sample error.</li>
+        <li>The <strong>optimism</strong> of the training error was derived, leading to Mallow's $C_p$ and AIC as bias-corrected alternatives to raw training error for model comparison.</li>
+      </ul>
+    </section>
+
+    <!-- ===== SECTION: HOLD-OUT ===== -->
+    <section>
+      <h2>1. Training, Validation, and Test Sets</h2>
+      <p>
+        Before discussing cross-validation, it is useful to recall the simplest data-splitting strategy. We have two distinct goals when building models:
+      </p>
+      <ul>
+        <li><strong>Model selection:</strong> find the best model among a set of candidates.</li>
+        <li><strong>Model assessment:</strong> estimate the prediction error of the final chosen model.</li>
+      </ul>
+      <p>
+        The <strong>hold-out method</strong> addresses both goals by splitting the dataset into three disjoint parts:
+      </p>
+      <ol>
+        <li>A <strong>training set</strong> used to fit all candidate models.</li>
+        <li>A <strong>validation set</strong> used to select the best model from the candidates.</li>
+        <li>A <strong>test set</strong> used to estimate the prediction error of the final model.</li>
+      </ol>
+
+      <div class="callout-warning">
+        <div class="callout-title">Issues with the Hold-Out Approach</div>
+        <p>There is no theory for optimal split proportions (a common rule of thumb is 50%/25%/25%). The results depend on the random split, and the training set is smaller than the full dataset, hurting predictive performance. Cross-validation addresses some of these drawbacks by eliminating the need for a separate validation set.</p>
+      </div>
+    </section>
+
+    <!-- ===== SECTION: K-FOLD CV ===== -->
+    <section>
+      <h2>2. Cross-Validation</h2>
+      <p>
+        Cross-validation is a <strong>resampling technique</strong> that estimates the expected extra-sample (generalization) prediction error of a model $\hat{f}$, without requiring a separate validation set.
+      </p>
+
+      <h3>2.1 The $K$-Fold Cross-Validation Algorithm</h3>
+      <div class="callout-definition">
+        <div class="callout-title">Definition — $K$-Fold Cross-Validation</div>
+        <p>Given data $\{(x_i, y_i)\}_{i=1}^n$ and a loss function $L$:</p>
+        <ol>
+          <li><strong>Partition</strong> the index set $\{1, \ldots, n\}$ into $K$ approximately equal-sized folds $B_1, \ldots, B_K$.</li>
+          <li>For each $k = 1, \ldots, K$, <strong>fit</strong> the model on all data <em>except</em> fold $B_k$. Call the resulting estimator $\hat{f}^{(-B_k)}$.</li>
+          <li><strong>Evaluate</strong> on the held-out fold $B_k$.</li>
+        </ol>
+        <p>The CV estimate of prediction error is:</p>
+        <div class="math-block">
+          $$\text{CV}(\hat{f}) = \frac{1}{K} \sum_{k=1}^{K} \frac{1}{|B_k|} \sum_{i \in B_k} L\!\left(y_i,\; \hat{f}^{(-B_k)}(x_i)\right).$$
+        </div>
+      </div>
+      <p>
+        The key intuition is that each $\hat{f}^{(-B_k)}$ is built <em>without</em> the data in $B_k$, so the loss evaluated on $B_k$ approximates out-of-sample error. The special case $K = n$ is called <strong>leave-one-out cross-validation (LOOCV)</strong>, where each observation serves as its own test set.
+      </p>
+
+      <h3>2.2 Cross-Validation for Model Selection</h3>
+      <p>
+        Suppose we have a collection of models $\{\hat{f}_\lambda\}_{\lambda \in \Lambda}$ indexed by a tuning parameter $\lambda$ (e.g., number of features in subset selection, bandwidth in kernel regression, or penalty in smoothing splines). Cross-validation selects the best $\lambda$ as follows:
+      </p>
+      <ol>
+        <li>For each $\lambda \in \Lambda$, compute $\text{CV}(\hat{f}_\lambda)$ using $K$-fold CV.</li>
+        <li>Select $\hat{\lambda} = \arg\min_{\lambda \in \Lambda} \text{CV}(\hat{f}_\lambda)$.</li>
+        <li>The <strong>final model</strong> is $\hat{f}_{\hat{\lambda}}$, <strong>refitted on all training data</strong>.</li>
+      </ol>
+
+      <div class="callout-warning">
+        <div class="callout-title">Important</div>
+        <p>After selecting $\hat{\lambda}$ via CV, you must refit the model on the <em>entire</em> dataset to get the final model. Cross-validation is only used for selection; the final model should exploit all available training data. A separate, independent test set is still needed to estimate the error of this final model.</p>
+      </div>
+    </section>
+
+    <!-- ===== SECTION: BIAS-VARIANCE IN K ===== -->
+    <section>
+      <h2>3. Choosing $K$: The Bias–Variance Tradeoff</h2>
+      <p>
+        The number of folds $K$ involves yet another bias–variance tradeoff — this time in the quality of the CV error estimate itself:
+      </p>
+
+      <div class="callout-definition">
+        <div class="callout-title">Bias–Variance Tradeoff in $K$</div>
+        <ul>
+          <li><strong>Small $K$</strong> (e.g., $K = 2$): Each model $\hat{f}^{(-B_k)}$ is trained on only $n(1 - 1/K)$ observations — substantially fewer than $n$. Because these models use less data, they tend to have higher prediction error. As a result, $\text{CV}(\hat{f})$ <strong>overestimates</strong> the true error (positive bias).</li>
+          <li><strong>Large $K$</strong> (e.g., $K = n$, i.e., LOOCV): The training sets overlap heavily — each pair of training sets shares $n - 2$ observations. This makes the fold-level error estimates $\text{CV}_k$ highly correlated, which <strong>increases the variance</strong> of $\text{CV}(\hat{f})$.</li>
+        </ul>
+      </div>
+
+      <p>
+        There is no universally optimal choice of $K$. In practice, <strong>$K = 5$ or $K = 10$</strong> are the most commonly used values, balancing bias and variance. Even though CV will typically overestimate the error in absolute terms, the <em>shape</em> of the $\text{CV}(\hat{f}_\lambda)$ curve as a function of $\lambda$ tends to be similar to the shape of the true error curve, so CV still picks a good $\hat\lambda$.
+      </p>
+
+      <div class="callout-warning">
+        <div class="callout-title">Computational Cost</div>
+        <p>$K$-fold CV requires fitting $K$ models. For LOOCV ($K = n$), this means $n$ model fits — which can be very expensive unless computational shortcuts are available (see Section 5).</p>
+      </div>
+    </section>
+
+    <!-- ===== SECTION: 1-SE RULE ===== -->
+    <section>
+      <h2>4. The One-Standard-Error Rule</h2>
+      <p>
+        Cross-validation curves are often relatively flat near their minimum. This means many models with different complexity levels have nearly the same estimated error. To favor simpler, more interpretable models, we use the <strong>one-standard-error rule</strong>.
+      </p>
+
+      <div class="callout-definition">
+        <div class="callout-title">One-Standard-Error Rule</div>
+        <p>Select the <strong>most parsimonious</strong> (simplest) model whose CV error is no more than one standard error above the minimum CV error.</p>
+      </div>
+
+      <h4>Estimating the Standard Error of CV</h4>
+      <p>
+        Assuming equal-sized folds $|B_k| = n/K$, define the per-fold error estimate:
+      </p>
+      <div class="math-block">
+        $$\text{CV}_k = \frac{K}{n} \sum_{i \in B_k} L\!\left(y_i,\;\hat{f}^{(-B_k)}(x_i)\right),$$
+      </div>
+      <p>
+        so that $\text{CV}(\hat{f}) = \frac{1}{K}(\text{CV}_1 + \cdots + \text{CV}_K)$. The standard error is estimated by:
+      </p>
+      <div class="math-block">
+        $$\widehat{\text{sd}} = \frac{1}{\sqrt{K}} \sqrt{\frac{1}{K-1} \sum_{k=1}^{K} \left(\text{CV}_k - \text{CV}(\hat{f})\right)^2}.$$
+      </div>
+
+      <div class="callout-warning">
+        <div class="callout-title">Caveat</div>
+        <p>This is only a <em>heuristic</em> standard error. The fold-level estimates $\text{CV}_k$ are <strong>not independent</strong> (the training sets overlap), so this formula only gives an approximate standard deviation. No unbiased estimator of the variance of $K$-fold CV is known (Bengio &amp; Grandvalet, 2004).</p>
+      </div>
+
+      <div class="callout-example">
+        <div class="callout-title">Example — Body Fat, Best Subset Selection</div>
+        <p>
+          Using 10-fold CV for best subset selection on the body fat dataset (247 observations, 13 predictors), the CV error curve is plotted as a function of the number of features $k$. The minimum tends to occur around $k = 7$ or $k = 8$, but applying the one-standard-error rule selects $\hat{k} = 3$, giving a much simpler model using only <strong>weight</strong>, <strong>abdomen</strong>, and <strong>wrist</strong>.
+        </p>
+        <p>
+          To show the instability of the argmin approach: repeating 10-fold CV 100 times with different random folds shows the argmin selects values of $k$ ranging widely from 2 to 12. In contrast, the one-standard-error rule concentrates on $k = 2$ (83 times) and $k = 3$ (15 times) — a much more stable selection.
+        </p>
+      </div>
+
+      <div class="table-wrapper">
+        <table>
+          <caption style="font-size:14px; color:#555; margin-bottom:0.5rem; font-style:italic;">Number of times each $k$ is selected over 100 repetitions of 10-fold CV</caption>
+          <tr>
+            <th>$k$</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th><th>11</th><th>12</th><th>13</th>
+          </tr>
+          <tr>
+            <td>argmin of CV</td><td>0</td><td>5</td><td>8</td><td>11</td><td>0</td><td>1</td><td>11</td><td>20</td><td>11</td><td>12</td><td>18</td><td>3</td><td>0</td>
+          </tr>
+          <tr>
+            <td>1-SE rule</td><td>0</td><td>83</td><td>15</td><td>2</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+          </tr>
+        </table>
+      </div>
+
+      <p>
+        After selecting $\hat{k} = 3$, the final model $\hat{f}_3$ is fitted on all 247 observations. Note that standard linear model inferences (standard errors, confidence intervals) are <strong>not valid</strong> after model selection — the selection step has been "data-snooping." To estimate the prediction error of the final model, an independent test set is needed.
+      </p>
+    </section>
+
+    <!-- ===== SECTION: COMPUTATIONAL SHORTCUTS ===== -->
+    <section>
+      <h2>5. Computational Shortcuts for Linear Smoothers</h2>
+      <p>
+        For estimators whose fitted values are linear in the response — i.e., $\hat{\mathbf{y}} = S\mathbf{Y}$ where $S$ is the smoother (hat) matrix — LOOCV admits a remarkable closed-form identity that avoids refitting $n$ models.
+      </p>
+
+      <div class="callout-definition">
+        <div class="callout-title">LOOCV Shortcut for Linear Smoothers</div>
+        <p>For squared loss, the leave-one-out CV score can be computed as:</p>
+        <div class="math-block">
+          $$\text{CV}(\hat{f}) = \frac{1}{n}\sum_{i=1}^{n} \left(\frac{Y_i - \hat{f}(X_i)}{1 - S_{ii}}\right)^2,$$
+        </div>
+        <p>where $S_{ii}$ is the $i$-th diagonal element of the smoother matrix $S$. This requires fitting $\hat{f}$ <strong>only once</strong> on the full dataset.</p>
+      </div>
+      <p>
+        The intuition is elegant: the residual $Y_i - \hat{f}(X_i)$ from the full fit is "inflated" by the factor $1/(1 - S_{ii})$ to account for the fact that observation $i$ influenced its own prediction. Observations with high <em>leverage</em> $S_{ii}$ get a larger correction.
+      </p>
+
+      <h3>5.1 Generalized Cross-Validation (GCV)</h3>
+      <p>
+        Computing all diagonal elements $S_{ii}$ can itself be expensive. Historically, this motivated <strong>Generalized Cross-Validation (GCV)</strong>, which replaces individual leverages with their average:
+      </p>
+      <div class="math-block">
+        $$\text{GCV} = \frac{\frac{1}{n}\sum_{i=1}^{n}(Y_i - \hat{f}(X_i))^2}{\left(1 - \frac{1}{n}\text{tr}(S)\right)^2} = \frac{\text{RSS}/n}{\left(1 - \text{df}/n\right)^2},$$
+      </div>
+      <p>
+        where $\text{df} = \text{tr}(S)$ is the effective degrees of freedom. GCV is closely related to the degrees-of-freedom concept from non-parametric regression and performs comparably to LOOCV in practice.
+      </p>
+    </section>
+
+    <!-- ===== SECTION: PRACTICAL COMMENTS ===== -->
+    <section>
+      <h2>6. Practical Comments on CV, $C_p$, AIC, and BIC</h2>
+      <ul>
+        <li>$C_p$, AIC, and BIC are easy to compute when the degrees of freedom $\text{df}$ is known or easy to estimate (e.g., for linear smoothers), but require specific model assumptions (e.g., AIC/BIC need a likelihood).</li>
+        <li>Cross-validation is the most widely used method in machine learning because it makes no distributional assumptions and works for any model class.</li>
+        <li><strong>CV must mimic the full modelling process:</strong> never touch the test fold $B_k$ when constructing $\hat{f}^{(-B_k)}$. Any preprocessing, feature selection, or standardisation must be done inside each training fold.</li>
+        <li>Random fold splits are not always appropriate — for example, in time-series forecasting you should use sequential or rolling splits.</li>
+        <li>All of these methods ($C_p$, AIC, BIC, CV) avoid the need for a dedicated validation set, but a <strong>test set is still required</strong> to estimate the error of the final selected model.</li>
+        <li>Many aspects of CV are based on rules of thumb rather than rigorous theory. The one-standard-error rule is probably the best practical heuristic for improving stability.</li>
+      </ul>
+    </section>
+
+    <!-- ===== SECTION: BOOTSTRAP INTRO ===== -->
+    <section>
+      <h2>7. Introduction to the Bootstrap</h2>
+      <p>
+        The lecture concludes by motivating Chapter 6. The <strong>bootstrap</strong>, introduced by Bradley Efron in 1979, is one of the most influential ideas in modern statistics. It provides a general computational approach to problems where analytical solutions are unavailable.
+      </p>
+
+      <h3>7.1 The Problem</h3>
+      <p>
+        Suppose we observe i.i.d. data $Z_1, \ldots, Z_n \sim P$, where $P$ is unknown, and we compute a statistic:
+      </p>
+      <div class="math-block">
+        $$\hat{\theta}_n = g(Z_1, \ldots, Z_n).$$
+      </div>
+      <p>
+        Our goal is to approximate the <strong>distribution</strong> of $\hat{\theta}_n$ (or of some transformation like a studentized version). This distribution tells us about the uncertainty of our estimate and allows us to build confidence intervals and perform hypothesis tests.
+      </p>
+
+      <h3>7.2 Why Do We Need the Bootstrap?</h3>
+      <p>
+        In simple cases, exact distributions are available. For instance, if $\hat{\theta}_n = \bar{X}_n$, the Central Limit Theorem gives $\sqrt{n}(\bar{X}_n - \mu) \xrightarrow{d} N(0, \sigma^2)$. In the Gaussian linear model, we have exact pivots for regression coefficients via $t$-distributions.
+      </p>
+      <p>
+        But in many practical situations: exact distributions are unavailable, asymptotic variances are hard to derive, asymptotic approximations may be poor for moderate $n$, or no useful asymptotic theory exists at all. The bootstrap addresses all of these scenarios.
+      </p>
+
+      <h3>7.3 The Core Idea</h3>
+      <div class="callout-definition">
+        <div class="callout-title">Bootstrap Principle</div>
+        <p>If the true distribution $P$ were known, we could simulate from it and approximate the distribution of $\hat{\theta}_n$ directly by Monte Carlo. Since $P$ is unknown, the bootstrap <strong>replaces $P$ with an estimate $\hat{P}$</strong> (typically the empirical distribution of the observed data) and simulates from $\hat{P}$ instead. This is the essence of the "plug-in" principle: substitute the unknown with an estimate and proceed as if you were in the ideal world.</p>
+      </div>
+      <p>
+        The bootstrap is useful for constructing confidence intervals, hypothesis testing, and estimating prediction error — topics that will be developed in detail in the coming weeks.
+      </p>
+    </section>
+
+    <!-- ===== KEY TAKEAWAYS ===== -->
+    <section>
+      <h2>Key Takeaways</h2>
+      <ul>
+        <li><strong>$K$-fold CV</strong> partitions data into $K$ folds, trains on $K-1$ folds, evaluates on the held-out fold, and averages the errors. It is the most broadly applicable method for model selection.</li>
+        <li>Choosing $K$ involves a <strong>bias–variance tradeoff</strong>: small $K$ overestimates error (bias), large $K$ increases variance due to correlated folds. Use $K = 5$ or $K = 10$ in practice.</li>
+        <li>The <strong>one-standard-error rule</strong> improves stability by selecting the simplest model within one SE of the minimum — it consistently picks simpler models than the argmin.</li>
+        <li>For <strong>linear smoothers</strong>, LOOCV has a closed-form shortcut using the hat matrix diagonals $S_{ii}$, and GCV approximates this using only $\text{tr}(S)$.</li>
+        <li>The <strong>bootstrap</strong> replaces the unknown distribution $P$ with an empirical estimate $\hat{P}$ and simulates from it — a powerful, general-purpose tool for uncertainty quantification when analytical methods are intractable.</li>
+      </ul>
+    </section>
+  </main>
+
+<footer>
+  <span>© 2026 piotr-marciniak.com</span>
+  <span>set in Inter &amp; JetBrains Mono</span>
+</footer>
+<script src="../../dark.js"></script>
+</body>
+</html>

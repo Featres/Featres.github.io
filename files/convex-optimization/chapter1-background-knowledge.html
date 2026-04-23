@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Convex Optimization – Chapter 1: Background Knowledge</title>
+  <link rel="icon" type="image/png" href="../../files/logo.png" />
+  <script>
+    try { var t=localStorage.getItem('theme')||'grain'; if(t) document.documentElement.setAttribute('data-theme',t); } catch(e){}
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../styles.css" />
+  <link rel="stylesheet" href="../../lecture.css" />
+  <script>
+      MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\(', '\)']],
+          displayMath: [['$$', '$$'], ['\[', '\]']]
+        },
+        svg: { fontCache: 'global' }
+      };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+<body>
+<div class="topbar">
+  <div class="left">
+    <div class="theme-switcher">
+      <button class="theme-dot" data-theme="stone" onclick="setTheme('stone')" title="stone"></button>
+      <button class="theme-dot" data-theme="dark"  onclick="setTheme('dark')"  title="dark"></button>
+      <button class="theme-dot" data-theme="ocean" onclick="setTheme('ocean')" title="ocean"></button>
+      <button class="theme-dot" data-theme="grain" onclick="setTheme('grain')" title="grain"></button>
+      <span class="theme-label">themes</span>
+    </div>
+    <span class="host">piotr@marciniak</span>
+    <span class="path">~/files/convex-opt</span>
+  </div>
+  <div class="right">
+    <a href="../../">← home</a>
+    <a href="../../studying/">← notes</a>
+  </div>
+</div>
+
+
+<header>
+  <h1>Chapter 1: Background Knowledge</h1>
+  <div class="meta">
+    <span>Course: Convex Optimization — Through the Lens of Algorithms and Applications</span>
+    <span>Chapter 1</span>
+  </div>
+</header>
+
+<main>
+
+<section>
+  <p>
+    This chapter provides the foundational concepts needed for the rest of the course. It covers four core topics: <strong>convex sets and convex functions</strong>, <strong>polytopes and polyhedra</strong>, <strong>cones</strong>, and <strong>linear programming</strong>. These are the building blocks on which the entire theory of convex optimization rests. The chapter is designed as a review — if any of these concepts are entirely new, supplementary reading is recommended.
+  </p>
+</section>
+
+<!-- ===== SECTION 1.1 ===== -->
+<section>
+  <h2>1.1 Convex Sets and Convex Functions</h2>
+
+  <p>The notion of convexity — for both sets and functions — is the single most important concept in this course. Everything that follows depends on it. The core idea is simple: a shape is convex if you can "walk" between any two of its points without leaving the shape.</p>
+
+  <h3>Line Segments and Convex Sets</h3>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition 1.1.1 — Line Segment</div>
+    <p>Let $p \neq q$ be two points in $\mathbb{R}^n$. The <strong>line segment</strong> between them is the set:</p>
+    <div class="math-block">
+      $$[p, q] = \{ \lambda p + (1-\lambda) q \mid 0 \leq \lambda \leq 1 \}$$
+    </div>
+    <p>As $\lambda$ varies from 0 to 1, the point $\lambda p + (1-\lambda) q$ slides smoothly from $q$ (when $\lambda=0$) to $p$ (when $\lambda=1$).</p>
+  </div>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition 1.1.2 — Convex Set</div>
+    <p>A set $S \subseteq \mathbb{R}^n$ is <strong>convex</strong> if for all $p, q \in S$, the entire line segment $[p, q] \subseteq S$.</p>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Intuition & Examples</div>
+    <p>Think of a convex set as a "blob with no dents." If you pick any two points inside it and draw a straight line between them, the line stays entirely inside the set. A filled circle, a filled square, and $\mathbb{R}^n$ itself are all convex. A crescent moon shape is <em>not</em> convex — you can find two points inside the crescent such that the line between them passes through the "hollow" part.</p>
+  </div>
+
+  <h3>Properties of Convex Sets</h3>
+
+  <div class="callout-theorem">
+    <div class="callout-title">Proposition 1.1.4 — Preservation of Convexity</div>
+    <p>Let $S, T \subseteq \mathbb{R}^n$ be convex sets. Then:</p>
+    <ol>
+      <li><strong>Intersection:</strong> $S \cap T$ is convex.</li>
+      <li><strong>Affine image:</strong> For $A \in \mathbb{R}^{m \times n}$ and $b \in \mathbb{R}^m$, the set $\{Ax + b \mid x \in S\}$ is convex.</li>
+      <li><strong>Minkowski sum:</strong> $S \oplus T := \{x + y \mid x \in S, y \in T\}$ is convex.</li>
+    </ol>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Why intersections matter</div>
+    <p>In optimization, the feasible region is usually described as an intersection of constraint sets (e.g., half-spaces). The fact that intersecting convex sets produces a convex set is what guarantees that these feasible regions remain convex — a crucial requirement for efficient optimization.</p>
+  </div>
+
+  <h3>Combinations and Hulls</h3>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition 1.1.5 — Affine, Conic, and Convex Combinations</div>
+    <p>Given points $a_1, \ldots, a_k \in \mathbb{R}^n$ and scalars $\lambda_1, \ldots, \lambda_k$, the linear combination $\sum_{i=1}^{k} \lambda_i a_i$ is called:</p>
+    <ul>
+      <li><strong>Affine combination</strong> if $\sum_i \lambda_i = 1$ (the weights sum to one, but can be negative).</li>
+      <li><strong>Conic combination</strong> if $\lambda_i \geq 0$ for all $i$ (non-negative weights, no sum constraint).</li>
+      <li><strong>Convex combination</strong> if both: $\lambda_i \geq 0$ and $\sum_i \lambda_i = 1$ (non-negative weights that sum to one).</li>
+    </ul>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Intuition</div>
+    <p>A <strong>convex combination</strong> is a "weighted average." For two points, $\lambda a_1 + (1-\lambda) a_2$ with $\lambda \in [0,1]$ traces the line segment between them — exactly what we used to define convex sets. A <strong>conic combination</strong> allows scaling up (think: rays from the origin), while an <strong>affine combination</strong> allows negative weights (think: extending beyond the original points along a line).</p>
+  </div>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition 1.1.6 — Hulls</div>
+    <p>For a set $A \subseteq \mathbb{R}^n$:</p>
+    <ul>
+      <li>The <strong>affine hull</strong> $\text{aff}(A)$ is the set of all finite affine combinations of points in $A$.</li>
+      <li>The <strong>conic hull</strong> $\text{cone}(A)$ is the set of all finite conic combinations of points in $A$.</li>
+      <li>The <strong>convex hull</strong> $\text{conv}(A)$ is the set of all finite convex combinations of points in $A$.</li>
+    </ul>
+    <p>Informally, $\text{conv}(A)$ is the smallest convex set containing $A$ — like stretching a rubber band around the points.</p>
+  </div>
+
+  <h3>Convex Functions</h3>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition 1.1.7 — Convex Function</div>
+    <p>Let $X \subseteq \mathbb{R}^n$ be a convex set. A function $f: X \to \mathbb{R}$ is <strong>convex</strong> if for all $x, y \in X$ and $\lambda \in [0,1]$:</p>
+    <div class="math-block">
+      $$f(\lambda x + (1-\lambda) y) \leq \lambda f(x) + (1-\lambda) f(y)$$
+    </div>
+    <p>If the inequality is strict for all $\lambda \in (0,1)$ and $x \neq y$, the function is <strong>strictly convex</strong>. A function $f$ is <strong>concave</strong> if $-f$ is convex.</p>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Intuition — "The Chord Lies Above"</div>
+    <p>The definition says: if you pick any two points on the graph of $f$ and draw a straight line (chord) between them, the function's graph lies <em>on or below</em> that chord. Think of a bowl shape like $f(x) = x^2$ — it's convex. A hill shape like $f(x) = -x^2$ is concave. A straight line $f(x) = ax + b$ is both convex <em>and</em> concave.</p>
+  </div>
+
+  <h4>Conditions for Convexity (Differentiable Functions)</h4>
+
+  <div class="callout-note">
+    <div class="callout-title">First- and Second-Order Conditions</div>
+    <p>If $f$ is <strong>differentiable</strong>, it is convex if and only if for all $x, y \in X$:</p>
+    <div class="math-block">
+      $$f(y) \geq f(x) + \nabla f(x)^\top (y - x)$$
+    </div>
+    <p>This says the tangent line (or hyperplane) always lies <em>below</em> the function — the function always curves upward from any tangent.</p>
+    <p>If $f$ is <strong>twice differentiable</strong>, it is convex if and only if its Hessian is positive semidefinite everywhere: $\nabla^2 f(x) \succeq 0$ for all $x \in X$. In one dimension, this reduces to the familiar condition $f''(x) \geq 0$ — the curve bends upward.</p>
+  </div>
+
+  <h3>The Epigraph — Connecting Sets and Functions</h3>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition 1.1.9 — Epigraph</div>
+    <p>The <strong>epigraph</strong> of a function $f: X \to \mathbb{R}$ is the set of all points "on or above" its graph:</p>
+    <div class="math-block">
+      $$\text{epi}\, f = \{(x, t) \in \mathbb{R}^{n+1} \mid x \in X,\; t \geq f(x)\}$$
+    </div>
+  </div>
+
+  <div class="callout-theorem">
+    <div class="callout-title">Proposition 1.1.10 — The Epigraph Characterization</div>
+    <p>A function $f$ is convex <strong>if and only if</strong> its epigraph is a convex set.</p>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Why this matters</div>
+    <p>This result is a powerful bridge: it lets you convert questions about convex <em>functions</em> into questions about convex <em>sets</em>, and vice versa. For example, to prove a function is convex, you can instead show its epigraph (the "ice cream bowl" above the curve) is a convex set. This technique is used extensively later in the course, especially in conic programming.</p>
+  </div>
+
+  <h3>Operations Preserving Convexity</h3>
+
+  <div class="callout-theorem">
+    <div class="callout-title">Proposition 1.1.11 — Preservation Rules for Convex Functions</div>
+    <p>Let $f_1, \ldots, f_s: X \to \mathbb{R}$ be convex functions on a convex set $X \subseteq \mathbb{R}^n$. Then:</p>
+    <ol>
+      <li><strong>Non-negative weighted sum:</strong> $\sum_{i} \lambda_i f_i$ is convex for all $\lambda_i \geq 0$.</li>
+      <li><strong>Pointwise maximum:</strong> $\max\{f_1, \ldots, f_s\}$ is convex.</li>
+      <li><strong>Composition with non-decreasing function:</strong> $f_1(f_2(x))$ is convex if $f_1$ is non-decreasing.</li>
+    </ol>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Practical use</div>
+    <p>These rules are your toolkit for proving convexity without going back to the definition each time. For instance, the function $\max(x^2, 3x+1)$ is convex because both $x^2$ and $3x+1$ are convex and the max of convex functions is convex. Similarly, $e^{x^2}$ is convex because $e^t$ is convex and non-decreasing and $x^2$ is convex.</p>
+  </div>
+</section>
+
+<!-- ===== SECTION 1.2 ===== -->
+<section>
+  <h2>1.2 Polytopes and Polyhedra</h2>
+
+  <p>Polyhedra are the geometric shapes that arise naturally in linear programming. They are the regions you get when you intersect a finite number of half-spaces — essentially, the feasible regions of linear programs.</p>
+
+  <h3>Hyperplanes and Half-Spaces</h3>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition 1.2.1 — Hyperplane and Half-Space</div>
+    <p>For $a \in \mathbb{R}^n \setminus \{0\}$ and $\beta \in \mathbb{R}$:</p>
+    <ul>
+      <li>The <strong>hyperplane</strong> is $H = \{x \in \mathbb{R}^n : a^\top x = \beta\}$.</li>
+      <li>The <strong>positive half-space</strong> is $H^+ = \{x : a^\top x \geq \beta\}$.</li>
+      <li>The <strong>negative half-space</strong> is $H^- = \{x : a^\top x \leq \beta\}$.</li>
+    </ul>
+    <p>The vector $a$ is the normal to the hyperplane — it points "outward" from $H^-$ into $H^+$.</p>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Intuition</div>
+    <p>In $\mathbb{R}^2$, a hyperplane is just a line. In $\mathbb{R}^3$, it's a plane. A half-space is everything on one side of that dividing surface. The constraint $2x_1 + 3x_2 \leq 7$ defines a half-space in $\mathbb{R}^2$: everything on one side of the line $2x_1 + 3x_2 = 7$.</p>
+  </div>
+
+  <h3>Separating and Supporting Hyperplanes</h3>
+
+  <div class="callout-theorem">
+    <div class="callout-title">Theorem 1.2.2 — Separating Hyperplane Theorem</div>
+    <p>If $X, Y \subseteq \mathbb{R}^n$ are two nonempty, disjoint convex sets, then there exists a hyperplane that separates them: a vector $a \neq 0$ and scalar $b$ such that $a^\top x \leq b$ for all $x \in X$ and $a^\top y \geq b$ for all $y \in Y$.</p>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Intuition</div>
+    <p>If you have two non-overlapping convex blobs, you can always slide a flat "wall" (hyperplane) between them. This seemingly simple geometric fact is the theoretical engine behind LP duality and many optimality conditions.</p>
+  </div>
+
+  <div class="callout-theorem">
+    <div class="callout-title">Theorem 1.2.8 — Supporting Hyperplane Theorem</div>
+    <p>For any nonempty, closed, convex set $S$ and any boundary point $x$, there exists a <strong>supporting hyperplane</strong> — a hyperplane that passes through $x$ with the entire set $S$ on one side.</p>
+  </div>
+
+  <h3>Polyhedra and Polytopes</h3>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition 1.2.3 — Polyhedron and Polytope</div>
+    <p>Given a matrix $A \in \mathbb{R}^{m \times n}$ and vector $b \in \mathbb{R}^m$, the set $P = \{x \in \mathbb{R}^n : Ax \leq b\}$ is a <strong>polyhedron</strong>. A <strong>bounded</strong> polyhedron is called a <strong>polytope</strong>.</p>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Intuition</div>
+    <p>A polyhedron is an intersection of finitely many half-spaces — think of it as a "faceted" region. A polygon in 2D (like a triangle or pentagon) is a polytope. An unbounded wedge-shaped region (open on one side) is a polyhedron but not a polytope. Since each half-space is convex and intersections preserve convexity, every polyhedron is automatically a convex set.</p>
+  </div>
+
+  <h3>Interior and Relative Interior</h3>
+  <p>
+    The <strong>interior</strong> $\text{int}(P)$ consists of all points with a small ball around them that fits entirely inside $P$. The <strong>relative interior</strong> $\text{relint}(P)$ relaxes this: the ball only needs to fit inside $P$ when restricted to the affine hull of $P$. This distinction matters for sets that are "flat" — for example, a line segment in $\mathbb{R}^2$ has empty interior, but its relative interior is the segment without its endpoints.
+  </p>
+
+  <h3>Faces, Vertices, Edges, and Facets</h3>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition 1.2.10 — Faces of a Polyhedron</div>
+    <p>Let $P$ be a nonempty polyhedron with dimension $\text{dim}(P)$:</p>
+    <ul>
+      <li>A <strong>face</strong> is $P$ itself or $P$ intersected with a supporting hyperplane.</li>
+      <li>A <strong>vertex</strong> is a 0-dimensional face (a corner point).</li>
+      <li>An <strong>edge</strong> is a 1-dimensional face.</li>
+      <li>A <strong>facet</strong> is a $(\text{dim}(P)-1)$-dimensional face.</li>
+    </ul>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Example: a cube in $\mathbb{R}^3$</div>
+    <p>A cube has dimension 3. Its 8 corners are vertices (dim 0), its 12 edges are edges (dim 1), and its 6 square sides are facets (dim 2). The Simplex method for linear programming works by hopping between vertices along edges.</p>
+  </div>
+
+  <h3>Two Representations of Polytopes</h3>
+
+  <div class="callout-theorem">
+    <div class="callout-title">Proposition 1.2.11 — Vertex (V-) Representation</div>
+    <p>Every polytope is the convex hull of its vertices. Conversely, the convex hull of any finite set of points is a polytope.</p>
+  </div>
+
+  <p>
+    So a polytope can be described in two equivalent ways: as an <strong>intersection of half-spaces</strong> (H-representation: $Ax \leq b$), or as the <strong>convex hull of its vertices</strong> (V-representation: $\text{conv}\{v_1, \ldots, v_k\}$). Converting between these representations can be computationally expensive — a polytope with a few half-spaces can have exponentially many vertices, and vice versa.
+  </p>
+
+  <h3>Rays and the Minkowski Resolution Theorem</h3>
+
+  <p>Unbounded polyhedra (those that extend to infinity) need an additional concept: <strong>extreme rays</strong> — directions in which the polyhedron extends infinitely. An extreme ray cannot be decomposed as a combination of two other distinct rays.</p>
+
+  <div class="callout-theorem">
+    <div class="callout-title">Proposition 1.2.13 — Minkowski Resolution Theorem</div>
+    <p>Every polyhedron is the Minkowski sum of the convex hull of its vertices and the conic hull of its extreme rays.</p>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Intuition</div>
+    <p>A polyhedron = a bounded "core" (polytope from vertices) + unbounded "directions" (rays). A polytope has no extreme rays, so it is just the convex hull of its vertices. An unbounded polyhedron like $\{(x,y) : x \geq 0,\; y \geq 0,\; x+y \geq 1\}$ has one vertex at $(1,0)$ and $(0,1)$ plus two rays pointing along the positive $x$- and $y$-axes.</p>
+  </div>
+</section>
+
+<!-- ===== SECTION 1.3 ===== -->
+<section>
+  <h2>1.3 Cones</h2>
+
+  <p>Cones are sets that are closed under non-negative scaling. They play a central role in generalizing linear programming to broader classes of optimization problems (conic programs, SOCPs, SDPs).</p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition 1.3.1 — Cone and Its Variants</div>
+    <p>A set $K \subseteq \mathbb{R}^n$ is a <strong>cone</strong> if for any $c \in K$ and $\lambda \geq 0$, we have $\lambda c \in K$. A cone $K$ is called:</p>
+    <ul>
+      <li><strong>Convex cone</strong> — if $K$ is convex (closed under non-negative linear combinations).</li>
+      <li><strong>Solid cone</strong> — if it has nonempty interior.</li>
+      <li><strong>Pointed cone</strong> — if it contains no entire line ($x, -x \in K \Rightarrow x = 0$).</li>
+      <li><strong>Proper cone</strong> — if it is convex, closed, solid, and pointed.</li>
+      <li><strong>Polyhedral cone</strong> — if it is a polyhedron (i.e., $K = \{x : Ax \leq 0\}$).</li>
+    </ul>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Key example: the non-negative orthant</div>
+    <p>The set $\mathbb{R}^n_{\geq 0} = \{x \in \mathbb{R}^n : x_i \geq 0 \text{ for all } i\}$ is the prototypical proper cone. It's convex (non-negative combination of non-negative vectors is non-negative), closed, solid (has interior, e.g., $(1,1,\ldots,1)$), and pointed (if both $x$ and $-x$ have all entries non-negative, then $x=0$). It is also polyhedral (defined by $-I x \leq 0$). Moreover, the non-negative orthant is <strong>self-dual</strong>.</p>
+  </div>
+
+  <div class="callout-theorem">
+    <div class="callout-title">Proposition 1.3.2 — Decomposition of Polyhedra</div>
+    <p>Every nonempty polyhedron $P$ can be written as $P = Q \oplus K$, where $Q$ is a polytope and $K$ is a polyhedral cone.</p>
+  </div>
+
+  <h3>Dual Cones</h3>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition 1.3.3 — Dual Cone</div>
+    <p>The <strong>dual cone</strong> of $K \subseteq \mathbb{R}^n$ is:</p>
+    <div class="math-block">
+      $$K^* = \{ \ell \in \mathbb{R}^n : \langle \ell, x \rangle \geq 0 \text{ for all } x \in K \}$$
+    </div>
+    <p>If $K = K^*$, the cone is <strong>self-dual</strong>.</p>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Intuition</div>
+    <p>A vector $\ell$ belongs to the dual cone $K^*$ if it makes a non-negative inner product with <em>every</em> vector in $K$. Geometrically, $\ell$ defines a half-space that contains the entire cone $K$. The dual cone captures the "directions that are friendly to $K$." The non-negative orthant $\mathbb{R}^n_{\geq 0}$ is self-dual: every vector with all non-negative entries has non-negative dot product with every other such vector.</p>
+  </div>
+
+  <div class="callout-theorem">
+    <div class="callout-title">Proposition 1.3.4 — Properties of Dual Cones</div>
+    <p>Key properties include:</p>
+    <ol>
+      <li>$K^*$ is always closed and convex (even if $K$ is not).</li>
+      <li>$K_1 \subseteq K_2 \Rightarrow K_2^* \subseteq K_1^*$ (bigger cone, smaller dual).</li>
+      <li>$K$ solid $\Rightarrow K^*$ pointed; $K$ convex and pointed $\Rightarrow K^*$ solid.</li>
+      <li>$K^{**} = \overline{\text{conv}}(K)$, and if $K$ is closed and convex, $K^{**} = K$.</li>
+      <li>If $K$ is proper, then $K^*$ is proper.</li>
+    </ol>
+  </div>
+
+  <div class="callout-note">
+    <div class="callout-title">Why cones matter for optimization</div>
+    <p>Cones generalize the non-negativity constraint $x \geq 0$ from linear programming. Instead of constraining variables to the non-negative orthant, conic programs constrain variables to lie in a general cone $K$ (such as the second-order cone or the positive semidefinite cone). The dual cone plays the same role that non-negative dual variables play in LP duality — this connection will become clear in later chapters.</p>
+  </div>
+</section>
+
+<!-- ===== SECTION 1.4 ===== -->
+<section>
+  <h2>1.4 Linear Programming</h2>
+
+  <p>Linear programming (LP) is the most fundamental class of convex optimization. The task is to optimize a linear objective over a polyhedral feasible region. LPs are both theoretically elegant and practically ubiquitous — they appear in logistics, economics, network flows, and as subroutines inside more complex optimization algorithms.</p>
+
+  <h3>LP Formulations</h3>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition 1.4.1 — Linear Program</div>
+    <p>A linear program can be written in three equivalent forms:</p>
+    <div class="table-wrapper">
+      <table>
+        <tr><th>General</th><th>Standard</th><th>Canonical</th></tr>
+        <tr>
+          <td>$\min\; c^\top x$<br>$Ax \geq b$<br>$Cx \leq d$<br>$Ex = f$</td>
+          <td>$\min\; c^\top x$<br>$Ax = b$<br>$x \geq 0$</td>
+          <td>$\max\; c^\top x$<br>$Ax \leq b$<br>$x \geq 0$</td>
+        </tr>
+      </table>
+    </div>
+    <p>All three forms are equivalent — any LP in one form can be converted to another using slack variables and sign-splitting.</p>
+  </div>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition 1.4.2 — Feasible, Infeasible, Unbounded</div>
+    <p>An LP is:</p>
+    <ul>
+      <li><strong>Feasible</strong> if it attains a finite optimum.</li>
+      <li><strong>Unbounded</strong> if the objective can be made arbitrarily good over the feasible region.</li>
+      <li><strong>Infeasible</strong> if no point satisfies all constraints simultaneously.</li>
+    </ul>
+  </div>
+
+  <h3>LP Duality</h3>
+
+  <p>Duality is one of the deepest ideas in optimization. The key insight: we can use the constraints of an LP to derive bounds on its optimal value. By systematically combining constraints, we construct a new LP — the <strong>dual</strong> — whose optimal value bounds the original (primal) LP.</p>
+
+  <div class="callout-example">
+    <div class="callout-title">Motivating Example (Example 1.4.4)</div>
+    <p>Consider $\max\; 2x_1 + x_2$ subject to $2x_1 + x_2 \leq 4$, $x_1 + x_2 \leq 1$, and $x_1, x_2 \geq 0$. The first constraint directly tells us the optimum is at most 4. But we can do better: notice that $2x_1 + x_2 = 2(x_1 + x_2) + (-x_2) \leq 2 \cdot 1 + 0 = 2$. The point $(1, 0)$ achieves this value, so the optimum is exactly 2. This "combining constraints to bound the objective" is exactly what the dual LP formalizes.</p>
+  </div>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition 1.4.5 — Dual LP</div>
+    <p>The primal-dual pairs for standard and canonical forms:</p>
+    <div class="table-wrapper">
+      <table>
+        <tr><th colspan="2">Standard Form</th><th colspan="2">Canonical Form</th></tr>
+        <tr><th>Primal</th><th>Dual</th><th>Primal</th><th>Dual</th></tr>
+        <tr>
+          <td>$\min\; c^\top x$<br>$Ax = b$<br>$x \geq 0$</td>
+          <td>$\max\; b^\top y$<br>$c - A^\top y \geq 0$</td>
+          <td>$\max\; c^\top x$<br>$Ax \leq b$<br>$x \geq 0$</td>
+          <td>$\min\; b^\top y$<br>$A^\top y \geq c$<br>$y \geq 0$</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <h3>Weak and Strong Duality</h3>
+
+  <div class="callout-theorem">
+    <div class="callout-title">Theorem 1.4.6 — Weak Duality</div>
+    <p>For any feasible primal solution $x$ and feasible dual solution $y$ (in standard form): $c^\top x \geq b^\top y$.</p>
+    <p>The dual objective always provides a <strong>lower bound</strong> on the primal objective. This holds for any feasible pair — not just the optimal ones.</p>
+  </div>
+
+  <div class="callout-theorem">
+    <div class="callout-title">Theorem 1.4.7 — Strong Duality for LPs</div>
+    <p>If both the primal and the dual are feasible, then their optimal values are equal: $c^\top x^* = b^\top y^*$.</p>
+  </div>
+
+  <div class="callout-note">
+    <div class="callout-title">Important: Strong duality is special to LPs</div>
+    <p>Weak duality holds for all mathematical programs (convex or not). Strong duality — the primal and dual optima being equal — holds unconditionally only for linear programs. For more general convex programs, strong duality requires additional conditions (like Slater's condition, covered in Chapter 3).</p>
+  </div>
+
+  <div class="callout-theorem">
+    <div class="callout-title">Proposition 1.4.8 — Primal-Dual Relationships</div>
+    <p>The possible outcomes for a primal-dual LP pair:</p>
+    <ul>
+      <li>Primal finite optimum $\Rightarrow$ Dual finite optimum (and they agree).</li>
+      <li>Primal unbounded $\Rightarrow$ Dual infeasible.</li>
+      <li>Primal infeasible $\Rightarrow$ Dual unbounded or infeasible.</li>
+    </ul>
+    <p>The same holds symmetrically (the dual of the dual is the primal).</p>
+  </div>
+
+  <h3>Complementary Slackness</h3>
+
+  <div class="callout-theorem">
+    <div class="callout-title">Theorem 1.4.9 — Complementary Slackness</div>
+    <p>For feasible primal $x$ and dual $y$ in canonical form, they are both optimal if and only if:</p>
+    <div class="math-block">
+      $$(b - Ax)^\top y = 0 \quad \text{and} \quad (A^\top y - c)^\top x = 0$$
+    </div>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Intuition</div>
+    <p>Complementary slackness says: at optimality, for each constraint, either the constraint is <strong>tight</strong> (holds with equality) or the corresponding dual variable is <strong>zero</strong>. You can't have both slack in a constraint and a positive dual variable — one of them must be zero. This gives a powerful tool for verifying optimality and for constructing optimal solutions: if you know which constraints are tight, you can often solve for the dual variables directly.</p>
+  </div>
+
+  <h3>Algorithms for Solving LPs</h3>
+
+  <h4>The Simplex Method</h4>
+  <p>
+    Developed by Dantzig in 1947, the Simplex method remains the most widely used LP solver. It starts at a vertex of the feasible polyhedron and moves along edges to adjacent vertices, always improving the objective value. The process terminates at an optimal vertex in finitely many steps. Although there exist worst-case inputs (like the Klee-Minty cube) where Simplex takes exponential time, it is extremely fast in practice — and has been proven to run in polynomial time under smoothed analysis.
+  </p>
+
+  <h4>The Ellipsoid Method</h4>
+  <p>
+    Introduced by Khachiyan in 1979, the Ellipsoid method was the first algorithm proven to solve LPs in polynomial worst-case time, settling a long-standing open question. It works by maintaining an ellipsoid that contains the optimal solution and iteratively shrinking it using cutting planes from violated constraints. While theoretically important, it is slower in practice than the Simplex method. Its real significance is theoretical: it proves that LP (and more general convex optimization problems) can be solved efficiently.
+  </p>
+
+  <div class="callout-note">
+    <div class="callout-title">Practical takeaway</div>
+    <p>Simplex is fast in practice but exponential in worst-case. The Ellipsoid method is polynomial in worst-case but slow in practice. Modern solvers often use interior-point methods (covered in Chapter 5), which combine the best of both worlds: polynomial worst-case time and strong practical performance.</p>
+  </div>
+</section>
+
+<!-- ===== KEY TAKEAWAYS ===== -->
+<section class="key-takeaways">
+  <h2>Key Takeaways</h2>
+  <ul>
+    <li><strong>Convex sets</strong> are closed under line segments between their points; convex functions satisfy the "chord above graph" property. The epigraph bridges these two concepts: $f$ is convex iff $\text{epi}\,f$ is a convex set.</li>
+    <li><strong>Polyhedra</strong> (intersections of half-spaces) are the feasible regions of linear programs. Polytopes are bounded polyhedra and admit both an inequality (H-) representation and a vertex (V-) representation.</li>
+    <li><strong>Cones</strong> generalize the non-negative orthant. Proper cones (convex, closed, solid, pointed) are the key to defining conic optimization problems. The dual cone $K^*$ generalizes the role of non-negative dual variables in LP duality.</li>
+    <li><strong>LP duality</strong> — expressed through weak duality, strong duality, and complementary slackness — provides a complete framework for certifying optimality and bounding objective values. Strong duality holds unconditionally for LPs but requires additional conditions (e.g., Slater's) for general convex programs.</li>
+    <li><strong>Key operations</strong> that preserve convexity (intersection, affine image, non-negative sum, pointwise max, composition with non-decreasing functions) are the practical tools for recognizing and constructing convex problems.</li>
+  </ul>
+</section>
+
+</main>
+
+<footer>
+  <span>© 2026 piotr-marciniak.com</span>
+  <span>set in Inter &amp; JetBrains Mono</span>
+</footer>
+<script src="../../dark.js"></script>
+</body>
+</html>

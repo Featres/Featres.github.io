@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IML – Lecture 5: Generalization</title>
+  <link rel="icon" type="image/png" href="../../files/logo.png" />
+  <script>
+    try { var t=localStorage.getItem('theme')||'grain'; if(t) document.documentElement.setAttribute('data-theme',t); } catch(e){}
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../styles.css" />
+  <link rel="stylesheet" href="../../lecture.css" />
+  <script>
+      MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\(', '\)']],
+          displayMath: [['$$', '$$'], ['\[', '\]']]
+        },
+        svg: { fontCache: 'global' }
+      };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+<body>
+<div class="topbar">
+  <div class="left">
+    <div class="theme-switcher">
+      <button class="theme-dot" data-theme="stone" onclick="setTheme('stone')" title="stone"></button>
+      <button class="theme-dot" data-theme="dark"  onclick="setTheme('dark')"  title="dark"></button>
+      <button class="theme-dot" data-theme="ocean" onclick="setTheme('ocean')" title="ocean"></button>
+      <button class="theme-dot" data-theme="grain" onclick="setTheme('grain')" title="grain"></button>
+      <span class="theme-label">themes</span>
+    </div>
+    <span class="host">piotr@marciniak</span>
+    <span class="path">~/files/iml</span>
+  </div>
+  <div class="right">
+    <a href="../../">← home</a>
+    <a href="../../studying/">← notes</a>
+  </div>
+</div>
+
+
+<header>
+  <h1>Lecture 5: Generalization</h1>
+  <div class="meta">
+    <span>Course: Introduction to Machine Learning (ETH Zürich)</span>
+    <span>Lecture 5</span>
+    <span>Spring 2026 · Prof. Fanny Yang</span>
+  </div>
+</header>
+
+<main>
+
+<!-- ===== OVERVIEW ===== -->
+<section>
+  <p>
+    This lecture addresses a central question in machine learning: once we have trained a model on data, how well will it perform on <em>new, unseen</em> data? The lecture formally introduces the generalization error and the estimation error, then studies how these errors behave for linear regression as a function of sample size $n$ (in both underparameterized and overparameterized settings) and for polynomial regression as a function of model complexity. The discussion culminates in the bias–variance tradeoff, which provides a mathematical explanation for the phenomena of underfitting and overfitting.
+  </p>
+</section>
+
+<!-- ===== 1. GENERALIZATION & ESTIMATION ERROR ===== -->
+<section>
+  <h2>1. Generalization and Estimation Error</h2>
+
+  <p>
+    In supervised learning we train a model $\hat{f}_D$ from a training dataset $D = \{(x_i, y_i)\}_{i=1}^{n}$. The training loss tells us how well the model fits the data it was trained on, but what we really care about is how well it predicts on <em>future</em> data points drawn from the same distribution $\mathbb{P}_{X,Y}$. This is captured by the generalization error.
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition: Generalization Error (Population Risk)</div>
+    <p>For a model $\hat{f}$ and data $(X,Y) \sim \mathbb{P}_{X,Y}$, the <strong>generalization error</strong> is:</p>
+    <div class="math-block">
+      $$L(\hat{f};\, \mathbb{P}_{X,Y}) \;=\; \mathbb{E}_{X,Y}\!\big[\ell\!\big(\hat{f}(X),\, Y\big)\big]$$
+    </div>
+    <p>This is the expected prediction error of the model on a new test sample. We cannot compute it directly because we do not have access to $\mathbb{P}_{X,Y}$.</p>
+  </div>
+
+  <p>
+    In contrast, the <strong>training loss</strong> is the average loss over the training set:
+  </p>
+  <div class="math-block">
+    $$L(\hat{f}_D;\, D) \;=\; \frac{1}{n}\sum_{i=1}^{n} \ell\!\big(\hat{f}_D(x_i),\, y_i\big)$$
+  </div>
+
+  <p>
+    If there exists an ideal ground-truth function $f^\star$ such that $y = f^\star(x) + \varepsilon$ (where $\varepsilon$ has mean zero and variance $\sigma^2$, independent of $x$), then we can also talk about the <strong>estimation error</strong>: how far is our learned model from the true underlying function?
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition: Estimation Error</div>
+    <p>The <strong>expected estimation error</strong> of a model $\hat{f}$ is:</p>
+    <div class="math-block">
+      $$\mathbb{E}_X\!\Big[\big(\hat{f}(X) - f^\star(X)\big)^2\Big]$$
+    </div>
+    <p>It measures how close our learned function is to the ground truth, on average over the input distribution.</p>
+  </div>
+
+  <h3>1.1 Connecting Generalization and Estimation Error</h3>
+
+  <p>
+    A key result (Lemma 6.2 in the lecture notes) shows that under the statistical model $Y = f^\star(X) + \varepsilon$, these two quantities are related by a clean decomposition:
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Lemma: Generalization = Estimation + Noise</div>
+    <div class="math-block">
+      $$L\!\big(\hat{f};\, \mathbb{P}_{X,Y}\big) \;=\; \mathbb{E}_X\!\Big[\big(\hat{f}(X) - f^\star(X)\big)^2\Big] \;+\; \sigma^2$$
+    </div>
+    <p>The term $\sigma^2 = \text{Var}(\varepsilon)$ is the <strong>irreducible noise</strong> — no model, no matter how perfect, can eliminate it. Therefore, minimizing the generalization error is equivalent to minimizing the estimation error.</p>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Proof sketch</div>
+    <p>Expand the squared loss on a test point $(x, y)$ with $y = f^\star(x) + \varepsilon$:</p>
+    <div class="math-block">
+      $$\big(\hat{f}(x) - y\big)^2 = \big(\hat{f}(x) - f^\star(x) - \varepsilon\big)^2 = \big(\hat{f}(x) - f^\star(x)\big)^2 + \varepsilon^2 - 2\varepsilon\big(\hat{f}(x) - f^\star(x)\big)$$
+    </div>
+    <p>Taking the expectation over $X$ and $\varepsilon$: the cross term vanishes because $\mathbb{E}[\varepsilon] = 0$ and $\varepsilon$ is independent of $X$, and $\mathbb{E}[\varepsilon^2] = \sigma^2$. This gives us the decomposition.</p>
+  </div>
+
+  <div class="callout-note">
+    <div class="callout-title">Why training loss is misleading</div>
+    <p>The training loss of the training-loss minimizer is generally a <em>too optimistic</em> estimate of the generalization error, especially for complex models with small to moderate sample sizes. The model was specifically chosen to minimize loss on this exact data, so it naturally looks better on the training set than it will on new data. This is why we need separate evaluation strategies (test sets, cross-validation — covered in the next lecture).</p>
+  </div>
+</section>
+
+<!-- ===== 2. LINEAR REGRESSION: ERROR VS. SAMPLE SIZE ===== -->
+<section>
+  <h2>2. Estimation Error in Linear Regression as a Function of Sample Size</h2>
+
+  <p>
+    To build intuition, the lecture examines how the estimation error $\|\hat{w} - w^\star\|^2$ behaves in linear regression as we vary the number of training samples $n$, for a fixed dimension $d$. The behavior is qualitatively different depending on whether $n \geq d$ (underparameterized) or $n < d$ (overparameterized).
+  </p>
+
+  <h3>2.1 Underparameterized Setting ($n \geq d$)</h3>
+
+  <p>
+    When the number of samples exceeds the number of parameters, the ordinary least squares (OLS) solution is unique: $\hat{w} = (X^\top X)^{-1} X^\top y$. In this regime, as we collect more data the estimation error <strong>decreases monotonically</strong>.
+  </p>
+
+  <p>
+    The intuition is straightforward: with more data points, the effect of noise "gets averaged out." Each individual noisy observation pulls the solution slightly away from $w^\star$, but with many observations these random pulls tend to cancel. Think of fitting a line through noisy points — with only 2 points the line is heavily influenced by which particular noisy points you happened to get, but with 100 points the line is much more stable and closer to the truth.
+  </p>
+
+  <div class="callout-note">
+    <div class="callout-title">Intuition: More data → less noise influence</div>
+    <p>In the underparameterized regime, the estimation error decreases as $n$ grows because each additional sample provides new information about $w^\star$, and the averaging effect of the least-squares solution smooths out the noise.</p>
+  </div>
+
+  <h3>2.2 Overparameterized Setting ($n < d$) — Noiseless Case</h3>
+
+  <p>
+    When $d > n$, the system $y = Xw$ is underdetermined — there are infinitely many $w$ that perfectly fit the training data. A natural choice is the <strong>minimum-norm solution</strong>:
+  </p>
+  <div class="math-block">
+    $$\hat{w}_{\text{mn}} = \arg\min_{w} \|w\|_2 \quad \text{subject to} \quad y = Xw$$
+  </div>
+
+  <p>
+    In the noiseless case ($y_i = \langle x_i, w^\star\rangle$), the estimation error can either monotonically decrease or show more complex behavior as $n$ increases, depending on the ground truth and the nature of the new samples collected. As $n$ approaches $d$, we gain enough information to fully determine $w^\star$, and the error drops to zero at $n = d$.
+  </p>
+
+  <h3>2.3 Overparameterized Setting ($n < d$) — Noisy Case</h3>
+
+  <p>
+    The noisy overparameterized setting ($y_i = \langle x_i, w^\star \rangle + \varepsilon_i$) is where things get surprising. As $n$ increases from 1 toward $d$, the estimation error of the minimum-norm interpolator initially decreases (more data helps), but then <strong>spikes dramatically near $n = d$</strong> (the interpolation threshold), before decreasing again in the underparameterized regime $n > d$.
+  </p>
+
+  <div class="callout-note">
+    <div class="callout-title">The spike at $n \approx d$</div>
+    <p>Near the interpolation threshold, the model barely has enough parameters to fit the data. It is forced to use all its capacity to interpolate the (noisy) training points, amplifying the noise enormously. This phenomenon relates to the concept of <strong>double descent</strong> — a U-shape in the overparameterized regime followed by a second descent. This is an active research area and also appears in neural networks.</p>
+  </div>
+</section>
+
+<!-- ===== 3. MODEL COMPLEXITY: TRAINING VS. ESTIMATION ERROR ===== -->
+<section>
+  <h2>3. Effects of Model Complexity on Training and Estimation Error</h2>
+
+  <p>
+    Now we fix the sample size $n$ and vary the model complexity — for example by fitting polynomials of increasing degree to 1-dimensional data. This reveals two fundamentally different behaviors for training error versus estimation (generalization) error.
+  </p>
+
+  <h3>3.1 Training Error vs. Model Complexity</h3>
+
+  <p>
+    As model complexity increases, the training error <strong>monotonically decreases</strong> (or at least never increases). A more complex function class $\mathcal{F}$ contains richer functions that can fit the training data more tightly. Eventually, with enough complexity, the model can perfectly interpolate every training point, driving the training loss to zero.
+  </p>
+
+  <div class="callout-example">
+    <div class="callout-title">Example: Polynomial Regression</div>
+    <p>Consider predicting house prices from size using polynomials. A constant function (degree 0) has high training error — it's just a horizontal line. A linear function (degree 1) fits better. A degree-4 polynomial fits even better. And a polynomial of degree $n-1$ can pass exactly through all $n$ training points, giving zero training error. But does this zero training error mean the model is good?</p>
+  </div>
+
+  <h3>3.2 Estimation/Generalization Error vs. Model Complexity</h3>
+
+  <p>
+    The generalization error behaves very differently: it follows a <strong>U-shaped curve</strong>. Starting from simple models, the generalization error first decreases as we add complexity (the model becomes flexible enough to capture the true pattern). But beyond a "sweet spot," the error starts increasing again — the model has become so complex that it starts fitting the noise rather than the signal.
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Underfitting and Overfitting</div>
+    <p><strong>Underfitting:</strong> The model is too simple. It predicts both training data and test data poorly. The function class $\mathcal{F}$ does not contain functions flexible enough to approximate $f^\star$.</p>
+    <p><strong>Overfitting:</strong> The model is too complex. It predicts training data very well (often perfectly) but test data poorly. The model has used its extra capacity to memorize noise rather than learn the true pattern.</p>
+    <p>The "right" model predicts training data well and test data well — it has found the sweet spot of complexity.</p>
+  </div>
+
+  <p>
+    The key insight is that once a model has extracted all available information about $f^\star$ from the training data, any additional flexibility can only be used to fit the noise. Since the model cannot distinguish signal from noise, it starts learning patterns in the noise that won't generalize.
+  </p>
+
+  <div class="callout-note">
+    <div class="callout-title">Training error ≠ generalization error</div>
+    <p>This is one of the most important lessons in machine learning. A model with zero training error is not necessarily (and is often not!) the best model. The training error always tells you the model fits the data you have; only the generalization error tells you whether it has actually learned the underlying pattern. For most models, training error is a <em>too optimistic</em> approximation of the generalization error.</p>
+  </div>
+</section>
+
+<!-- ===== 4. BIAS–VARIANCE TRADEOFF ===== -->
+<section>
+  <h2>4. Bias–Variance Tradeoff</h2>
+
+  <p>
+    The U-shaped curve of the generalization error can be explained mathematically through the <strong>bias–variance decomposition</strong>. The idea is to think of the trained model $\hat{f}_D$ as random (because the training set $D$ is random), and to analyze the <em>expected</em> estimation error over many possible training sets.
+  </p>
+
+  <h3>4.1 Bias and Variance of a Model</h3>
+
+  <p>
+    Imagine training the same learning method $\mathcal{M}$ on many independent datasets $D_1, D_2, \ldots, D_J$ drawn from the same distribution, producing models $\hat{f}_1, \hat{f}_2, \ldots, \hat{f}_J$. The average model $\bar{f} = \frac{1}{J}\sum_{j=1}^{J} \hat{f}_j$ represents "what the method learns on average." Two things can go wrong:
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition: Bias (Squared)</div>
+    <p>The <strong>squared bias</strong> measures how far the <em>average model</em> is from the ground truth:</p>
+    <div class="math-block">
+      $$\text{Bias}_D^2(\hat{f}_D) \;:=\; \mathbb{E}_X\!\Big[\big(\mathbb{E}_D[\hat{f}_D(X)] - f^\star(X)\big)^2\Big]$$
+    </div>
+    <p>High bias means that even if we average over infinitely many training sets, the method systematically misses the truth. This drives <strong>underfitting</strong> and arises when the function class is too simple to approximate $f^\star$.</p>
+  </div>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition: Variance</div>
+    <p>The <strong>variance</strong> measures how much individual models fluctuate around the average model:</p>
+    <div class="math-block">
+      $$\text{Var}_D(\hat{f}_D) \;:=\; \mathbb{E}_X\!\Big[\text{Var}_D\!\big(\hat{f}_D(X)\big)\Big] \;=\; \mathbb{E}_X\!\Big[\mathbb{E}_D\!\big[(\hat{f}_D(X) - \mathbb{E}_D[\hat{f}_D(X)])^2\big]\Big]$$
+    </div>
+    <p>High variance means that the model is very sensitive to which particular training set it sees — different datasets lead to very different models. This drives <strong>overfitting</strong> and typically occurs with complex models or small sample sizes.</p>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Example: Simple vs. Complex Models</div>
+    <p><strong>Simple model (e.g., constant function):</strong> Every training set produces roughly the same model (low variance), but that model is systematically far from $f^\star$ (high bias).</p>
+    <p><strong>Complex model (e.g., high-degree polynomial):</strong> The average model might be close to $f^\star$ (low bias), but each individual model is very wiggly and different from the average (high variance).</p>
+  </div>
+
+  <h3>4.2 The Bias–Variance Decomposition</h3>
+
+  <p>
+    The expected generalization error can be decomposed into exactly three terms:
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Theorem: Bias–Variance Decomposition</div>
+    <div class="math-block">
+      $$\mathbb{E}_D\!\Big[L\!\big(\hat{f}_D;\, \mathbb{P}_{X,Y}\big)\Big] \;=\; \underbrace{\text{Var}_D(\hat{f}_D)}_{\text{variance}} \;+\; \underbrace{\text{Bias}_D^2(\hat{f}_D)}_{\text{squared bias}} \;+\; \underbrace{\sigma^2}_{\text{irreducible noise}}$$
+    </div>
+    <p>This is the expected generalization error, where the expectation is taken over both the randomness in the training set $D$ and the test point $(X,Y)$.</p>
+  </div>
+
+  <p>
+    This decomposition tells us exactly why the generalization error has a U-shape:
+  </p>
+  <ul>
+    <li><strong>Simple models:</strong> High bias, low variance → underfitting. The bias term dominates.</li>
+    <li><strong>Complex models:</strong> Low bias, high variance → overfitting. The variance term dominates.</li>
+    <li><strong>Optimal complexity:</strong> A balanced tradeoff between bias and variance minimizes the total generalization error.</li>
+  </ul>
+  <p>
+    The irreducible noise $\sigma^2$ is a constant floor that no model can beat — it represents the inherent randomness in the data.
+  </p>
+
+  <div class="callout-note">
+    <div class="callout-title">Bias and variance are properties of a method, not of an individual model</div>
+    <p>An important subtlety: bias and variance describe the behavior of a learning <em>method</em> $\mathcal{M}$ (a combination of function class, loss, and optimizer) across different datasets drawn from the same distribution. They are not properties of a single trained model on a specific dataset. This is why we take the expectation over $D$.</p>
+  </div>
+
+  <h3>4.3 Sources of Generalization Error Beyond Noise</h3>
+
+  <p>
+    A natural question: can the generalization error be positive even if there is <em>no</em> observation noise ($\sigma^2 = 0$)?  The answer is <strong>yes</strong>. Even without noise:
+  </p>
+  <ul>
+    <li><strong>Bias:</strong> If the function class cannot represent $f^\star$, the model will systematically miss the truth.</li>
+    <li><strong>Variance:</strong> If we have too few samples relative to the complexity, the model still varies across datasets — for example, in overparameterized linear regression ($n < d$) without noise, there are many interpolating solutions, and different training sets lead to different ones.</li>
+  </ul>
+  <p>
+    The generalization error is not just about overfitting to noise; it can arise from seeing too little data or choosing the wrong model structure.
+  </p>
+</section>
+
+<!-- ===== 5. BONUS: DOUBLE DESCENT ===== -->
+<section>
+  <h2>5. Bonus: Double Descent</h2>
+
+  <p>
+    The classical bias–variance picture suggests a clean U-shaped generalization curve. But recent research has revealed that for very complex models (such as modern neural networks), something surprising happens: beyond the interpolation threshold (where the model first becomes complex enough to perfectly fit the training data), the generalization error can start <em>decreasing again</em>. This creates a "double descent" curve.
+  </p>
+
+  <p>
+    This was demonstrated empirically on CIFAR-10 using ResNet18 architectures with varying width. As the network width increases past the interpolation threshold (where training error reaches zero), the test error initially peaks but then descends again in the overparameterized regime.
+  </p>
+
+  <p>
+    The same phenomenon occurs for linear models: when we fix $d$ large and increase $n$, the error spikes near $n = d$ and then descends on both sides. This is an active area of research, and understanding when and why overparameterized models generalize well (sometimes called "benign overfitting") is one of the most important open questions in modern machine learning theory.
+  </p>
+</section>
+
+<!-- ===== KEY TAKEAWAYS ===== -->
+<section>
+  <h2>Key Takeaways</h2>
+  <ul>
+    <li><strong>Generalization error ≠ training error:</strong> The generalization error measures expected performance on unseen data. Training error is typically too optimistic, especially for complex models, and should not be used as the sole criterion for model selection.</li>
+    <li><strong>Generalization = estimation + irreducible noise:</strong> Under the standard regression model $Y = f^\star(X) + \varepsilon$, the generalization error equals the estimation error plus $\sigma^2$. Minimizing generalization error is equivalent to minimizing estimation error.</li>
+    <li><strong>Sample size matters differently in two regimes:</strong> In the underparameterized setting ($n > d$), more data monotonically decreases estimation error. In the overparameterized setting ($n < d$), the error can spike near the interpolation threshold $n \approx d$, especially with noisy data.</li>
+    <li><strong>The U-shaped generalization curve:</strong> As model complexity increases, training error always decreases, but generalization error first decreases (underfitting regime) and then increases (overfitting regime). The sweet spot in between is the goal.</li>
+    <li><strong>Bias–variance decomposition explains the U-shape:</strong> The expected generalization error decomposes as $\text{Variance} + \text{Bias}^2 + \sigma^2$. Simple models have high bias/low variance; complex models have low bias/high variance. The optimal model balances both.</li>
+    <li><strong>Double descent challenges classical wisdom:</strong> In highly overparameterized models (e.g., wide neural networks), generalization can improve again beyond the interpolation threshold, creating a second descent — an active area of current research.</li>
+  </ul>
+</section>
+
+</main>
+
+<footer>
+  <span>© 2026 piotr-marciniak.com</span>
+  <span>set in Inter &amp; JetBrains Mono</span>
+</footer>
+<script src="../../dark.js"></script>
+</body>
+</html>

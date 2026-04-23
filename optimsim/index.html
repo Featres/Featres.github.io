@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OptimSim — Piotr Marciniak</title>
+  <meta name="description" content="Data analyst work at OptimSim — warehouse optimization, anomaly detection, scheduling analysis, and dashboard reporting." />
+  <script>
+    try { var t=localStorage.getItem('theme')||'grain'; if(t) document.documentElement.setAttribute('data-theme',t); } catch(e){}
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css" />
+</head>
+<body>
+
+<div class="topbar">
+  <div class="left">
+    <div class="theme-switcher">
+      <button class="theme-dot" data-theme="stone" onclick="setTheme('stone')" title="stone"></button>
+      <button class="theme-dot" data-theme="dark"  onclick="setTheme('dark')"  title="dark"></button>
+      <button class="theme-dot" data-theme="ocean" onclick="setTheme('ocean')" title="ocean"></button>
+      <button class="theme-dot" data-theme="grain" onclick="setTheme('grain')" title="grain"></button>
+      <span class="theme-label">themes</span>
+    </div>
+    <span class="host">piotr@marciniak</span>
+    <span class="path">~/work/optimsim</span>
+  </div>
+  <div class="right">
+    <a href="../">← home</a>
+    <a href="#summary">summary</a>
+    <a href="#content">work</a>
+  </div>
+</div>
+
+<div class="grid">
+
+  <!-- HEADER -->
+  <section class="cell subhead span-12">
+    <div class="proj-line">
+      <span class="k">role ·</span>
+      <span class="v">Data Analyst</span>
+    </div>
+    <h1>OptimSim</h1>
+    <p class="tagline">Part-time data analyst role — warehouse optimization, anomaly detection, and automated reporting. Jun 2024 – Mar 2026.</p>
+  </section>
+
+  <!-- MODULES -->
+  <section class="cell modules span-12" style="grid-template-columns: repeat(5, 1fr);">
+    <div class="mod">
+      <div class="micro">Languages</div>
+      <div class="tags">
+        <span class="tag">Python</span>
+        <span class="tag">SQL</span>
+      </div>
+    </div>
+    <div class="mod">
+      <div class="micro">Tools</div>
+      <div class="tags">
+        <span class="tag">Apache Superset</span>
+        <span class="tag">Power BI</span>
+        <span class="tag">Git</span>
+      </div>
+    </div>
+    <div class="mod">
+      <div class="micro">Focus</div>
+      <div class="tags">
+        <span class="tag">Data Analysis and Visualization</span>
+        <span class="tag">Anomaly Detection</span>
+        <span class="tag">Scheduling</span>
+      </div>
+    </div>
+    <div class="mod">
+      <div class="micro">Databases</div>
+      <div class="tags">
+        <span class="tag">MariaDB</span>
+        <span class="tag">Postgres</span>
+      </div>
+    </div>
+    <div class="mod">
+      <div class="micro">Type</div>
+      <div class="tags">
+        <span class="tag">Part-time</span>
+        <span class="tag">Remote</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- SUMMARY -->
+  <section class="cell sum span-12" id="summary">
+    <div class="micro">01 // summary</div>
+    <p>Part-time data analyst at OptimSim since June 2024. The work focuses on examining historical and live operational data from automated warehouse systems to surface optimization opportunities, flag inefficiencies, and improve scheduling algorithms.</p>
+    <p>The technical stack spans SQL for data extraction, Python for analysis and automation, and Apache Superset with Power BI for dashboarding and reporting.</p>
+  </section>
+
+  <!-- CONTENT -->
+  <section class="cell content span-12" id="content">
+    <div class="head">
+      <div class="micro">02 // work</div>
+      <div class="micro">3 areas</div>
+    </div>
+
+    <!-- Data -->
+    <section>
+      <div class="micro">§</div>
+      <h2>Data Extraction &amp; Analysis</h2>
+    </section>
+    <section>
+      <p>Built a pipeline of SQL views and Python extractors to pull structured records from the warehouse management system — tracking box locations, type transitions, stock levels, and movement sequences. Analysis targets unnecessary moves, unblocking events, and speed-buffer utilisation to quantify inefficiencies and guide scheduling decisions.</p>
+      <ul>
+        <li>Box-level record extraction and state tracking across time</li>
+        <li>Anomaly detection on weight measurements and lot expiry</li>
+        <li>Movement analysis: unnecessary relocations, blocking patterns, unblocking frequency</li>
+        <li>Article stock reconciliation and location-change auditing</li>
+      </ul>
+    </section>
+
+    <!-- Reporting -->
+    <section>
+      <div class="micro">§</div>
+      <h2>Dashboards &amp; Reporting</h2>
+    </section>
+    <section>
+      <p>Built and maintained automated dashboards in Apache Superset and Power BI for ongoing performance monitoring. Implemented a reporting pipeline that pushes updated metrics to clients on a scheduled basis, reducing manual overhead.</p>
+      <ul>
+        <li>Apache Superset dashboards with automated data refresh via API</li>
+        <li>Power BI reports for stock and quality analysis</li>
+        <li>Scheduled report delivery with client-specific export logic</li>
+      </ul>
+    </section>
+
+  </section>
+
+  <!-- BACK NAV -->
+  <section class="cell subnav span-12">
+    <a href="../">← back to work_log</a>
+    <span class="trail">piotr-marciniak.com / optimsim</span>
+  </section>
+
+</div>
+
+<footer>
+  <span>© 2026 piotr-marciniak.com</span>
+  <span>set in Inter &amp; JetBrains Mono</span>
+</footer>
+
+<script src="../dark.js"></script>
+</body>
+</html>

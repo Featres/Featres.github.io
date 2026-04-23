@@ -1,0 +1,877 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lecture 2 – Quantiles, Multivariate Distributions, Moments & Convergence</title>
+  <link rel="icon" type="image/png" href="../../files/logo.png" />
+  <script>
+    try { var t=localStorage.getItem('theme')||'grain'; if(t) document.documentElement.setAttribute('data-theme',t); } catch(e){}
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../styles.css" />
+  <link rel="stylesheet" href="../../lecture.css" />
+  <script>
+      MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\(', '\)']],
+          displayMath: [['$$', '$$'], ['\[', '\]']]
+        },
+        svg: { fontCache: 'global' }
+      };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+<body>
+<div class="topbar">
+  <div class="left">
+    <div class="theme-switcher">
+      <button class="theme-dot" data-theme="stone" onclick="setTheme('stone')" title="stone"></button>
+      <button class="theme-dot" data-theme="dark"  onclick="setTheme('dark')"  title="dark"></button>
+      <button class="theme-dot" data-theme="ocean" onclick="setTheme('ocean')" title="ocean"></button>
+      <button class="theme-dot" data-theme="grain" onclick="setTheme('grain')" title="grain"></button>
+      <span class="theme-label">themes</span>
+    </div>
+    <span class="host">piotr@marciniak</span>
+    <span class="path">~/files/ccsl</span>
+  </div>
+  <div class="right">
+    <a href="../../">← home</a>
+    <a href="../../studying/">← notes</a>
+  </div>
+</div>
+
+
+<header>
+    <h1>Lecture 2: Quantiles, Multivariate Distributions, Moments & Convergence</h1>
+    <div class="meta">
+      <span>Course: Core Concepts in Statistical Learning</span>
+      <span>Lecture 2</span>
+      <span>March 2026</span>
+    </div>
+  </header>
+
+  <main>
+    <section>
+      <p>
+        This lecture builds on the foundation of random variables and CDFs from Lecture 1. We begin with the <strong>quantile function</strong> — the "inverse" of the CDF — which lets us go from probabilities back to values. We then extend our view to <strong>multivariate distributions</strong>, covering joint, marginal, and conditional distributions, and the key concept of independence for random variables. Next we formalize <strong>moments</strong> (mean, variance, covariance) and their properties, including the powerful tools of conditional expectation and the law of total variance. We close with <strong>probability inequalities</strong> and the major <strong>convergence theorems</strong> (LLN, CLT, delta method) that underpin all of statistical inference.
+      </p>
+    </section>
+
+    <!-- ============ QUANTILE FUNCTION ============ -->
+    <section>
+      <h2>1. The Quantile Function</h2>
+
+      <div class="callout-definition">
+        <div class="callout-title">Definition — Quantile Function</div>
+        <p>
+          Given a CDF $F$, the <strong>quantile function</strong> is defined as:
+        </p>
+        <div class="math-block">
+          $$ F^{-1}(q) = \inf\{x \in \mathbb{R} : F(x) \ge q\}, \quad q \in (0,1). $$
+        </div>
+        <p>The value $F^{-1}(q)$ is called the <strong>$q$-quantile</strong>.</p>
+      </div>
+
+      <div class="intuition">
+        <div class="callout-title">Intuition</div>
+        <p>
+          The CDF answers: "given a value $x$, what is the probability of being at most $x$?" The quantile function asks the reverse question: "given a probability $q$, what is the smallest value $x$ such that at least a fraction $q$ of the distribution lies at or below $x$?"
+        </p>
+        <p>
+          Think of it like a class exam. The CDF tells you "if you scored 75, you're in the 80th percentile." The quantile function tells you "to be in the 80th percentile, you need at least a score of 75."
+        </p>
+      </div>
+
+      <h3>When is the quantile just the usual inverse?</h3>
+      <p>
+        If $F$ is <strong>strictly increasing and continuous</strong>, then $F$ is a bijection (one-to-one and onto) from its support to $(0,1)$, and $F^{-1}(q)$ is simply the ordinary inverse function evaluated at $q$. The "inf" in the general definition handles cases where $F$ has flat regions or jumps (as with discrete distributions).
+      </p>
+
+      <div class="callout-example">
+        <div class="callout-title">Example 1 — Quantile of a continuous distribution</div>
+        <p>
+          Let $X \sim \text{Uniform}(0,1)$, so $F(x) = x$ for $x \in [0,1]$. Then:
+        </p>
+        <div class="math-block">
+          $$ F^{-1}(q) = q $$
+        </div>
+        <p>
+          The 0.25-quantile is 0.25, the median ($q = 0.5$) is 0.5, and the 0.9-quantile is 0.9. This makes sense: for a uniform distribution, the quantiles are spread evenly across the interval.
+        </p>
+      </div>
+
+      <div class="callout-example">
+        <div class="callout-title">Example 2 — Quantile of a discrete distribution (Binomial)</div>
+        <p>
+          Recall from Lecture 1 the $\text{Binomial}(3, 1/2)$ distribution with CDF:
+        </p>
+        <div class="math-block">
+          $$ F(x) = \begin{cases} 0 & x < 0 \\ 1/8 & 0 \le x < 1 \\ 1/2 & 1 \le x < 2 \\ 7/8 & 2 \le x < 3 \\ 1 & x \ge 3 \end{cases} $$
+        </div>
+        <p>
+          The median is $F^{-1}(1/2) = \inf\{x : F(x) \ge 1/2\}$. Looking at the CDF, $F(x)$ first reaches $1/2$ at $x = 1$. So the median is $\mathbf{1}$.
+        </p>
+        <p>
+          Similarly, $F^{-1}(0.9) = \inf\{x : F(x) \ge 0.9\} = 3$, since $F(2) = 7/8 = 0.875 < 0.9$ but $F(3) = 1 \ge 0.9$.
+        </p>
+      </div>
+
+      <div class="callout-example">
+        <div class="callout-title">Example 3 — Quantile of the Exponential distribution</div>
+        <p>
+          Let $X \sim \text{Exp}(\lambda)$ with $F(x) = 1 - e^{-\lambda x}$ for $x \ge 0$. Since $F$ is continuous and strictly increasing on $[0, \infty)$, we solve $F(x) = q$ directly:
+        </p>
+        <div class="math-block">
+          $$ 1 - e^{-\lambda x} = q \implies x = -\frac{\ln(1-q)}{\lambda}. $$
+        </div>
+        <p>
+          For $\lambda = 1$: the median is $-\ln(0.5) \approx 0.693$, and the 90th percentile is $-\ln(0.1) \approx 2.303$.
+        </p>
+      </div>
+
+      <div class="callout-note">
+        <div class="callout-title">Special quantile: the Median ($q = 1/2$)</div>
+        <p>
+          The median is the "middle value" of a distribution — half the probability mass lies below it, half above. For symmetric distributions (like the Normal), the median equals the mean. For skewed distributions, they can differ substantially.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ MULTIVARIATE DISTRIBUTIONS ============ -->
+    <section>
+      <h2>2. Multivariate Distributions</h2>
+
+      <p>
+        So far we've dealt with a single random variable $X$. In practice, we often observe multiple quantities simultaneously — for instance, a person's height <em>and</em> weight, or today's temperature <em>and</em> humidity. We need tools to describe their <strong>joint</strong> behavior.
+      </p>
+
+      <div class="callout-definition">
+        <div class="callout-title">Definition — Random Vector</div>
+        <p>
+          $\mathbf{X} = (X_1, \ldots, X_k)^\top$ is a <strong>random vector</strong> in $\mathbb{R}^k$ if $X_1, \ldots, X_k$ are all real random variables defined on the same sample space $\Omega$.
+        </p>
+      </div>
+
+      <h3>2.1 Joint CDF, PMF, and PDF</h3>
+
+      <div class="callout-definition">
+        <div class="callout-title">Definition — Joint CDF</div>
+        <p>
+          The joint CDF of $\mathbf{X}$ is:
+        </p>
+        <div class="math-block">
+          $$ F_{\mathbf{X}}(\mathbf{x}) = P(X_1 \le x_1, \ldots, X_k \le x_k). $$
+        </div>
+      </div>
+
+      <p>
+        Just as for a single random variable, we distinguish two important cases:
+      </p>
+      <ul>
+        <li><strong>Discrete:</strong> The joint pmf is $f_{\mathbf{X}}(\mathbf{x}) = P(X_1 = x_1, \ldots, X_k = x_k)$.</li>
+        <li><strong>Absolutely continuous:</strong> There exists a joint pdf $f_{\mathbf{X}}(\mathbf{x}) \ge 0$ such that $F_{\mathbf{X}}(\mathbf{x}) = \int_{-\infty}^{x_k} \cdots \int_{-\infty}^{x_1} f_{\mathbf{X}}(t_1, \ldots, t_k)\,dt_1 \cdots dt_k$.</li>
+      </ul>
+
+      <div class="callout-example">
+        <div class="callout-title">Example 4 — Joint PMF of two dice</div>
+        <p>
+          Roll two fair dice. Let $X_1$ = result of die 1 and $X_2$ = result of die 2. The joint pmf is:
+        </p>
+        <div class="math-block">
+          $$ f_{X_1, X_2}(x_1, x_2) = \frac{1}{36} \quad \text{for } x_1, x_2 \in \{1, 2, 3, 4, 5, 6\}. $$
+        </div>
+        <p>
+          Every pair is equally likely. For example, $P(X_1 = 3, X_2 = 5) = 1/36$.
+        </p>
+      </div>
+
+      <h3>2.2 Marginal Distributions</h3>
+
+      <div class="callout-definition">
+        <div class="callout-title">Definition — Marginal PMF / PDF</div>
+        <p>
+          The marginal distribution of a single component $X_i$ is obtained by "summing out" (discrete) or "integrating out" (continuous) all other variables from the joint distribution:
+        </p>
+        <div class="math-block">
+          $$ \text{Discrete: } f_{X_i}(x) = \sum_{x_j : j \ne i} f_{\mathbf{X}}(x_1, \ldots, x_k) $$
+        </div>
+        <div class="math-block">
+          $$ \text{Continuous: } f_{X_i}(x) = \int_{-\infty}^{\infty} \cdots \int_{-\infty}^{\infty} f_{\mathbf{X}}(x_1,\ldots,x_{i-1}, x, x_{i+1},\ldots,x_k)\,dx_1 \cdots dx_{i-1}\,dx_{i+1} \cdots dx_k $$
+        </div>
+      </div>
+
+      <div class="intuition">
+        <div class="callout-title">Intuition</div>
+        <p>
+          Think of the joint distribution as a complete spreadsheet of data about every variable together. The marginal distribution is what you get when you focus on just <strong>one column</strong> and ignore the rest. The word "marginal" comes from the idea of writing row/column totals in the <em>margins</em> of a table.
+        </p>
+      </div>
+
+      <div class="callout-example">
+        <div class="callout-title">Example 5 — From joint to marginal</div>
+        <p>
+          Suppose $(X, Y)$ has joint pmf given by this table:
+        </p>
+        <div class="table-wrapper">
+          <table>
+            <tr><th></th><th>$Y=0$</th><th>$Y=1$</th><th>Marginal of $X$</th></tr>
+            <tr><td><strong>$X=0$</strong></td><td>0.2</td><td>0.1</td><td><strong>0.3</strong></td></tr>
+            <tr><td><strong>$X=1$</strong></td><td>0.3</td><td>0.4</td><td><strong>0.7</strong></td></tr>
+            <tr><td><strong>Marginal of $Y$</strong></td><td><strong>0.5</strong></td><td><strong>0.5</strong></td><td>1.0</td></tr>
+          </table>
+        </div>
+        <p>
+          For instance, $f_X(1) = f(1,0) + f(1,1) = 0.3 + 0.4 = 0.7$. The marginals appear in the "margins" of the table — hence the name.
+        </p>
+      </div>
+
+      <h3>2.3 Independence of Random Variables</h3>
+
+      <div class="callout-definition">
+        <div class="callout-title">Definition — Mutual Independence</div>
+        <p>
+          Random variables $X_1, \ldots, X_k$ are <strong>mutually independent</strong> if for all subsets of indices and all events:
+        </p>
+        <div class="math-block">
+          $$ P(X_{i_1} \in A_{i_1}, \ldots, X_{i_j} \in A_{i_j}) = \prod_{m=1}^{j} P(X_{i_m} \in A_{i_m}). $$
+        </div>
+      </div>
+
+      <div class="callout-definition">
+        <div class="callout-title">Characterization — Independence via Joint = Product of Marginals</div>
+        <p>
+          $X_1, \ldots, X_k$ are mutually independent if and only if for all $\mathbf{x} \in \mathbb{R}^k$:
+        </p>
+        <div class="math-block">
+          $$ f_{\mathbf{X}}(\mathbf{x}) = \prod_{i=1}^{k} f_{X_i}(x_i). $$
+        </div>
+        <p>In words: the joint pmf/pdf factors into the product of the marginals.</p>
+      </div>
+
+      <div class="intuition">
+        <div class="callout-title">Intuition</div>
+        <p>
+          Independence means <strong>knowing one variable tells you nothing about the others</strong>. If the joint distribution equals the product of the individual (marginal) distributions, then the variables carry no information about each other. This is the multivariate generalization of the event independence $P(A \cap B) = P(A)P(B)$ from Lecture 1.
+        </p>
+      </div>
+
+      <div class="callout-example">
+        <div class="callout-title">Example 6 — Checking independence from a table</div>
+        <p>
+          Using Example 5: is $P(X=1, Y=0) = P(X=1) \cdot P(Y=0)$? We have $0.3 \ne 0.7 \times 0.5 = 0.35$. So $X$ and $Y$ are <strong>not</strong> independent.
+        </p>
+        <p>
+          If instead the table were $f(0,0)=0.15$, $f(0,1)=0.15$, $f(1,0)=0.35$, $f(1,1)=0.35$, then every cell would equal the product of its row and column marginals, and $X, Y$ would be independent.
+        </p>
+      </div>
+
+      <h3>2.4 Conditional Distributions</h3>
+
+      <div class="callout-definition">
+        <div class="callout-title">Definition — Conditional PMF / PDF</div>
+        <p>
+          For a random pair $(X, Y)$, the conditional pmf/pdf of $X$ given $Y = y$ is:
+        </p>
+        <div class="math-block">
+          $$ f_{X|Y}(x|y) = \frac{f(x, y)}{f_Y(y)}, \quad \text{provided } f_Y(y) > 0. $$
+        </div>
+      </div>
+
+      <div class="intuition">
+        <div class="callout-title">Intuition</div>
+        <p>
+          This is just Bayes' rule applied to random variables. Once you <em>observe</em> that $Y = y$, you "zoom in" on the slice of the joint distribution where $Y = y$ and renormalize it so the probabilities add up to 1. The denominator $f_Y(y)$ does that renormalization.
+        </p>
+      </div>
+
+      <div class="callout-example">
+        <div class="callout-title">Example 7 — Conditional PMF from a table</div>
+        <p>
+          From Example 5, what is $f_{X|Y}(x | Y=1)$?
+        </p>
+        <div class="math-block">
+          $$ f_{X|Y}(0|1) = \frac{f(0,1)}{f_Y(1)} = \frac{0.1}{0.5} = 0.2, \qquad f_{X|Y}(1|1) = \frac{f(1,1)}{f_Y(1)} = \frac{0.4}{0.5} = 0.8. $$
+        </div>
+        <p>
+          Given that $Y = 1$, there's an 80% chance that $X = 1$ and a 20% chance that $X = 0$. Notice the marginal was $P(X=1) = 0.7$, so observing $Y=1$ <em>increased</em> our belief that $X=1$ — they are positively associated.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ MOMENTS ============ -->
+    <section>
+      <h2>3. Moments: Mean, Variance, Covariance</h2>
+
+      <p>
+        Moments are numerical summaries that capture key features of a distribution: its center, spread, and the relationships between variables.
+      </p>
+
+      <h3>3.1 Expectation (Mean)</h3>
+
+      <div class="callout-definition">
+        <div class="callout-title">Definition — $k$-th Moment</div>
+        <p>
+          The $k$-th moment of a random variable $X$ is:
+        </p>
+        <div class="math-block">
+          $$ E(X^k) = \int_{-\infty}^{\infty} x^k \, dF_X(x). $$
+        </div>
+        <p>The first moment $E(X)$ is the <strong>mean</strong> (or expected value) — the "center of mass" of the distribution.</p>
+      </div>
+
+      <div class="callout-note">
+        <div class="callout-title">Key property: Linearity of Expectation</div>
+        <p>
+          For any constants $a_1, \ldots, a_p$ and random variables $X_1, \ldots, X_p$:
+        </p>
+        <div class="math-block">
+          $$ E\!\left(\sum_{i=1}^{p} a_i X_i\right) = \sum_{i=1}^{p} a_i\, E(X_i). $$
+        </div>
+        <p>This holds <strong>always</strong> — no independence assumption needed. It's one of the most useful properties in probability.</p>
+      </div>
+
+      <div class="callout-example">
+        <div class="callout-title">Example 8 — Average of dice via linearity</div>
+        <p>
+          Roll 100 dice. Let $S = X_1 + \cdots + X_{100}$. By linearity, $E(S) = 100 \cdot E(X_1) = 100 \cdot 3.5 = 350$. No need to enumerate all $6^{100}$ outcomes!
+        </p>
+      </div>
+
+      <h3>3.2 Variance and Standard Deviation</h3>
+
+      <div class="callout-definition">
+        <div class="callout-title">Definition — Variance</div>
+        <p>
+          The variance of $X$ is the second <strong>central</strong> moment:
+        </p>
+        <div class="math-block">
+          $$ \text{Var}(X) = E[(X - E(X))^2] = E(X^2) - [E(X)]^2. $$
+        </div>
+        <p>The standard deviation is $\sigma_X = \sqrt{\text{Var}(X)}$ and has the same units as $X$.</p>
+      </div>
+
+      <div class="intuition">
+        <div class="callout-title">Intuition</div>
+        <p>
+          Variance measures <strong>how spread out</strong> a distribution is around its mean. A variance of zero means the random variable is actually a constant. The second formula $E(X^2) - [E(X)]^2$ is often easier to compute — it says: "the average of the squares minus the square of the average."
+        </p>
+      </div>
+
+      <div class="callout-example">
+        <div class="callout-title">Example 9 — Variance of a coin flip</div>
+        <p>
+          Let $X \sim \text{Bernoulli}(p)$, so $X \in \{0, 1\}$. Then $E(X) = p$, $E(X^2) = p$ (since $0^2=0$, $1^2=1$), and:
+        </p>
+        <div class="math-block">
+          $$ \text{Var}(X) = p - p^2 = p(1-p). $$
+        </div>
+        <p>
+          Maximum variance occurs at $p = 1/2$ (most uncertainty), and variance is 0 at $p=0$ or $p=1$ (no randomness).
+        </p>
+      </div>
+
+      <h3>3.3 Covariance and Correlation</h3>
+
+      <div class="callout-definition">
+        <div class="callout-title">Definition — Covariance and Correlation</div>
+        <p>For two random variables $X$ and $Y$:</p>
+        <div class="math-block">
+          $$ \text{Cov}(X, Y) = E[(X - E(X))(Y - E(Y))] = E(XY) - E(X)E(Y) $$
+        </div>
+        <div class="math-block">
+          $$ \rho_{X,Y} = \frac{\text{Cov}(X, Y)}{\sigma_X \, \sigma_Y}, \quad -1 \le \rho_{X,Y} \le 1. $$
+        </div>
+      </div>
+
+      <div class="intuition">
+        <div class="callout-title">Intuition</div>
+        <p>
+          Covariance tells you whether two variables tend to move together ($\text{Cov} > 0$), move in opposite directions ($\text{Cov} < 0$), or have no linear association ($\text{Cov} = 0$). Correlation is a normalized version on $[-1, 1]$ that is unit-free, making it easier to interpret.
+        </p>
+      </div>
+
+      <p>Key properties to remember:</p>
+      <ul>
+        <li>$\text{Cov}(X, X) = \text{Var}(X)$.</li>
+        <li>$\text{Cov}(X, Y) = \text{Cov}(Y, X)$ — it's symmetric.</li>
+        <li>If $X$ and $Y$ are independent, then $\text{Cov}(X, Y) = 0$. (The converse is <strong>not</strong> true in general!)</li>
+        <li>$\text{Var}\!\left(\sum a_i X_i\right) = \sum a_i^2 \text{Var}(X_i) + 2\sum_{i < j} a_i a_j \text{Cov}(X_i, X_j)$.</li>
+      </ul>
+
+      <div class="callout-example">
+        <div class="callout-title">Example 10 — Zero covariance does not imply independence</div>
+        <p>
+          Let $X \sim \text{Uniform}\{-1, 0, 1\}$ and $Y = X^2$. Then $E(X) = 0$, so:
+        </p>
+        <div class="math-block">
+          $$ \text{Cov}(X, Y) = E(XY) - E(X)E(Y) = E(X^3) - 0 = 0, $$
+        </div>
+        <p>
+          since $X^3$ takes values $\{-1, 0, 1\}$ symmetrically. Yet $Y$ is completely determined by $X$! This shows zero covariance doesn't mean independence — it only captures <em>linear</em> relationships.
+        </p>
+      </div>
+
+      <h3>3.4 The Covariance Matrix and Linear Transformations</h3>
+
+      <div class="callout-definition">
+        <div class="callout-title">Definition — Mean Vector and Covariance Matrix</div>
+        <p>
+          For $\mathbf{X} = (X_1, \ldots, X_k)^\top$:
+        </p>
+        <div class="math-block">
+          $$ E(\mathbf{X}) = \begin{pmatrix} E(X_1) \\ \vdots \\ E(X_k) \end{pmatrix}, \qquad \Sigma_{\mathbf{X}} = E[(\mathbf{X} - \boldsymbol{\mu})(\mathbf{X} - \boldsymbol{\mu})^\top] $$
+        </div>
+        <p>where $\boldsymbol{\mu} = E(\mathbf{X})$. The $(i,j)$-th entry of $\Sigma_{\mathbf{X}}$ is $\text{Cov}(X_i, X_j)$. Diagonal entries are the variances.</p>
+      </div>
+
+      <div class="callout-definition">
+        <div class="callout-title">Theorem — Linear Transformation of Random Vectors</div>
+        <p>
+          Let $\mathbf{Y} = A\mathbf{X}$ where $A$ is an $m \times k$ constant matrix. Then:
+        </p>
+        <div class="math-block">
+          $$ E(\mathbf{Y}) = A\,E(\mathbf{X}), \qquad \text{Var}(\mathbf{Y}) = A\,\text{Var}(\mathbf{X})\,A^\top. $$
+        </div>
+      </div>
+
+      <div class="callout-example">
+        <div class="callout-title">Example 11 — Variance of a sum of two variables</div>
+        <p>
+          Let $S = X_1 + X_2$. This is $S = A\mathbf{X}$ with $A = (1 \;\; 1)$. Then:
+        </p>
+        <div class="math-block">
+          $$ \text{Var}(S) = A \Sigma A^\top = \text{Var}(X_1) + 2\text{Cov}(X_1,X_2) + \text{Var}(X_2). $$
+        </div>
+        <p>If $X_1, X_2$ are independent, $\text{Cov}=0$ and $\text{Var}(S) = \text{Var}(X_1) + \text{Var}(X_2)$.</p>
+      </div>
+    </section>
+
+    <!-- ============ CONDITIONAL EXPECTATION ============ -->
+    <section>
+      <h2>4. Conditional Expectation and Variance</h2>
+
+      <div class="callout-definition">
+        <div class="callout-title">Definition — Conditional Expectation</div>
+        <p>
+          The conditional expectation of $X$ given $Y = y$ is the mean of the conditional distribution $f_{X|Y}(\cdot|y)$:
+        </p>
+        <div class="math-block">
+          $$ E(X|Y=y) = \begin{cases} \sum_x x\, f_{X|Y}(x|y) & \text{(discrete)} \\ \int_{\mathbb{R}} x\, f_{X|Y}(x|y)\,dx & \text{(continuous)} \end{cases} $$
+        </div>
+        <p>$E(X|Y)$ is a <strong>random variable</strong> — it takes value $E(X|Y=y)$ when $Y=y$.</p>
+      </div>
+
+      <div class="intuition">
+        <div class="callout-title">Intuition</div>
+        <p>
+          Imagine you want to predict someone's income ($X$) and you know their education level ($Y$). $E(X|Y=y)$ is the best prediction of income for people with education level $y$ — it's the average income <em>within that group</em>. As $Y$ varies, this prediction changes, which is why $E(X|Y)$ is itself a random variable.
+        </p>
+      </div>
+
+      <div class="callout-example">
+        <div class="callout-title">Example 12 — Conditional expectation from a table</div>
+        <p>
+          Using Example 5 (and Example 7), $E(X | Y = 1) = 0 \cdot 0.2 + 1 \cdot 0.8 = 0.8$, and $E(X | Y = 0) = 0 \cdot 0.4 + 1 \cdot 0.6 = 0.6$.
+        </p>
+        <p>
+          (Here $f_{X|Y}(0|0) = 0.2/0.5 = 0.4$ and $f_{X|Y}(1|0) = 0.3/0.5 = 0.6$.)
+        </p>
+      </div>
+
+      <h3>4.1 The Tower Rule (Law of Iterated Expectations)</h3>
+
+      <div class="callout-definition">
+        <div class="callout-title">Theorem — Tower Rule</div>
+        <div class="math-block">
+          $$ E[E(X|Y)] = E(X). $$
+        </div>
+      </div>
+
+      <div class="intuition">
+        <div class="callout-title">Intuition</div>
+        <p>
+          Divide a population into groups based on $Y$. Compute the average of $X$ within each group. Then take the (weighted) average of those group averages. You get back the overall average of $X$. Think of it as: <em>the average of the group averages is the grand average</em>.
+        </p>
+      </div>
+
+      <div class="callout-example">
+        <div class="callout-title">Example 13 — Tower rule verification</div>
+        <p>
+          Continuing the previous example: $E(X|Y=0) = 0.6$ and $E(X|Y=1) = 0.8$. Since $P(Y=0) = 0.5$ and $P(Y=1) = 0.5$:
+        </p>
+        <div class="math-block">
+          $$ E[E(X|Y)] = 0.6 \times 0.5 + 0.8 \times 0.5 = 0.7 = E(X). \checkmark $$
+        </div>
+      </div>
+
+      <h3>4.2 Law of Total Variance</h3>
+
+      <div class="callout-definition">
+        <div class="callout-title">Theorem — Law of Total Variance</div>
+        <div class="math-block">
+          $$ \text{Var}(X) = E[\text{Var}(X|Y)] + \text{Var}(E(X|Y)). $$
+        </div>
+      </div>
+
+      <div class="intuition">
+        <div class="callout-title">Intuition</div>
+        <p>
+          The total variability in $X$ comes from two sources:
+        </p>
+        <ul>
+          <li><strong>$E[\text{Var}(X|Y)]$:</strong> the average variability <em>within</em> each group (how spread out incomes are among people with the same education level).</li>
+          <li><strong>$\text{Var}(E(X|Y))$:</strong> the variability <em>between</em> group means (how much the average income differs across education levels).</li>
+        </ul>
+        <p>This is exactly the "within-group" + "between-group" variance decomposition familiar from ANOVA.</p>
+      </div>
+    </section>
+
+    <!-- ============ PROBABILITY INEQUALITIES ============ -->
+    <section>
+      <h2>5. Probability Inequalities</h2>
+
+      <p>
+        These inequalities are blunt but powerful tools: they give bounds on probabilities using only simple summaries (the mean, the variance). They are especially useful when you don't know the exact distribution.
+      </p>
+
+      <div class="callout-definition">
+        <div class="callout-title">Markov's Inequality</div>
+        <p>If $X \ge 0$ and $t > 0$:</p>
+        <div class="math-block">
+          $$ P(X \ge t) \le \frac{E(X)}{t}. $$
+        </div>
+      </div>
+
+      <div class="intuition">
+        <div class="callout-title">Intuition</div>
+        <p>
+          If a non-negative variable has a small mean, it can't be large too often. For instance, if the average commute time is 30 minutes, at most $30/120 = 25\%$ of commuters can have a commute $\ge 120$ minutes.
+        </p>
+      </div>
+
+      <div class="callout-definition">
+        <div class="callout-title">Chebyshev's Inequality</div>
+        <p>If $X$ has mean $\mu$ and variance $\sigma^2$, then for any $t > 0$:</p>
+        <div class="math-block">
+          $$ P(|X - \mu| \ge t) \le \frac{\sigma^2}{t^2}. $$
+        </div>
+      </div>
+
+      <div class="callout-example">
+        <div class="callout-title">Example 14 — Chebyshev in action</div>
+        <p>
+          Suppose exam scores have $\mu = 70$, $\sigma^2 = 100$ (so $\sigma = 10$). What fraction of students can score outside $[50, 90]$?
+        </p>
+        <div class="math-block">
+          $$ P(|X - 70| \ge 20) \le \frac{100}{400} = 0.25. $$
+        </div>
+        <p>At most 25% — regardless of the exact distribution of scores.</p>
+      </div>
+
+      <div class="callout-definition">
+        <div class="callout-title">Cauchy-Schwarz Inequality</div>
+        <p>For any two random variables $X, Y$ with finite second moments:</p>
+        <div class="math-block">
+          $$ E(|XY|) \le \sqrt{E(X^2)} \cdot \sqrt{E(Y^2)}. $$
+        </div>
+        <p>Substituting $X - E(X)$ and $Y - E(Y)$ gives $|\text{Cov}(X,Y)| \le \sigma_X \sigma_Y$, which is why $|\rho| \le 1$.</p>
+      </div>
+
+      <div class="callout-definition">
+        <div class="callout-title">Jensen's Inequality</div>
+        <p>If $g$ is <strong>convex</strong>:</p>
+        <div class="math-block">
+          $$ E(g(X)) \ge g(E(X)). $$
+        </div>
+        <p>If $g$ is <strong>concave</strong>, the inequality reverses.</p>
+      </div>
+
+      <div class="callout-example">
+        <div class="callout-title">Example 15 — Jensen's for $g(x) = x^2$</div>
+        <p>
+          Since $g(x) = x^2$ is convex, $E(X^2) \ge [E(X)]^2$. This is equivalent to saying $\text{Var}(X) \ge 0$, a reassuring sanity check.
+        </p>
+      </div>
+
+      <div class="callout-example">
+        <div class="callout-title">Example 16 — Jensen's for $g(x) = \log(x)$</div>
+        <p>
+          Since $\log$ is concave, $E(\log X) \le \log(E(X))$. This is used frequently in information theory and when working with likelihoods.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ CONVERGENCE ============ -->
+    <section>
+      <h2>6. Convergence of Random Sequences</h2>
+
+      <p>
+        In statistics, we work with sequences of random variables (e.g., $\bar{X}_n$ as $n$ grows). We need precise notions of what it means for such a sequence to "approach" a limit.
+      </p>
+
+      <h3>6.1 Three Modes of Convergence</h3>
+
+      <div class="callout-definition">
+        <div class="callout-title">Definition — Convergence in Probability</div>
+        <p>$X_n \xrightarrow{P} X$ if for every $\epsilon > 0$:</p>
+        <div class="math-block">$$ \lim_{n \to \infty} P(|X_n - X| > \epsilon) = 0. $$</div>
+      </div>
+
+      <div class="intuition">
+        <div class="callout-title">Intuition</div>
+        <p>
+          As $n$ grows, the probability that $X_n$ is "far" from $X$ shrinks to zero. The random variable $X_n$ might occasionally be far away, but such events become increasingly rare.
+        </p>
+      </div>
+
+      <div class="callout-definition">
+        <div class="callout-title">Definition — Convergence in Distribution</div>
+        <p>$X_n \xrightarrow{d} X$ if:</p>
+        <div class="math-block">$$ \lim_{n \to \infty} F_{X_n}(x) = F_X(x) $$</div>
+        <p>for all $x$ where $F_X$ is continuous.</p>
+      </div>
+
+      <div class="intuition">
+        <div class="callout-title">Intuition</div>
+        <p>
+          This is the <strong>weakest</strong> form. It doesn't say the values $X_n$ get close to the values of $X$; it says the <em>shape of the distribution</em> of $X_n$ looks more and more like the distribution of $X$. Think of histograms: the histogram of $X_n$ gradually morphs into the density curve of $X$.
+        </p>
+      </div>
+
+      <div class="callout-definition">
+        <div class="callout-title">Definition — Convergence in $L^r$</div>
+        <p>$X_n \xrightarrow{L^r} X$ if $\lim_{n \to \infty} E(|X_n - X|^r) = 0$.</p>
+        <p>$r = 1$: convergence in mean. $r = 2$: convergence in quadratic mean.</p>
+      </div>
+
+      <h3>6.2 Relationships Between Modes</h3>
+
+      <figure>
+        <svg viewBox="0 0 600 180" xmlns="http://www.w3.org/2000/svg" style="max-width:520px;">
+          <defs>
+            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+              <polygon points="0 0, 10 3.5, 0 7" fill="#1a73e8"/>
+            </marker>
+          </defs>
+          <rect x="10" y="55" width="130" height="50" rx="8" fill="#eef6ff" stroke="#1a73e8" stroke-width="2"/>
+          <text x="75" y="85" text-anchor="middle" font-family="Inter, sans-serif" font-size="15" fill="#16213e" font-weight="600">$L^r$ conv.</text>
+
+          <rect x="220" y="55" width="160" height="50" rx="8" fill="#eef6ff" stroke="#1a73e8" stroke-width="2"/>
+          <text x="300" y="85" text-anchor="middle" font-family="Inter, sans-serif" font-size="15" fill="#16213e" font-weight="600">Conv. in Prob.</text>
+
+          <rect x="460" y="55" width="130" height="50" rx="8" fill="#eef6ff" stroke="#1a73e8" stroke-width="2"/>
+          <text x="525" y="85" text-anchor="middle" font-family="Inter, sans-serif" font-size="15" fill="#16213e" font-weight="600">Conv. in Dist.</text>
+
+          <line x1="140" y1="80" x2="218" y2="80" stroke="#1a73e8" stroke-width="2" marker-end="url(#arrowhead)"/>
+          <line x1="380" y1="80" x2="458" y2="80" stroke="#1a73e8" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+          <!-- reverse arrow for constant -->
+          <line x1="458" y1="115" x2="382" y2="115" stroke="#2e7d32" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#arrowhead2)"/>
+          <defs>
+            <marker id="arrowhead2" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+              <polygon points="0 0, 10 3.5, 0 7" fill="#2e7d32"/>
+            </marker>
+          </defs>
+          <text x="420" y="140" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" fill="#2e7d32" font-style="italic">if limit is constant</text>
+
+          <text x="175" y="70" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" fill="#1a73e8">⟹</text>
+          <text x="415" y="70" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" fill="#1a73e8">⟹</text>
+        </svg>
+        <figcaption>Figure 1: Implications between modes of convergence. The dashed arrow holds only when the limit is a constant.</figcaption>
+      </figure>
+
+      <div class="callout-note">
+        <div class="callout-title">Important</div>
+        <p>
+          Convergence in distribution to a <strong>constant</strong> $c$ is equivalent to convergence in probability to $c$. This special case is used frequently (e.g., in the Law of Large Numbers).
+        </p>
+      </div>
+
+      <h3>6.3 Continuous Mapping Theorem</h3>
+
+      <div class="callout-definition">
+        <div class="callout-title">Theorem — Continuous Mapping</div>
+        <p>
+          If $g$ is a continuous function, then convergence is preserved:
+        </p>
+        <ul>
+          <li>$X_n \xrightarrow{d} X \implies g(X_n) \xrightarrow{d} g(X)$</li>
+          <li>$X_n \xrightarrow{P} X \implies g(X_n) \xrightarrow{P} g(X)$</li>
+        </ul>
+      </div>
+
+      <div class="intuition">
+        <div class="callout-title">Intuition</div>
+        <p>
+          If $X_n$ is getting close to $X$, and you apply a smooth (continuous) transformation, the result $g(X_n)$ stays close to $g(X)$. Continuous functions don't "tear apart" things that are close together.
+        </p>
+      </div>
+
+      <h3>6.4 Slutsky's Theorem</h3>
+
+      <div class="callout-definition">
+        <div class="callout-title">Theorem — Slutsky</div>
+        <p>
+          If $X_n \xrightarrow{d} X$ and $A_n \xrightarrow{P} a$ (a constant), then $A_n X_n \xrightarrow{d} aX$.
+        </p>
+      </div>
+
+      <div class="intuition">
+        <div class="callout-title">Intuition</div>
+        <p>
+          You can "multiply" a distributional limit by something that converges to a constant, and the result behaves as expected. This is extremely useful when you need to replace an unknown quantity (like $\sigma$) with a consistent estimator.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ LLN & CLT ============ -->
+    <section>
+      <h2>7. The Big Theorems: LLN and CLT</h2>
+
+      <h3>7.1 The (Weak) Law of Large Numbers</h3>
+
+      <div class="callout-definition">
+        <div class="callout-title">Theorem — Weak Law of Large Numbers (WLLN)</div>
+        <p>
+          If $X_1, X_2, \ldots$ are i.i.d. with finite mean $\mu$, then:
+        </p>
+        <div class="math-block">
+          $$ \bar{X}_n = \frac{1}{n}\sum_{i=1}^{n} X_i \xrightarrow{P} \mu. $$
+        </div>
+      </div>
+
+      <div class="intuition">
+        <div class="callout-title">Intuition</div>
+        <p>
+          The sample average settles down to the true mean as you collect more data. This is why polls get more accurate with larger samples, why casinos always win in the long run, and why "practice makes perfect" has a statistical basis.
+        </p>
+      </div>
+
+      <div class="callout-example">
+        <div class="callout-title">Example 17 — LLN for coin flips</div>
+        <p>
+          Flip a fair coin $n$ times. Let $X_i = 1$ if heads, 0 if tails. Then $\bar{X}_n$ is the proportion of heads. The WLLN says $\bar{X}_n \xrightarrow{P} 0.5$. After 10 flips you might get 0.3 or 0.7; after 10,000 flips, you'll be very close to 0.5.
+        </p>
+      </div>
+
+      <h3>7.2 The Central Limit Theorem (CLT)</h3>
+
+      <div class="callout-definition">
+        <div class="callout-title">Theorem — Central Limit Theorem</div>
+        <p>
+          If $X_1, X_2, \ldots$ are i.i.d. with mean $\mu$ and finite variance $\sigma^2 > 0$, then:
+        </p>
+        <div class="math-block">
+          $$ \frac{\sqrt{n}(\bar{X}_n - \mu)}{\sigma} \xrightarrow{d} N(0, 1). $$
+        </div>
+      </div>
+
+      <div class="intuition">
+        <div class="callout-title">Intuition</div>
+        <p>
+          The LLN says $\bar{X}_n$ converges to $\mu$. The CLT goes further and tells you <strong>how</strong> it converges: the fluctuations around $\mu$ are approximately normally distributed, with size roughly $\sigma / \sqrt{n}$.
+        </p>
+        <p>
+          This is remarkable because <strong>it doesn't matter what the original distribution looks like</strong> — it could be Bernoulli, Exponential, Poisson, or anything else with finite variance. The sum/average always becomes approximately Normal for large $n$. This universality is why the Normal distribution appears everywhere in statistics.
+        </p>
+      </div>
+
+      <div class="callout-example">
+        <div class="callout-title">Example 18 — CLT for dice</div>
+        <p>
+          Roll a die $n$ times. We have $\mu = 3.5$, $\sigma^2 = 35/12 \approx 2.917$. By the CLT:
+        </p>
+        <div class="math-block">
+          $$ \bar{X}_n \approx N\!\left(3.5, \; \frac{2.917}{n}\right) \text{ for large } n. $$
+        </div>
+        <p>For $n = 100$: $\bar{X}_{100} \approx N(3.5, \, 0.029)$, so $\sigma_{\bar{X}} \approx 0.17$. A 95% interval is roughly $3.5 \pm 0.34$.</p>
+      </div>
+
+      <div class="callout-definition">
+        <div class="callout-title">Theorem — Multivariate CLT</div>
+        <p>
+          If $\mathbf{X}_1, \ldots, \mathbf{X}_n$ are i.i.d. random vectors in $\mathbb{R}^k$ with mean $\boldsymbol{\mu}$ and covariance matrix $\Sigma$, then:
+        </p>
+        <div class="math-block">
+          $$ \sqrt{n}(\bar{\mathbf{X}}_n - \boldsymbol{\mu}) \xrightarrow{d} N(\mathbf{0}, \Sigma). $$
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ DELTA METHOD ============ -->
+    <section>
+      <h2>8. The Delta Method</h2>
+
+      <div class="callout-definition">
+        <div class="callout-title">Theorem — Delta Method</div>
+        <p>
+          Suppose $\sqrt{n}(Y_n - \mu) \xrightarrow{d} N(0, \sigma^2)$ and $g$ is differentiable at $\mu$ with $g'(\mu) \ne 0$. Then:
+        </p>
+        <div class="math-block">
+          $$ \sqrt{n}(g(Y_n) - g(\mu)) \xrightarrow{d} N\!\left(0, \; [g'(\mu)]^2 \sigma^2\right). $$
+        </div>
+        <p>In the multivariate case, if $\sqrt{n}(\mathbf{Y}_n - \boldsymbol{\mu}) \xrightarrow{d} N(\mathbf{0}, \Sigma)$ and $g: \mathbb{R}^k \to \mathbb{R}$ is differentiable:</p>
+        <div class="math-block">
+          $$ \sqrt{n}(g(\mathbf{Y}_n) - g(\boldsymbol{\mu})) \xrightarrow{d} N\!\left(0, \; (\nabla g(\boldsymbol{\mu}))^\top \Sigma \, \nabla g(\boldsymbol{\mu})\right). $$
+        </div>
+      </div>
+
+      <div class="intuition">
+        <div class="callout-title">Intuition</div>
+        <p>
+          You already know that $Y_n$ is approximately normal (via CLT). Now you want to know the distribution of $g(Y_n)$. The delta method says: <strong>zoom in near $\mu$ and approximate $g$ by its tangent line</strong> (first-order Taylor expansion). Since a linear transformation of a Normal is still Normal, $g(Y_n)$ is approximately Normal too — with variance scaled by the squared slope $[g'(\mu)]^2$.
+        </p>
+      </div>
+
+      <div class="callout-example">
+        <div class="callout-title">Example 19 — Estimating a probability transformation</div>
+        <p>
+          Suppose $\bar{X}_n \xrightarrow{} \mu$ with $\sqrt{n}(\bar{X}_n - \mu) \xrightarrow{d} N(0, \sigma^2)$, and we want the distribution of $g(\bar{X}_n) = \bar{X}_n^2$. Then $g'(\mu) = 2\mu$, so:
+        </p>
+        <div class="math-block">
+          $$ \sqrt{n}(\bar{X}_n^2 - \mu^2) \xrightarrow{d} N(0, \; 4\mu^2 \sigma^2). $$
+        </div>
+      </div>
+
+      <div class="callout-example">
+        <div class="callout-title">Example 20 — Log transformation</div>
+        <p>
+          If $\sqrt{n}(\bar{X}_n - \mu) \xrightarrow{d} N(0, \sigma^2)$ and $\mu > 0$, with $g(x) = \log(x)$ and $g'(\mu) = 1/\mu$:
+        </p>
+        <div class="math-block">
+          $$ \sqrt{n}(\log \bar{X}_n - \log \mu) \xrightarrow{d} N\!\left(0, \frac{\sigma^2}{\mu^2}\right). $$
+        </div>
+        <p>This is widely used to construct confidence intervals on a log-scale, which is natural for quantities like ratios or fold-changes.</p>
+      </div>
+
+      <div class="callout-note">
+        <div class="callout-title">Why it works: Taylor expansion</div>
+        <p>
+          Write $g(Y_n) \approx g(\mu) + g'(\mu)(Y_n - \mu)$. Then $\sqrt{n}(g(Y_n) - g(\mu)) \approx g'(\mu) \cdot \sqrt{n}(Y_n - \mu)$. Since $\sqrt{n}(Y_n - \mu) \xrightarrow{d} N(0, \sigma^2)$, multiplying by the constant $g'(\mu)$ scales the variance by $[g'(\mu)]^2$. That's the entire proof idea.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ KEY TAKEAWAYS ============ -->
+    <section>
+      <h2>Key Takeaways</h2>
+      <ul>
+        <li>The <strong>quantile function</strong> $F^{-1}(q)$ inverts the CDF: it maps probabilities back to values. The median is $F^{-1}(1/2)$.</li>
+        <li><strong>Joint distributions</strong> describe multiple random variables together. Marginals are obtained by summing/integrating out other variables. Independence means the joint equals the product of marginals.</li>
+        <li><strong>Covariance</strong> measures linear association; $\text{Cov} = 0$ does not imply independence. The covariance matrix generalizes variance to random vectors, and transforms via $A\Sigma A^\top$.</li>
+        <li>The <strong>tower rule</strong> ($E[E(X|Y)] = E(X)$) and <strong>law of total variance</strong> decompose expectations and variances into within-group and between-group components.</li>
+        <li>The <strong>LLN</strong> says $\bar{X}_n \to \mu$; the <strong>CLT</strong> says the fluctuations are Normal with scale $\sigma/\sqrt{n}$; the <strong>delta method</strong> extends the CLT to smooth transformations $g(\bar{X}_n)$.</li>
+      </ul>
+    </section>
+  </main>
+
+<footer>
+  <span>© 2026 piotr-marciniak.com</span>
+  <span>set in Inter &amp; JetBrains Mono</span>
+</footer>
+<script src="../../dark.js"></script>
+</body>
+</html>

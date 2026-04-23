@@ -1,0 +1,528 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chapter 4 – Unconstrained Optimization</title>
+  <link rel="icon" type="image/png" href="../../files/logo.png" />
+  <script>
+    try { var t=localStorage.getItem('theme')||'grain'; if(t) document.documentElement.setAttribute('data-theme',t); } catch(e){}
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../styles.css" />
+  <link rel="stylesheet" href="../../lecture.css" />
+  <script>
+      MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\(', '\)']],
+          displayMath: [['$$', '$$'], ['\[', '\]']]
+        },
+        svg: { fontCache: 'global' }
+      };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+<body>
+<div class="topbar">
+  <div class="left">
+    <div class="theme-switcher">
+      <button class="theme-dot" data-theme="stone" onclick="setTheme('stone')" title="stone"></button>
+      <button class="theme-dot" data-theme="dark"  onclick="setTheme('dark')"  title="dark"></button>
+      <button class="theme-dot" data-theme="ocean" onclick="setTheme('ocean')" title="ocean"></button>
+      <button class="theme-dot" data-theme="grain" onclick="setTheme('grain')" title="grain"></button>
+      <span class="theme-label">themes</span>
+    </div>
+    <span class="host">piotr@marciniak</span>
+    <span class="path">~/files/convex-opt</span>
+  </div>
+  <div class="right">
+    <a href="../../">← home</a>
+    <a href="../../studying/">← notes</a>
+  </div>
+</div>
+
+
+<header>
+  <h1>Chapter 4: Unconstrained Optimization</h1>
+  <div class="meta">
+    <span>Convex Optimization — Through the Lens of Algorithms and Applications</span>
+    <span>Chapter 4</span>
+    <span>Lecture Summary</span>
+  </div>
+</header>
+
+<main>
+
+<!-- ======== OVERVIEW ======== -->
+<section>
+  <p>
+    This chapter addresses the fundamental question: <em>given a convex function with no constraints, how do we find its minimum?</em> We explore two approaches. First, the analytic method — solving the optimality conditions directly — which is elegant but only works for special cases. Second, and more importantly, iterative <strong>descent methods</strong> that start from any point and walk downhill step by step. The chapter develops the theory of <strong>Gradient Descent</strong> and <strong>Newton's Method</strong>, analyzes their convergence guarantees, and introduces <strong>self-concordant functions</strong> — a class of functions where Newton's method converges without needing to know hard-to-estimate constants.
+  </p>
+</section>
+
+<!-- ======== 4.1 ANALYTIC METHOD ======== -->
+<section>
+  <h2>4.1 The Analytic Method</h2>
+  <p>
+    The simplest situation is when we can solve for the optimum directly. We want to minimize a convex, twice continuously differentiable function $f : \mathbb{R}^n \to \mathbb{R}$. Since $f$ is convex, a point $x^*$ is optimal if and only if:
+  </p>
+  <div class="math-block">
+    $$ \nabla f(x^*) = 0. $$
+  </div>
+  <p>
+    This reduces the optimization problem to solving a system of $n$ equations in $n$ unknowns. In rare cases, this system has a closed-form solution.
+  </p>
+
+  <div class="callout-example">
+    <div class="callout-title">Example — Quadratic Minimization</div>
+    <p>
+      Consider $\min \frac{1}{2} x^\top P x + q^\top x + r$, where $P$ is positive semidefinite. The optimality condition becomes $Px^* + q = 0$. If $P$ is positive definite (i.e., invertible), the unique solution is $x^* = -P^{-1}q$. This is the analytic method at its best — one matrix inversion and we're done. If $P$ is only positive semidefinite, any solution to $Px^*+q=0$ is optimal. If no solution exists, the problem is unbounded.
+    </p>
+  </div>
+
+  <div class="callout-note">
+    <div class="callout-title">When Does the Analytic Method Fail?</div>
+    <p>
+      In practice, most functions don't yield systems of equations we can solve in closed form. Even when we can write down $\nabla f(x) = 0$, the resulting equations may be nonlinear and intractable. That's why we need iterative algorithms.
+    </p>
+  </div>
+</section>
+
+<!-- ======== 4.2 DESCENT METHOD ======== -->
+<section>
+  <h2>4.2 The Descent Method Framework</h2>
+  <p>
+    When the analytic approach fails, we use an iterative strategy. Starting from an initial guess $x^{(0)}$, we produce a sequence of points $x^{(0)}, x^{(1)}, x^{(2)}, \ldots$ such that the function value strictly decreases at each step: $f(x^{(k+1)}) < f(x^{(k)})$. Each iteration has two decisions:
+  </p>
+  <ol>
+    <li><strong>Choose a descent direction</strong> $\Delta x^{(k)}$: a direction along which $f$ decreases.</li>
+    <li><strong>Choose a step size</strong> $t^{(k)}$: how far to go in that direction.</li>
+  </ol>
+  <p>The update rule is:</p>
+  <div class="math-block">
+    $$ x^{(k+1)} = x^{(k)} + t^{(k)} \Delta x^{(k)}. $$
+  </div>
+  <p>
+    A direction $\Delta x$ is a <em>descent direction</em> at $x$ if moving along it initially decreases $f$, i.e., $\nabla f(x)^\top \Delta x < 0$. Geometrically, the direction forms an obtuse angle with the gradient (which points uphill). In practice, the algorithm terminates when the solution is close enough to the optimum, since running forever isn't practical — and computers have finite precision anyway.
+  </p>
+
+  <div class="callout-note">
+    <div class="callout-title">Intuition</div>
+    <p>
+      Think of standing on a hilly landscape in fog. You can feel the local slope (gradient) under your feet. The descent method says: pick a downhill direction, take a step of some size, then repeat. The two big questions are <em>which direction</em> and <em>how big a step</em>.
+    </p>
+  </div>
+</section>
+
+<!-- ======== 4.3 STEP SIZE ======== -->
+<section>
+  <h2>4.3 Descent Method — Step Size</h2>
+  <p>
+    Once we've picked a descent direction, we need to decide how far to go. Two standard approaches are exact line search and backtracking line search.
+  </p>
+
+  <h3>Exact Line Search</h3>
+  <p>
+    The ideal step size minimizes $f$ along the chosen direction:
+  </p>
+  <div class="math-block">
+    $$ t^* = \arg\min_{t \geq 0}\, f(x + t\,\Delta x). $$
+  </div>
+  <p>
+    This is a one-dimensional optimization problem. When it has a cheap closed-form solution (for instance, if $f$ is quadratic), exact line search is great. But often solving even this 1D problem is expensive, so we use an approximation instead.
+  </p>
+
+  <h3>Backtracking Line Search</h3>
+  <p>
+    The backtracking line search is a practical, approximate alternative. It uses two parameters: $\alpha \in (0, 0.5)$ controls how much decrease we demand, and $\beta \in (0,1)$ controls how fast we shrink the step.
+  </p>
+  <p>
+    The algorithm starts with $t = 1$ and repeatedly multiplies $t$ by $\beta$ until the following <em>sufficient decrease condition</em> (Armijo condition) is satisfied:
+  </p>
+  <div class="math-block">
+    $$ f(x + t\,\Delta x) \leq f(x) + \alpha\, t\, \nabla f(x)^\top \Delta x. $$
+  </div>
+
+  <div class="callout-note">
+    <div class="callout-title">Intuition — What Does the Armijo Condition Mean?</div>
+    <p>
+      The right-hand side is a linear approximation of $f$ with a "shallower" slope (scaled by $\alpha < 0.5$). We're asking: is our actual decrease at least as good as this gentle linear prediction? The parameter $\alpha$ is lenient — we don't demand the full decrease the gradient promises, just a fraction of it. The parameter $\beta$ controls how aggressively we shrink $t$ when the condition isn't met. Typical values are $\alpha \approx 0.01$–$0.3$ and $\beta \approx 0.5$–$0.8$.
+    </p>
+  </div>
+
+  <p>
+    The key property of the backtracking line search is that the sufficient decrease condition is <em>always</em> satisfied for small enough $t$ (specifically, for any $t \in [0, \hat{t}]$ where $\hat{t}$ depends on $\alpha$ and the local curvature). Since we start at $t=1$ and shrink by a factor of $\beta$ each time, the returned step satisfies $t \geq \min\{1, \beta\hat{t}\}$.
+  </p>
+</section>
+
+<!-- ======== 4.4 STEP DIRECTION ======== -->
+<section>
+  <h2>4.4 Descent Method — Step Direction</h2>
+  <p>
+    The two most popular descent directions both arise from a common idea: <strong>approximate $f$ locally with a simpler function, then minimize the approximation</strong>.
+  </p>
+
+  <h3>First-Order Approximation → Gradient Descent</h3>
+  <p>
+    Using the first-order Taylor expansion at the current point $x$:
+  </p>
+  <div class="math-block">
+    $$ f(x + v) \approx f(x) + \nabla f(x)^\top v. $$
+  </div>
+  <p>
+    The direction that decreases this approximation the fastest (per unit length) is the <em>negative gradient</em>:
+  </p>
+  <div class="math-block">
+    $$ \Delta x_{\text{GD}} = -\nabla f(x). $$
+  </div>
+
+  <h3>Second-Order Approximation → Newton's Method</h3>
+  <p>
+    Using the second-order Taylor expansion:
+  </p>
+  <div class="math-block">
+    $$ f(x + v) \approx f(x) + \nabla f(x)^\top v + \tfrac{1}{2} v^\top \nabla^2 f(x)\, v. $$
+  </div>
+  <p>
+    Minimizing this quadratic approximation (setting its gradient to zero) gives the <em>Newton step</em>:
+  </p>
+  <div class="math-block">
+    $$ \Delta x_N = -\frac{\nabla f(x)}{\nabla^2 f(x)} = -\bigl[\nabla^2 f(x)\bigr]^{-1} \nabla f(x). $$
+  </div>
+
+  <div class="callout-note">
+    <div class="callout-title">Gradient Descent vs. Newton's Method — Intuition</div>
+    <p>
+      Gradient descent only "sees" the slope of $f$ (first-order info). Newton's method also "sees" the curvature (second-order info via the Hessian). This means Newton's method can adapt to the shape of the function: in directions where the function curves sharply, it takes smaller steps; where it's flat, it takes larger steps. Gradient descent treats all directions equally, which can be very inefficient for "elongated" functions (high condition number $M/m$). When $f$ is a quadratic, Newton's method finds the exact minimum in a single step — it becomes the analytic method.
+    </p>
+  </div>
+
+  <p>
+    Both directions are indeed descent directions: $\nabla f(x)^\top \Delta x_{\text{GD}} = -\|\nabla f(x)\|^2 < 0$, and $\nabla f(x)^\top \Delta x_N = -\nabla f(x)^\top [\nabla^2 f(x)]^{-1} \nabla f(x) < 0$ since $\nabla^2 f(x)$ is positive definite (so the function value decreases unless we are already at the optimum).
+  </p>
+</section>
+
+<!-- ======== 4.5 GRADIENT DESCENT ======== -->
+<section>
+  <h2>4.5 Gradient Descent Method</h2>
+
+  <h3>Setup and Assumptions</h3>
+  <p>
+    We assume $f$ is <strong>strongly convex</strong> and twice continuously differentiable. A key concept here is that the Hessian eigenvalues are bounded:
+  </p>
+  <div class="math-block">
+    $$ m\,I \preceq \nabla^2 f(x) \preceq M\,I, $$
+  </div>
+  <p>
+    where $m > 0$ is the strong convexity parameter (smallest Hessian eigenvalue) and $M$ is an upper bound on the largest Hessian eigenvalue. The ratio $\kappa = M/m$ is the <strong>condition number</strong> and controls how "elongated" the level sets of $f$ are. When $\kappa$ is large, $f$ looks like a narrow valley and gradient descent zigzags slowly.
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Proposition 4.5.2 — Strong Convexity (Equivalent Forms)</div>
+    <p>For a twice differentiable function, the following are equivalent:</p>
+    <ol>
+      <li>$f(x) - \frac{m}{2}\|x\|^2$ is convex (the defining property).</li>
+      <li>$\nabla^2 f(x) \succeq m\,I$ for all $x$.</li>
+      <li>$f(y) \geq f(x) + \nabla f(x)^\top(y-x) + \frac{m}{2}\|y-x\|^2$ for all $x, y$.</li>
+    </ol>
+    <p>The third form is especially useful: it says $f$ is bounded below by a <em>quadratic bowl</em> touching it at $x$. This lets us bound how far we are from optimal.</p>
+  </div>
+
+  <h3>Stopping Criterion</h3>
+  <p>
+    From the strong convexity lower bound, by minimizing the right-hand side over $y$, we get a crucial inequality:
+  </p>
+  <div class="math-block">
+    $$ f^* \geq f(x) - \frac{1}{2m}\|\nabla f(x)\|^2. $$
+  </div>
+  <p>
+    Rearranging: $f(x) - f^* \leq \frac{1}{2m}\|\nabla f(x)\|^2$. So a <strong>small gradient implies near-optimality</strong>. This gives a practical stopping criterion: stop when $\|\nabla f(x)\| \leq \sqrt{2m\varepsilon}$, which guarantees $f(x) - f^* \leq \varepsilon$.
+  </p>
+
+  <h3>Convergence with Exact Line Search</h3>
+  <div class="callout-definition">
+    <div class="callout-title">Theorem 4.5.3 — GD with Exact Line Search</div>
+    <p>
+      Under $m\,I \preceq \nabla^2 f(x) \preceq M\,I$, gradient descent with exact line search achieves $f(x^{(k)}) - f^* \leq \varepsilon$ in at most
+    </p>
+    <div class="math-block">
+      $$ k \geq \frac{\log\!\bigl((f(x^{(0)}) - f^*)/\varepsilon\bigr)}{\log(1/c)}, \quad c = 1 - \frac{m}{M}. $$
+    </div>
+  </div>
+  <p>
+    The error shrinks by a constant factor $c = 1 - m/M$ per iteration: $f(x^{(k)}) - f^* \leq c^k \bigl(f(x^{(0)}) - f^*\bigr)$. This is called <strong>linear convergence</strong> (the error is a straight line on a log-scale plot). The rate depends on the condition number: if $m/M$ is close to 1 (well-conditioned), convergence is fast; if $m/M \approx 0$ (ill-conditioned), $c \approx 1$ and convergence is very slow.
+  </p>
+
+  <div class="callout-example">
+    <div class="callout-title">Example — Why Condition Number Matters</div>
+    <p>
+      Consider $f(x,y) = \frac{1}{2}(100x^2 + y^2)$. Here $m = 1$ and $M = 100$, so $\kappa = 100$ and $c = 0.99$. To reduce the error by a factor of $10^6$ you'd need about $k \geq 6/\log(1/0.99) \approx 1381$ steps. For a well-conditioned function with $\kappa = 2$, you'd only need about $k \approx 9$ steps!
+    </p>
+  </div>
+
+  <h3>Convergence with Backtracking Line Search</h3>
+  <div class="callout-definition">
+    <div class="callout-title">Theorem 4.5.5 — GD with Backtracking</div>
+    <p>
+      Under the same assumptions, gradient descent with backtracking achieves $f(x^{(k)}) - f^* \leq \varepsilon$ in at most
+    </p>
+    <div class="math-block">
+      $$ k \geq \frac{\log\!\bigl((f(x^{(0)}) - f^*)/\varepsilon\bigr)}{\log(1/c)}, \quad c = 1 - \min\{2m\alpha,\; 2\alpha\beta m / M\}. $$
+    </div>
+  </div>
+  <p>
+    The structure is the same — linear convergence — but the constant $c$ now depends on $\alpha$ and $\beta$ as well. The key insight behind the proof is that the backtracking line search's exit condition is always satisfied for step sizes $t \in [0, 1/M]$ (Proposition 4.5.4), so the algorithm always exits with $t \geq \beta/M$.
+  </p>
+</section>
+
+<!-- ======== 4.6 NEWTON'S METHOD ======== -->
+<section>
+  <h2>4.6 Newton's Method</h2>
+  <p>
+    Newton's method uses the same descent framework but with the superior Newton direction $\Delta x_N = -[\nabla^2 f(x)]^{-1}\nabla f(x)$. It requires stronger assumptions: on top of $mI \preceq \nabla^2 f(x) \preceq MI$, we also need the Hessian to be <strong>Lipschitz continuous</strong>:
+  </p>
+  <div class="math-block">
+    $$ \|\nabla^2 f(x) - \nabla^2 f(y)\| \leq L\|x - y\|. $$
+  </div>
+  <p>
+    This Lipschitz condition says the curvature of $f$ doesn't change too abruptly — which is needed because Newton's method assumes the quadratic model is accurate.
+  </p>
+
+  <h3>The Newton Decrement</h3>
+  <div class="callout-definition">
+    <div class="callout-title">Definition — Newton Decrement $\lambda(x)$</div>
+    <p>The Newton decrement is defined as:</p>
+    <div class="math-block">
+      $$ \lambda(x) = \bigl(\nabla f(x)^\top [\nabla^2 f(x)]^{-1} \nabla f(x)\bigr)^{1/2}. $$
+    </div>
+    <p>
+      Equivalently, $\lambda(x)^2 = -\nabla f(x)^\top \Delta x_N$, which equals the predicted decrease in $f$ from the quadratic model. It serves as a natural measure of how far we are from the optimum, analogous to $\|\nabla f(x)\|$ but adapted to the curvature of $f$.
+    </p>
+  </div>
+
+  <h3>Two Phases of Newton's Method</h3>
+  <p>
+    The convergence of Newton's method exhibits a striking two-phase behavior. This is captured by the following key theorem.
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Theorem 4.6.1 — Two Phases of Newton's Method</div>
+    <p>
+      There exist constants $0 < \eta \leq m^2/L$ and $\gamma > 0$ such that for all $k$:
+    </p>
+    <ol>
+      <li><strong>Damped Newton phase</strong> (far from optimum): If $\|\nabla f(x^{(k)})\| \geq \eta$, then $f(x^{(k+1)}) - f(x^{(k)}) \leq -\gamma$. (Guaranteed constant decrease each step.)</li>
+      <li><strong>Pure Newton phase</strong> (close to optimum): If $\|\nabla f(x^{(k)})\| < \eta$, then the backtracking selects $t^{(k)} = 1$ and $\frac{L}{2m^2}\|\nabla f(x^{(k+1)})\| \leq \bigl(\frac{L}{2m^2}\|\nabla f(x^{(k)})\|\bigr)^2$. (Quadratic convergence — the error squares each step.)</li>
+    </ol>
+  </div>
+
+  <div class="callout-note">
+    <div class="callout-title">Intuition — Why Two Phases?</div>
+    <p>
+      Far from the optimum, the quadratic model isn't very accurate, so we can't trust the full Newton step (step size 1). The backtracking line search will shrink $t$, giving a "damped" step. Each damped step still makes a guaranteed decrease $\gamma$, so we make steady progress.
+    </p>
+    <p>
+      Once we're close enough, the quadratic model becomes very accurate, the full step ($t = 1$) is always accepted, and convergence becomes <strong>quadratic</strong>: the number of correct digits roughly doubles each iteration. Crucially, once we enter the pure Newton phase, we never leave it.
+    </p>
+  </div>
+
+  <h3>Overall Convergence</h3>
+  <div class="callout-definition">
+    <div class="callout-title">Theorem 4.6.2 — Newton's Method Convergence</div>
+    <p>
+      Newton's method with backtracking line search achieves $f(x^{(k)}) - f^* \leq \varepsilon$ in at most
+    </p>
+    <div class="math-block">
+      $$ k \geq \frac{f(x^{(0)}) - f^*}{\gamma} + \log\log\frac{2m^3}{L\varepsilon}. $$
+    </div>
+  </div>
+  <p>
+    The first term counts the damped phase steps (linear progress), and the second counts the pure Newton phase steps. The $\log\log(1/\varepsilon)$ term is remarkable — it means that once we enter the quadratic phase, reaching extremely high accuracy is essentially free. For example, going from $\varepsilon = 10^{-3}$ to $\varepsilon = 10^{-100}$ adds only about $\log\log(10^{100}/10^{3}) \approx 5$ extra iterations.
+  </p>
+
+  <div class="callout-example">
+    <div class="callout-title">Example — Gradient Descent vs. Newton</div>
+    <p>
+      For GD, achieving accuracy $\varepsilon$ requires $O(\kappa \cdot \log(1/\varepsilon))$ iterations, where $\kappa = M/m$. For Newton, after the damped phase, the pure phase only costs $O(\log\log(1/\varepsilon))$. This is a massive difference: to go from accuracy $10^{-5}$ to $10^{-50}$, GD needs about $10\times$ more iterations, while Newton needs about 4 extra steps.
+    </p>
+  </div>
+
+  <h3>The Price of Newton's Method</h3>
+  <p>
+    Newton's method converges much faster, but each iteration is more expensive: computing $\Delta x_N = -[\nabla^2 f(x)]^{-1}\nabla f(x)$ requires forming the Hessian ($O(n^2)$ entries) and solving a linear system ($O(n^3)$ in general). Gradient descent only needs the gradient ($O(n)$). The trade-off depends on the problem dimension and the condition number.
+  </p>
+</section>
+
+<!-- ======== 4.7 SELF-CONCORDANT ======== -->
+<section>
+  <h2>4.7 Self-Concordant Functions</h2>
+
+  <h3>Motivation: Getting Rid of Unknown Constants</h3>
+  <p>
+    All convergence results so far depend on constants $m$, $M$, and $L$ that characterize the function. In practice, these constants are <strong>rarely known</strong>. This means the actual complexity of the algorithms is unknown — we can't predict how many iterations we'll need. Self-concordant functions are a special class where Newton's method converges <em>without any dependence on such constants</em>. This property makes self-concordant functions central to the theory of <strong>interior point methods</strong> (Chapter 5).
+  </p>
+
+  <h3>Definition in One Dimension</h3>
+  <div class="callout-definition">
+    <div class="callout-title">Definition 4.7.1 — Self-Concordant Function (1D)</div>
+    <p>
+      A convex, three times differentiable function $f : U \subseteq \mathbb{R} \to \mathbb{R}$ is <strong>self-concordant</strong> if
+    </p>
+    <div class="math-block">
+      $$ |f'''(x)| \leq 2\, f''(x)^{3/2} \quad \text{for all } x \in U. $$
+    </div>
+  </div>
+
+  <div class="callout-note">
+    <div class="callout-title">Intuition — What Does Self-Concordance Mean?</div>
+    <p>
+      The condition $|f'''| \leq 2(f'')^{3/2}$ says that the <em>rate of change of the curvature</em> ($f'''$) is controlled by <em>the curvature itself</em> ($f''$). In other words, the function's second derivative can't change too fast relative to its own magnitude. This is precisely the condition that replaces both the bounds $mI \preceq \nabla^2 f(x) \preceq MI$ and the Lipschitz continuity of the Hessian. The function is "self-regulating" — it carries its own smoothness guarantee.
+    </p>
+  </div>
+
+  <p>
+    The constant 2 in the definition is just for convenience. Any function satisfying $|f'''(x)| \leq k\, f''(x)^{3/2}$ for some $k > 0$ can be scaled to become self-concordant: the function $\tilde{f}(x) = \frac{k^2}{4}f(x)$ is self-concordant (Proposition 4.7.2).
+  </p>
+
+  <div class="callout-example">
+    <div class="callout-title">Example 4.7.4 — Self-Concordant Functions</div>
+    <p>
+      The following are self-concordant:
+    </p>
+    <ul>
+      <li><strong>Negative logarithm:</strong> $f(x) = -\log x$. (This is the most important example — it's the "log barrier" used in interior point methods.)</li>
+      <li><strong>Negative entropy + negative log:</strong> $f(x) = x\log x - \log x$.</li>
+    </ul>
+    <p>
+      You can verify the negative logarithm: $f'(x) = -1/x$, $f''(x) = 1/x^2$, $f'''(x) = -2/x^3$. Then $|f'''| = 2/x^3$ and $2(f'')^{3/2} = 2/(x^2)^{3/2} = 2/x^3$. So the condition holds with equality.
+    </p>
+  </div>
+
+  <h3>Useful Properties</h3>
+  <p>
+    Self-concordance is invariant under affine transformation of variables: if $f$ is self-concordant, then $\tilde{f}(y) = f(ay + b)$ is also self-concordant for any $a \neq 0, b \in \mathbb{R}$ (Proposition 4.7.3). This is important because it means self-concordance is a "geometric" property — it doesn't depend on the coordinate system.
+  </p>
+
+  <h3>Higher Dimensions</h3>
+  <div class="callout-definition">
+    <div class="callout-title">Definition 4.7.5 — Self-Concordant Function ($\mathbb{R}^n$)</div>
+    <p>
+      A convex, three times differentiable function $f : U \subseteq \mathbb{R}^n \to \mathbb{R}$ is self-concordant if for every direction $v \in \mathbb{R}^n$, the one-dimensional restriction $\tilde{f}(t) = f(x + tv)$ is self-concordant.
+    </p>
+  </div>
+  <p>
+    In higher dimensions, self-concordant functions are closed under scaling by $a \geq 1$, addition, and affine composition (Proposition 4.7.6). These closure properties make it easy to build complex self-concordant functions from simple ones.
+  </p>
+
+  <h3>Key Technical Results</h3>
+  <p>
+    For strongly convex, self-concordant functions, several important bounds hold that replace the role of $m$, $M$, and $L$:
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Proposition 4.7.7 — Hessian Bounds</div>
+    <p>For a strongly convex self-concordant $f$:</p>
+    <div class="math-block">
+      $$ \frac{f''(0)}{(1 + t\,f''(0)^{1/2})^2} \leq f''(t) \leq \frac{f''(0)}{(1 - t\,f''(0)^{1/2})^2}. $$
+    </div>
+    <p>These bounds are "self-referencing" — the Hessian at point $t$ is bounded in terms of the Hessian at 0, with no external constants.</p>
+  </div>
+
+  <div class="callout-definition">
+    <div class="callout-title">Proposition 4.7.8 — Newton Decrement Bounds Suboptimality</div>
+    <p>For a strongly convex, self-concordant function: $f^* - f(x) \geq -\lambda(x)^2$.</p>
+    <p>This means the Newton decrement directly measures the gap to optimality — just like $\|\nabla f(x)\|$ did before, but without needing to know $m$.</p>
+  </div>
+
+  <h3>Newton's Method for Self-Concordant Functions</h3>
+  <p>
+    The convergence theory mirrors the classical case but with the Newton decrement $\lambda(x)$ replacing $\|\nabla f(x)\|$, and with <em>no dependence on $m$, $M$, or $L$</em>.
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Theorem 4.7.10 — Two Phases (Self-Concordant)</div>
+    <p>There exist $0 < \eta \leq 1/4$ and $\gamma > 0$ such that:</p>
+    <ol>
+      <li><strong>Damped phase:</strong> If $\lambda(x^{(k)}) > \eta$, then $f(x^{(k+1)}) - f(x^{(k)}) \leq -\gamma$.</li>
+      <li><strong>Pure Newton phase:</strong> If $\lambda(x^{(k)}) \leq \eta$, then $t^{(k)} = 1$ and $2\lambda(x^{(k+1)}) \leq \bigl(2\lambda(x^{(k)})\bigr)^2$.</li>
+    </ol>
+  </div>
+
+  <div class="callout-definition">
+    <div class="callout-title">Theorem 4.7.11 — Convergence (Self-Concordant)</div>
+    <p>
+      For a strongly convex self-concordant function, Newton's method with backtracking achieves $f(x^{(k)}) - f^* \leq \varepsilon$ in at most
+    </p>
+    <div class="math-block">
+      $$ k \geq \frac{f(x^{(0)}) - f^*}{\gamma} + \log\log\frac{1}{\varepsilon}. $$
+    </div>
+  </div>
+  <p>
+    Compared to Theorem 4.6.2, the key difference is that $\gamma$ and $\eta$ are now absolute constants — they don't depend on $m$, $M$, or $L$. The complexity is fully determined by the initial suboptimality and the desired accuracy. The same $\log\log(1/\varepsilon)$ term appears, confirming that quadratic convergence in the pure Newton phase is preserved.
+  </p>
+</section>
+
+<!-- ======== COMPARISON TABLE ======== -->
+<section>
+  <h2>Summary Comparison</h2>
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Method</th>
+          <th>Direction</th>
+          <th>Cost per Step</th>
+          <th>Convergence Rate</th>
+          <th>Steps to $\varepsilon$-accuracy</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Gradient Descent</td>
+          <td>$-\nabla f(x)$</td>
+          <td>$O(n)$</td>
+          <td>Linear</td>
+          <td>$O\!\bigl(\frac{M}{m}\log\frac{1}{\varepsilon}\bigr)$</td>
+        </tr>
+        <tr>
+          <td>Newton's Method</td>
+          <td>$-[\nabla^2 f]^{-1}\nabla f$</td>
+          <td>$O(n^3)$</td>
+          <td>Quadratic (near opt.)</td>
+          <td>$O\!\bigl(\frac{f_0 - f^*}{\gamma}\bigr) + O(\log\log\frac{1}{\varepsilon})$</td>
+        </tr>
+        <tr>
+          <td>Newton (self-conc.)</td>
+          <td>$-[\nabla^2 f]^{-1}\nabla f$</td>
+          <td>$O(n^3)$</td>
+          <td>Quadratic (near opt.)</td>
+          <td>Same form, <em>no unknown constants</em></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ======== KEY TAKEAWAYS ======== -->
+<section>
+  <h2>Key Takeaways</h2>
+  <ul>
+    <li><strong>Descent methods</strong> iteratively improve a solution by choosing a descent direction and a step size. The two key design choices — direction and step length — determine everything about the algorithm's behavior.</li>
+    <li><strong>Backtracking line search</strong> is a practical, tunable method for choosing step sizes that always guarantees sufficient decrease. It replaces the expensive exact line search with a cheap iterative check.</li>
+    <li><strong>Gradient descent</strong> converges linearly with rate controlled by the condition number $M/m$. It's cheap per step ($O(n)$) but can be painfully slow for ill-conditioned problems.</li>
+    <li><strong>Newton's method</strong> converges quadratically once close to the optimum (the pure Newton phase), giving $\log\log(1/\varepsilon)$ steps in the fast phase — essentially instantaneous convergence. The cost is $O(n^3)$ per step for the Hessian inverse.</li>
+    <li><strong>Self-concordant functions</strong> eliminate the dependence on unknown constants $m$, $M$, $L$. Newton's method on self-concordant functions has a convergence bound that is fully explicit and computable. This is the theoretical foundation for interior point methods in constrained optimization (Chapter 5).</li>
+  </ul>
+</section>
+
+</main>
+
+<footer>
+  <span>© 2026 piotr-marciniak.com</span>
+  <span>set in Inter &amp; JetBrains Mono</span>
+</footer>
+<script src="../../dark.js"></script>
+</body>
+</html>

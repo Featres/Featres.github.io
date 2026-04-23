@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IML – Lecture 7: Classification</title>
+  <link rel="icon" type="image/png" href="../../files/logo.png" />
+  <script>
+    try { var t=localStorage.getItem('theme')||'grain'; if(t) document.documentElement.setAttribute('data-theme',t); } catch(e){}
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../styles.css" />
+  <link rel="stylesheet" href="../../lecture.css" />
+  <script>
+      MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\(', '\)']],
+          displayMath: [['$$', '$$'], ['\[', '\]']]
+        },
+        svg: { fontCache: 'global' }
+      };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+<body>
+<div class="topbar">
+  <div class="left">
+    <div class="theme-switcher">
+      <button class="theme-dot" data-theme="stone" onclick="setTheme('stone')" title="stone"></button>
+      <button class="theme-dot" data-theme="dark"  onclick="setTheme('dark')"  title="dark"></button>
+      <button class="theme-dot" data-theme="ocean" onclick="setTheme('ocean')" title="ocean"></button>
+      <button class="theme-dot" data-theme="grain" onclick="setTheme('grain')" title="grain"></button>
+      <span class="theme-label">themes</span>
+    </div>
+    <span class="host">piotr@marciniak</span>
+    <span class="path">~/files/iml</span>
+  </div>
+  <div class="right">
+    <a href="../../">← home</a>
+    <a href="../../studying/">← notes</a>
+  </div>
+</div>
+
+
+<header>
+  <h1>Lecture 7: Classification</h1>
+  <div class="meta">
+    <span>Introduction to Machine Learning</span>
+    <span>Prof. Fanny Yang</span>
+    <span>ETH Zürich, Spring 2025</span>
+  </div>
+</header>
+
+<main>
+
+<!-- Overview -->
+<section>
+  <h2>Overview</h2>
+  <p>
+    This lecture introduces the <strong>classification</strong> problem — the task of predicting a discrete label $y$ from an input $x$, as opposed to a continuous value in regression. The lecture walks through the full machine learning pipeline for binary classification: choosing a function class (linear classifiers), selecting an appropriate training loss (surrogate losses for the 0–1 loss), and optimizing it (gradient descent on the logistic loss). It concludes by connecting gradient descent on logistic loss to the <strong>maximum-margin classifier</strong> and <strong>support vector machines (SVMs)</strong>.
+  </p>
+</section>
+
+<!-- Section 1: What is Classification -->
+<section>
+  <h2>1. What Is Classification?</h2>
+  <p>
+    In supervised learning, we have a training set of pairs $(x_i, y_i)$ and want to learn a mapping $\hat{f}: \mathcal{X} \to \mathcal{Y}$. The key difference from regression is the nature of the output space $\mathcal{Y}$:
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition — Regression vs. Classification</div>
+    <p>
+      <strong>Regression:</strong> $\mathcal{Y} = \mathbb{R}$ — the label is a continuous real value.<br>
+      <strong>Classification:</strong> $\mathcal{Y}$ is a finite, discrete set, e.g. $\{-1, +1\}$ (binary) or $\{1, 2, \ldots, K\}$ (multiclass).
+    </p>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Examples of Classification Tasks</div>
+    <ul>
+      <li><strong>Email spam detection:</strong> input = email text, output $\in$ {spam, not spam}.</li>
+      <li><strong>Medical diagnosis:</strong> input = patient symptoms &amp; measurements, output $\in$ {at risk, safe}.</li>
+      <li><strong>Image classification:</strong> input = image pixels, output $\in$ {cat, dog, ship, …}.</li>
+      <li><strong>Sentiment analysis:</strong> input = text message, output = sentiment class.</li>
+    </ul>
+  </div>
+
+  <h3>Step 0 — Converting to Numbers</h3>
+  <p>
+    Before we can do any math, we need to convert the problem into numerical form. The input attributes are typically already numerical (e.g. blood measurements), but the class labels need to be assigned numbers. For binary classification, the standard convention is $y \in \{-1, +1\}$.
+  </p>
+
+  <h3>Prediction via the Sign Function</h3>
+  <p>
+    Just like in regression, we train a model $\hat{f}: \mathbb{R}^d \to \mathbb{R}$ that outputs a real-valued score. To turn this into a class prediction, we apply the <strong>sign function</strong>:
+  </p>
+  <div class="math-block">
+    $$ \hat{y} = \text{sign}(\hat{f}(x)) $$
+  </div>
+  <p>If $\hat{f}(x) > 0$ we predict $+1$; if $\hat{f}(x) < 0$ we predict $-1$.</p>
+
+  <h3>The 0–1 Loss</h3>
+  <p>The natural evaluation metric for classification is the <strong>zero-one loss</strong>, which simply checks whether the prediction is correct:</p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition — Zero-One Loss</div>
+    <p>
+      $$ \ell_{0\text{-}1}(\hat{y},\, y) \;=\; \mathbb{1}_{\{\hat{y} \neq y\}} \;=\; \begin{cases} 1 & \text{if } \hat{y} \neq y \\ 0 & \text{otherwise} \end{cases} $$
+    </p>
+    <p>Since $\hat{y}, y \in \{-1, +1\}$, this can also be written as $\mathbb{1}_{\{y \cdot f(x) < 0\}}$, which depends on $y$ and $f(x)$ only through the product $z = y \cdot f(x)$.</p>
+  </div>
+
+  <div class="callout-note">
+    <div class="callout-title">Accuracy &amp; 0–1 Loss</div>
+    <p>When we say a classifier has "78% accuracy", that means $\ell_{0\text{-}1} = 0$ for 78% of data points. Accuracy $= 1 -$ (average 0–1 loss).</p>
+  </div>
+</section>
+
+<!-- Section 2: Linear Classifiers -->
+<section>
+  <h2>2. Linear Classifiers &amp; Decision Boundaries</h2>
+
+  <p>A <strong>linear classifier</strong> uses a function of the form $f(x) = w^\top x$ (or $w^\top x + w_0$ with a bias term). The prediction rule is:</p>
+  <div class="math-block">
+    $$ \hat{y} = \text{sign}(w^\top x) $$
+  </div>
+
+  <p>The <strong>decision boundary</strong> is the set $\{x : w^\top x = 0\}$, which is a hyperplane in $\mathbb{R}^d$. Points on one side are classified as $+1$, and points on the other side as $-1$. Geometrically, $w$ is the normal vector to this hyperplane: points that form an acute angle with $w$ get classified as $+1$ and those that form an obtuse angle as $-1$.</p>
+
+  <h3>When Do Linear Classifiers Work?</h3>
+  <p>
+    Linear classifiers work well when the data is <strong>linearly separable</strong> — meaning there exists a hyperplane that perfectly separates the two classes. However, for more complex data distributions (e.g. classes arranged in concentric circles, or in alternating quadrants), a straight line simply cannot separate them.
+  </p>
+
+  <h3>Non-linear Classifiers via Feature Maps</h3>
+  <p>
+    The key insight is that we can make linear classifiers far more powerful by first applying a <strong>non-linear feature map</strong> $\phi: \mathbb{R}^d \to \mathbb{R}^p$ and then fitting a linear model in the transformed feature space:
+  </p>
+  <div class="math-block">
+    $$ f(x) = w^\top \phi(x), \qquad w \in \mathbb{R}^p $$
+  </div>
+  <p>The effective function class becomes $\mathcal{F}_\phi = \{ x \mapsto w^\top \phi(x) : w \in \mathbb{R}^p \}$. Although $\phi$ is non-linear, the classifier is still <em>linear in the features</em> $\phi(x)$, so all the same training machinery applies.</p>
+
+  <div class="callout-example">
+    <div class="callout-title">Example — Circular Data</div>
+    <p>
+      Suppose "+" points are inside a circle of radius $r$ and "−" points are outside. The data is not linearly separable in $(x_1, x_2)$.
+      But with the feature map $\phi(x_1, x_2) = (1,\; x_1^2,\; x_2^2)$, the function $f(x) = r^2 - x_1^2 - x_2^2$ is linear in $\phi(x)$ and perfectly separates the classes. The decision boundary $\{x : x_1^2 + x_2^2 = r^2\}$ is a circle!
+    </p>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Example — XOR-like Data</div>
+    <p>
+      If "+" points lie in the 2nd and 4th quadrants and "−" points in the 1st and 3rd, then $\phi(x_1, x_2) = x_1 x_2$ makes the data linearly separable with decision boundary along the coordinate axes.
+    </p>
+  </div>
+
+  <div class="callout-note">
+    <div class="callout-title">Looking Ahead</div>
+    <p>Neural networks can be viewed as linear classifiers on <em>learned</em> features: instead of hand-picking $\phi$, the network learns the best $\phi$ from data. The last layer is essentially a linear classifier.</p>
+  </div>
+</section>
+
+<!-- Section 3: Surrogate Losses -->
+<section>
+  <h2>3. Surrogate Loss Functions for Training</h2>
+
+  <p>
+    A natural idea is to train the classifier by directly minimizing the 0–1 loss on the training set. However, the 0–1 loss is <strong>non-continuous, non-differentiable, and non-convex</strong>, which makes it computationally infeasible to optimize with gradient-based methods. We therefore introduce <strong>surrogate losses</strong> — smooth, convex substitutes that we minimize during training instead.
+  </p>
+
+  <div class="callout-note">
+    <div class="callout-title">Key Principle</div>
+    <p>Surrogate losses are used only for <strong>training</strong>. For <strong>evaluation</strong>, we still report accuracy (i.e. the 0–1 loss).</p>
+  </div>
+
+  <h3>What Makes a Good Surrogate?</h3>
+  <p>
+    Since the 0–1 loss depends on $y$ and $f(x)$ only through $z = y \cdot f(x)$, we look for surrogate functions $g(z)$ that satisfy:
+  </p>
+  <ol>
+    <li><strong>Decreasing</strong> in $z$: wrong predictions ($z < 0$) should incur higher loss than correct ones ($z > 0$).</li>
+    <li><strong>Convex &amp; differentiable:</strong> so gradient-based optimization works reliably.</li>
+    <li><strong>No extra reward for correct predictions:</strong> the loss should be bounded below (ideally by zero), so the optimizer doesn't waste effort pushing already-correct points further away from the boundary.</li>
+    <li><strong>Stable gradients:</strong> no exploding or vanishing gradients for misclassified points.</li>
+    <li><strong>Robust to noisy outliers:</strong> a single mislabeled point shouldn't dominate the loss.</li>
+  </ol>
+
+  <h3>Candidate Surrogate Losses</h3>
+  <div class="table-wrapper">
+    <table>
+      <tr>
+        <th>Loss</th>
+        <th>Formula $g(z)$</th>
+        <th>Verdict</th>
+      </tr>
+      <tr>
+        <td>Linear</td>
+        <td>$-z$</td>
+        <td>Decreasing &amp; convex, but unbounded below — rewards large margins too aggressively, can fail on imbalanced data.</td>
+      </tr>
+      <tr>
+        <td>Exponential</td>
+        <td>$e^{-z}$</td>
+        <td>Decreasing, convex, bounded below by 0. But gradients explode as $z \to -\infty$, making it sensitive to outliers.</td>
+      </tr>
+      <tr>
+        <td><strong>Logistic</strong></td>
+        <td>$\log(1 + e^{-z})$</td>
+        <td><strong>Best candidate.</strong> Decreasing, convex, differentiable, bounded gradients for misclassified points, robust to outliers.</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition — Logistic Loss</div>
+    <p>
+      $$ \ell_{\log}(f(x),\, y) \;=\; \log\!\big(1 + e^{-y \cdot f(x)}\big) $$
+    </p>
+    <p>
+      Its derivative with respect to $z = y \cdot f(x)$ is $\displaystyle\frac{d}{dz}\ell_{\log}(z) = -\frac{1}{1 + e^{z}}$, which is bounded between $-1$ and $-1/2$ for misclassified points ($z < 0$). This prevents exploding gradients and makes training stable.
+    </p>
+  </div>
+
+  <h4>Why Not the Exponential Loss?</h4>
+  <p>
+    The exponential loss $e^{-z}$ has derivative $-e^{-z}$, which blows up as $z \to -\infty$ (badly misclassified points). This makes the optimizer hypersensitive to outliers or noisy labels. The logistic loss avoids this problem by having bounded gradients.
+  </p>
+
+  <h4>Why Not the Linear Loss?</h4>
+  <p>
+    The linear loss $g(z) = -z$ decreases without bound, which means it keeps rewarding points that are already classified correctly with large margin. On imbalanced datasets, this can pull the decision boundary away from the majority class, hurting minority class accuracy.
+  </p>
+</section>
+
+<!-- Section 4: Logistic Regression -->
+<section>
+  <h2>4. Logistic Regression</h2>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition — Logistic Regression</div>
+    <p>
+      Logistic regression is the method that fits a linear function $f_w(x) = w^\top x$ by minimizing the average logistic loss on the training data:
+    </p>
+    <p>
+      $$ L(w) \;=\; \frac{1}{n}\sum_{i=1}^{n} \log\!\Big(1 + e^{-y_i\, w^\top x_i}\Big) $$
+    </p>
+  </div>
+
+  <p>
+    Despite the name "regression", this is a classification method. The name comes from its connection to probabilistic modeling (the logistic/sigmoid function), which is covered later in the course.
+  </p>
+
+  <h3>Properties of the Logistic Loss Objective</h3>
+  <p>The training loss $L(w)$ is always <strong>convex</strong>. However, whether it has a unique minimizer depends on the data:</p>
+  <ul>
+    <li><strong>Not linearly separable data:</strong> $L(w)$ is strictly convex and has a unique finite minimizer. Gradient descent converges to it.</li>
+    <li><strong>Linearly separable data:</strong> the loss can be driven arbitrarily close to zero by scaling $\|w\|$ to infinity. There is no finite minimizer — the iterates of GD diverge in norm, but converge in <em>direction</em>.</li>
+  </ul>
+</section>
+
+<!-- Section 5: Max-Margin and SVM -->
+<section>
+  <h2>5. Maximum-Margin Classifiers &amp; SVMs</h2>
+
+  <p>When data is linearly separable, many decision boundaries can perfectly classify all training points. Which one should we prefer?</p>
+
+  <h3>The Margin</h3>
+  <p>
+    For a unit-norm weight vector $\|w\|_2 = 1$, the distance from a point $x_i$ to the decision boundary $\{x: w^\top x = 0\}$ is $|w^\top x_i|$. For correctly classified points, this equals $y_i \cdot w^\top x_i$. The <strong>margin</strong> of a classifier $w$ is the minimum such distance across all training points:
+  </p>
+  <div class="math-block">
+    $$ \text{margin}(w) = \min_{i=1,\ldots,n}\; y_i \langle w, x_i\rangle $$
+  </div>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition — Maximum-Margin Classifier</div>
+    <p>
+      The max-margin classifier finds the unit-norm $w$ that maximizes the margin:
+      $$ w_{\text{MM}} = \arg\max_{\|w\|_2 = 1} \;\min_{i=1,\ldots,n}\; y_i \langle w, x_i\rangle $$
+    </p>
+    <p>Intuitively, this is the decision boundary that is as far away as possible from the nearest training points in both classes.</p>
+  </div>
+
+  <h3>Support Vector Machines (Hard-Margin)</h3>
+  <p>
+    The max-margin problem has an equivalent (and more tractable) formulation: instead of fixing the norm and maximizing the margin, we fix the margin to be at least 1 and minimize the norm:
+  </p>
+  <div class="math-block">
+    $$ w_{\text{SVM}} = \arg\min_{w \in \mathbb{R}^d} \|w\|_2 \qquad \text{s.t.} \quad y_i \langle w, x_i\rangle \geq 1 \;\; \forall\, i $$
+  </div>
+  <p>
+    These two formulations yield the same decision boundary (same direction): $w_{\text{SVM}} / \|w_{\text{SVM}}\|_2 = w_{\text{MM}}$. The training points that lie exactly on the margin boundary ($y_i \langle w, x_i \rangle = 1$) are called <strong>support vectors</strong>.
+  </p>
+
+  <h3>Implicit Bias of Gradient Descent</h3>
+
+  <div class="callout-definition">
+    <div class="callout-title">Theorem — Implicit Bias of GD on Logistic Loss</div>
+    <p>
+      For linearly separable data, gradient descent (initialized at 0) on the logistic loss converges <strong>in direction</strong> to the maximum-margin solution:
+      $$ \lim_{t \to \infty} \frac{w_t}{\|w_t\|_2} = w_{\text{MM}} $$
+    </p>
+    <p>
+      Even though the logistic loss objective says nothing about margins or norms, gradient descent naturally finds the widest-margin classifier. This is called the <strong>implicit bias</strong> (or inductive bias) of gradient descent.
+    </p>
+  </div>
+
+  <p>
+    This is a remarkable result: you don't need to explicitly solve the SVM optimization problem. Simply running gradient descent on the logistic loss will, for separable data, give you the same decision boundary as the maximum-margin/SVM solution.
+  </p>
+
+  <h3>Soft-Margin SVM (Non-Separable Data)</h3>
+  <p>When data is <strong>not</strong> linearly separable, the hard-margin constraint $y_i \langle w, x_i\rangle \geq 1$ cannot be satisfied for all points. We relax it by introducing <strong>slack variables</strong> $\xi_i \geq 0$:</p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition — Soft-Margin SVM</div>
+    <p>
+      $$ \min_{w,\,\xi} \;\frac{1}{2}\|w\|^2 + \lambda \sum_{i=1}^{n} \xi_i \qquad \text{s.t.} \;\; y_i w^\top x_i \geq 1 - \xi_i,\;\; \xi_i \geq 0 \;\;\forall\, i $$
+    </p>
+    <p>This is equivalent to the unconstrained formulation with the <strong>hinge loss</strong>:</p>
+    <p>
+      $$ \min_{w} \;\frac{1}{2}\|w\|^2 + \lambda \sum_{i=1}^{n} \max(0,\; 1 - y_i w^\top x_i) $$
+    </p>
+  </div>
+
+  <p>
+    The parameter $\lambda > 0$ controls the trade-off between keeping a large margin (small $\|w\|$) and allowing violations (large $\xi_i$). For non-separable data, we can also use $\ell_2$-regularized logistic regression, which has a similar form. The two approaches give similar — sometimes identical — decision boundaries, though the SVM with hinge loss ignores correctly classified points beyond the margin, while logistic loss gives them a small but non-zero weight.
+  </p>
+</section>
+
+<!-- Section 6: Full Pipeline Summary -->
+<section>
+  <h2>6. The Classification Pipeline at a Glance</h2>
+
+  <figure>
+    <svg viewBox="0 0 760 110" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;">
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-auto">
+          <path d="M 0 0 L 10 5 L 0 10 Z" fill="#1a73e8"/>
+        </marker>
+      </defs>
+      <!-- Boxes -->
+      <rect x="5" y="20" width="140" height="70" rx="8" fill="#eef6ff" stroke="#1a73e8" stroke-width="1.5"/>
+      <text x="75" y="48" text-anchor="middle" font-size="13" font-weight="600" fill="#16213e">Function Class</text>
+      <text x="75" y="68" text-anchor="middle" font-size="12" fill="#555">Linear / Non-linear</text>
+
+      <line x1="150" y1="55" x2="195" y2="55" stroke="#1a73e8" stroke-width="2" marker-end="url(#arrow)"/>
+
+      <rect x="200" y="20" width="160" height="70" rx="8" fill="#eef6ff" stroke="#1a73e8" stroke-width="1.5"/>
+      <text x="280" y="48" text-anchor="middle" font-size="13" font-weight="600" fill="#16213e">Training Loss</text>
+      <text x="280" y="68" text-anchor="middle" font-size="12" fill="#555">Surrogate (logistic)</text>
+
+      <line x1="365" y1="55" x2="410" y2="55" stroke="#1a73e8" stroke-width="2" marker-end="url(#arrow)"/>
+
+      <rect x="415" y="20" width="150" height="70" rx="8" fill="#eef6ff" stroke="#1a73e8" stroke-width="1.5"/>
+      <text x="490" y="48" text-anchor="middle" font-size="13" font-weight="600" fill="#16213e">Optimization</text>
+      <text x="490" y="68" text-anchor="middle" font-size="12" fill="#555">Gradient Descent</text>
+
+      <line x1="570" y1="55" x2="615" y2="55" stroke="#1a73e8" stroke-width="2" marker-end="url(#arrow)"/>
+
+      <rect x="620" y="20" width="130" height="70" rx="8" fill="#f1f8f1" stroke="#2e7d32" stroke-width="1.5"/>
+      <text x="685" y="48" text-anchor="middle" font-size="13" font-weight="600" fill="#16213e">Prediction</text>
+      <text x="685" y="68" text-anchor="middle" font-size="12" fill="#555">ŷ = sign(f̂(x))</text>
+    </svg>
+    <figcaption>Figure 1: The binary classification pipeline covered in this lecture.</figcaption>
+  </figure>
+
+  <p>The practitioner cares about 0–1 loss (accuracy), but the ML scientist uses a surrogate (logistic loss) during training because it is smooth and convex. Evaluation is always done on the actual 0–1 loss / accuracy.</p>
+</section>
+
+<!-- Key Takeaways -->
+<section>
+  <h2>Key Takeaways</h2>
+  <ul>
+    <li><strong>Classification</strong> maps inputs to discrete labels. For binary classification, we use $y \in \{-1, +1\}$ and predict via $\hat{y} = \text{sign}(f(x))$.</li>
+    <li><strong>Linear classifiers</strong> ($f(x) = w^\top x$) separate classes with a hyperplane. They can be made much more powerful by using <strong>non-linear feature maps</strong> $\phi(x)$.</li>
+    <li>We cannot directly optimize the <strong>0–1 loss</strong> (it's non-convex and non-differentiable). Instead, we train with a <strong>surrogate loss</strong> — the <strong>logistic loss</strong> $\log(1 + e^{-yf(x)})$ is the best-behaved candidate (convex, smooth, bounded gradients, outlier-robust).</li>
+    <li><strong>Logistic regression</strong> = minimizing average logistic loss with a linear model. For non-separable data, GD converges to a unique minimizer. For separable data, the iterates diverge in norm but converge in direction.</li>
+    <li>For separable data, GD on the logistic loss <strong>implicitly converges to the max-margin / SVM direction</strong> — no explicit margin maximization needed.</li>
+    <li>For non-separable data, the <strong>soft-margin SVM</strong> (hinge loss + $\ell_2$ penalty) and <strong>regularized logistic regression</strong> give similar decision boundaries.</li>
+  </ul>
+</section>
+
+</main>
+
+<footer>
+  <span>© 2026 piotr-marciniak.com</span>
+  <span>set in Inter &amp; JetBrains Mono</span>
+</footer>
+<script src="../../dark.js"></script>
+</body>
+</html>

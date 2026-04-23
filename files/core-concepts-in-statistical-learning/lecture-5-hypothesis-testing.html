@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Core Concepts in Statistical Learning – Lecture 5: Hypothesis Testing Foundations</title>
+  <link rel="icon" type="image/png" href="../../files/logo.png" />
+  <script>
+    try { var t=localStorage.getItem('theme')||'grain'; if(t) document.documentElement.setAttribute('data-theme',t); } catch(e){}
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../styles.css" />
+  <link rel="stylesheet" href="../../lecture.css" />
+
+</head>
+<body>
+<div class="topbar">
+  <div class="left">
+    <div class="theme-switcher">
+      <button class="theme-dot" data-theme="stone" onclick="setTheme('stone')" title="stone"></button>
+      <button class="theme-dot" data-theme="dark"  onclick="setTheme('dark')"  title="dark"></button>
+      <button class="theme-dot" data-theme="ocean" onclick="setTheme('ocean')" title="ocean"></button>
+      <button class="theme-dot" data-theme="grain" onclick="setTheme('grain')" title="grain"></button>
+      <span class="theme-label">themes</span>
+    </div>
+    <span class="host">piotr@marciniak</span>
+    <span class="path">~/files/ccsl</span>
+  </div>
+  <div class="right">
+    <a href="../../">← home</a>
+    <a href="../../studying/">← notes</a>
+  </div>
+</div>
+
+
+<header>
+  <h1>Lecture 5 — Hypothesis Testing: Foundations</h1>
+  <div class="meta">
+    <span>Course: Core Concepts in Statistical Learning</span>
+    <span>Lecture 5</span>
+    <span>Date: 2026-04-13</span>
+  </div>
+</header>
+
+<main>
+
+<section>
+  <p>
+    This lecture introduces <strong>hypothesis testing</strong>, the third pillar of classical statistical inference (after point estimation and confidence sets). We develop the vocabulary — null and alternative hypotheses, Type I and Type II errors, level, power — and then build our first family of asymptotic tests: the <strong>Wald tests</strong>. The guiding idea throughout: a statistical test is a <em>decision rule</em> that lets the data speak, while carefully controlling how often we are fooled.
+  </p>
+</section>
+
+<section>
+  <h2>1. The Core Question: When Do Numbers Disagree "Enough"?</h2>
+
+  <p>
+    Imagine you are comparing two machine-learning models on the same test set. Model A misclassifies 82 rows; model B misclassifies 76. Is B actually better, or is the gap just random wiggle? Hypothesis testing is the formal answer to "<em>is this difference real or a coincidence?</em>"
+  </p>
+
+  <div class="callout-example">
+    <div class="callout-title">Motivating Example — Two Prediction Algorithms</div>
+    <p>Let $p_i = \mathbb{P}(\text{algorithm } i \text{ makes a wrong prediction})$ for $i \in \{1, 2\}$.</p>
+    <p>We want to decide between:</p>
+    <ul>
+      <li>$p_1 = p_2$: the two algorithms are equally accurate.</li>
+      <li>$p_1 \ne p_2$: one is genuinely more accurate.</li>
+    </ul>
+    <p>Even if $p_1 = p_2$ in truth, sample error rates will almost never be exactly equal. The question is whether the observed gap is larger than random fluctuation would reasonably produce.</p>
+  </div>
+</section>
+
+<section>
+  <h2>2. The Vocabulary of Testing</h2>
+
+  <p>
+    We observe a random sample $X \sim f(\cdot \,;\, \theta)$ where $\theta$ is unknown. We split the parameter space $\Theta$ into two disjoint regions $\Theta_0$ and $\Theta_1$ (with $\Theta_0 \cap \Theta_1 = \emptyset$), and we want to test:
+  </p>
+
+  <div class="math-block">
+    $$H_0 : \theta \in \Theta_0 \quad \text{versus} \quad H_1 : \theta \in \Theta_1.$$
+  </div>
+
+  <div class="callout-definition">
+    <div class="callout-title">Null and Alternative Hypotheses</div>
+    <ul>
+      <li><strong>$H_0$ (null hypothesis):</strong> the default, conservative, or "status-quo" claim. Typically something like "<em>no effect</em>" or "<em>no difference</em>".</li>
+      <li><strong>$H_1$ (alternative hypothesis):</strong> the claim we would need evidence to support.</li>
+    </ul>
+  </div>
+
+  <p>Based on the data, we make one of two decisions:</p>
+  <ul>
+    <li><strong>Reject $H_0$</strong> — the data provide enough evidence to favor $H_1$.</li>
+    <li><strong>Do not reject $H_0$</strong> — the data do not provide enough evidence against $H_0$. (Note: this is <em>not</em> the same as "accepting $H_0$ as true" — absence of evidence is not evidence of absence.)</li>
+  </ul>
+
+  <h3>2.1 The Two Kinds of Mistakes</h3>
+
+  <p>Every test can go wrong in exactly two ways:</p>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Decision \ Truth</th>
+          <th>$H_0$ is true</th>
+          <th>$H_1$ is true</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Reject $H_0$</strong></td>
+          <td>Type I error (false alarm)</td>
+          <td>✓ Correct</td>
+        </tr>
+        <tr>
+          <td><strong>Do not reject $H_0$</strong></td>
+          <td>✓ Correct</td>
+          <td>Type II error (missed signal)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout-warning">
+    <div class="callout-title">Intuition — Think of a Smoke Detector</div>
+    <p>$H_0$ = "no fire". A <strong>Type I error</strong> is the detector shrieking while you are calmly making toast (false alarm). A <strong>Type II error</strong> is the detector staying silent while the kitchen burns (missed signal).</p>
+    <p>You cannot drive both to zero at once: a hyper-sensitive detector has fewer misses but more false alarms; a sleepy one has fewer false alarms but misses real fires. The whole craft of testing lies in managing this tradeoff.</p>
+  </div>
+
+  <h3>2.2 Rejection Region, Level, and Power</h3>
+
+  <div class="callout-definition">
+    <div class="callout-title">Rejection Region</div>
+    <p>The <strong>rejection region</strong> is the set of data outcomes that lead us to reject $H_0$:</p>
+    <div class="math-block">
+      $$R = \{x \in \mathcal{X} : \text{the test rejects } H_0 \text{ when } X = x\}.$$
+    </div>
+    <p>A test is simply a function $f : \mathcal{X} \to \{0, 1\}$ with $f(x) = \mathbf{1}_{\{x \in R\}}$ (1 = reject, 0 = do not reject).</p>
+  </div>
+
+  <div class="callout-definition">
+    <div class="callout-title">Level and Size</div>
+    <ul>
+      <li>For $\theta \in \Theta_0$, the probability $\mathbb{P}_\theta(X \in R)$ is the <strong>Type I error probability</strong> at $\theta$.</li>
+      <li>The <strong>level</strong> of the test is the worst-case Type I error: $\sup_{\theta \in \Theta_0} \mathbb{P}_\theta(X \in R)$.</li>
+      <li>We say the test has <strong>level $\alpha$</strong> if $\sup_{\theta \in \Theta_0} \mathbb{P}_\theta(X \in R) \le \alpha$.</li>
+      <li>It has <strong>size $\alpha$</strong> if equality holds.</li>
+    </ul>
+  </div>
+
+  <div class="callout-definition">
+    <div class="callout-title">Power</div>
+    <p>For $\theta \in \Theta_1$, the <strong>power</strong> at $\theta$ is</p>
+    <div class="math-block">
+      $$\beta(\theta) = \mathbb{P}_\theta(X \in R).$$
+    </div>
+    <p>This is the probability of correctly rejecting $H_0$ when the alternative is true. The <strong>Type II error probability</strong> at $\theta$ is $1 - \beta(\theta)$.</p>
+  </div>
+
+  <p>
+    <strong>Intuition.</strong> The level is a promise to the skeptic: "If $H_0$ really holds, I will wrongly reject it at most $\alpha$ fraction of the time." Typical choices are $\alpha = 0.05$ or $\alpha = 0.01$. Power is a measure of detection ability — higher is better. We fix level first (to control false alarms), then try to maximize power (to catch real effects).
+  </p>
+
+  <h3>2.3 Simple vs. Composite Hypotheses</h3>
+
+  <ul>
+    <li>A hypothesis is <strong>simple</strong> if it specifies a single distribution (i.e., $|\Theta_0| = 1$ or $|\Theta_1| = 1$).</li>
+    <li>Otherwise it is <strong>composite</strong>.</li>
+  </ul>
+
+  <div class="callout-example">
+    <div class="callout-title">Example — Three flavors of test</div>
+    <ul>
+      <li>$H_0: \theta = \theta_0$ vs. $H_1: \theta = \theta_1$ &nbsp; — simple vs. simple.</li>
+      <li>$H_0: \theta \le \theta_0$ vs. $H_1: \theta > \theta_0$ &nbsp; — composite vs. composite (one-sided).</li>
+      <li>$H_0: \theta = \theta_0$ vs. $H_1: \theta \ne \theta_0$ &nbsp; — simple vs. composite (two-sided).</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>3. The Paradigm: Control Type I, Then Maximize Power</h2>
+
+  <p>
+    Classical testing follows a strict two-step logic. Think of it like a courtroom: we presume the defendant ($H_0$) innocent. We never convict on a whim — first, we set a strict bar that makes wrongful convictions rare ($\alpha$). Only then do we try to make our method as good as possible at convicting the truly guilty (power).
+  </p>
+
+  <ol>
+    <li><strong>Cap the Type I error</strong> at a chosen level $\alpha$: require $\sup_{\theta \in \Theta_0} \mathbb{P}_\theta(X \in R) \le \alpha$.</li>
+    <li><strong>Maximize power</strong> among all tests satisfying (1).</li>
+  </ol>
+
+  <div class="callout-definition">
+    <div class="callout-title">Uniformly Most Powerful (UMP) Test</div>
+    <p>A level-$\alpha$ test with power function $\beta(\cdot)$ is <strong>Uniformly Most Powerful</strong> if, for every other level-$\alpha$ test with power $\beta'(\cdot)$:</p>
+    <div class="math-block">
+      $$\beta'(\theta) \le \beta(\theta) \quad \text{for all } \theta \in \Theta_1.$$
+    </div>
+    <p>"Uniformly" means dominant at every single $\theta$ in the alternative — not just on average.</p>
+  </div>
+
+  <p>
+    UMP tests are the gold standard, but they do not always exist (especially for two-sided alternatives). When they do, we are in a very fortunate spot.
+  </p>
+</section>
+
+<section>
+  <h2>4. Worked Example: A Test for a Normal Mean</h2>
+
+  <p>
+    Let $X_1, \dots, X_n \stackrel{\text{i.i.d.}}{\sim} \mathcal{N}(\theta, 1)$ with $\theta \in \mathbb{R}$. Test
+  </p>
+
+  <div class="math-block">
+    $$H_0 : \theta = 0 \quad \text{vs.} \quad H_1 : \theta > 0,$$
+  </div>
+
+  <p>at level $\alpha \in (0, 1)$.</p>
+
+  <h3>4.1 Building the Test</h3>
+
+  <p>
+    Intuitively, if $\theta > 0$, the sample mean $\bar{X}_n$ should tend to be large. So reject $H_0$ when $\bar{X}_n$ exceeds some threshold $c$:
+  </p>
+
+  <div class="math-block">
+    $$\text{Reject } H_0 \iff \bar{X}_n > c.$$
+  </div>
+
+  <p>We choose $c$ so that the test has size $\alpha$, i.e., $\mathbb{P}_{\theta=0}(\bar{X}_n > c) = \alpha$.</p>
+
+  <p>Under $H_0$, $\bar{X}_n \sim \mathcal{N}(0, 1/n)$, so $\sqrt{n}\,\bar{X}_n \sim \mathcal{N}(0, 1)$. Hence:</p>
+
+  <div class="math-block">
+    $$\mathbb{P}_{\theta=0}(\bar{X}_n > c) = \mathbb{P}(Z > \sqrt{n}\, c) = \alpha,$$
+  </div>
+
+  <p>which gives $\sqrt{n}\, c = z_{1-\alpha}$, the $(1-\alpha)$-quantile of $\mathcal{N}(0, 1)$. Therefore:</p>
+
+  <div class="math-block">
+    $$c = \frac{z_{1-\alpha}}{\sqrt{n}}, \qquad R = \left\{ (x_1, \dots, x_n) : \bar{x}_n \ge \frac{z_{1-\alpha}}{\sqrt{n}} \right\}.$$
+  </div>
+
+  <h3>4.2 The Power Function</h3>
+
+  <p>How good is this test at detecting a truly positive $\theta$? For $\theta > 0$:</p>
+
+  <div class="math-block">
+    $$
+    \begin{aligned}
+      \beta(\theta) &= \mathbb{P}_\theta\left( \bar{X}_n > \frac{z_{1-\alpha}}{\sqrt{n}} \right) \\
+      &= \mathbb{P}_\theta\left( \sqrt{n}(\bar{X}_n - \theta) > z_{1-\alpha} - \sqrt{n}\, \theta \right) \\
+      &= \mathbb{P}(Z > z_{1-\alpha} - \sqrt{n}\, \theta) \\
+      &= 1 - F_Z(z_{1-\alpha} - \sqrt{n}\, \theta),
+    \end{aligned}
+    $$
+  </div>
+
+  <p>where $Z \sim \mathcal{N}(0, 1)$ and $F_Z$ its CDF.</p>
+
+  <div class="callout-warning">
+    <div class="callout-title">Two crucial observations</div>
+    <ul>
+      <li><strong>For fixed $n$:</strong> the power $\beta(\theta)$ grows as $\theta$ moves farther above 0. Larger effects are easier to detect — obvious and reassuring.</li>
+      <li><strong>For fixed $\theta > 0$:</strong> as $n \to \infty$, $\sqrt{n}\,\theta \to \infty$, so $\beta(\theta) \to 1$. More data ⟹ near-certain detection. This is the mathematical soul of "with enough data, any real effect becomes detectable."</li>
+    </ul>
+  </div>
+
+  <figure>
+    <svg viewBox="0 0 500 260" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto;">
+      <!-- Axes -->
+      <line x1="40" y1="220" x2="480" y2="220" stroke="#1a1a2e" stroke-width="1.5"/>
+      <line x1="40" y1="30" x2="40" y2="220" stroke="#1a1a2e" stroke-width="1.5"/>
+      <!-- Axis labels -->
+      <text x="470" y="240" font-family="Inter, sans-serif" font-size="13" fill="#1a1a2e">$\theta$</text>
+      <text x="10" y="35" font-family="Inter, sans-serif" font-size="13" fill="#1a1a2e">β(θ)</text>
+      <text x="35" y="235" font-family="Inter, sans-serif" font-size="12" fill="#555">0</text>
+      <text x="28" y="40" font-family="Inter, sans-serif" font-size="12" fill="#555">1</text>
+      <!-- Dashed alpha line -->
+      <line x1="40" y1="205" x2="480" y2="205" stroke="#f9a825" stroke-width="1" stroke-dasharray="4,4"/>
+      <text x="445" y="200" font-family="Inter, sans-serif" font-size="12" fill="#e65100">α</text>
+      <!-- Small n curve -->
+      <path d="M 40 205 Q 180 200 260 150 T 480 40" stroke="#1a73e8" stroke-width="2.5" fill="none"/>
+      <text x="300" y="120" font-family="Inter, sans-serif" font-size="12" fill="#1a73e8">small n</text>
+      <!-- Large n curve -->
+      <path d="M 40 205 Q 100 200 140 100 T 300 42 L 480 40" stroke="#2e7d32" stroke-width="2.5" fill="none"/>
+      <text x="170" y="70" font-family="Inter, sans-serif" font-size="12" fill="#2e7d32">large n</text>
+    </svg>
+    <figcaption>Figure 1: Power curves for the one-sided normal-mean test. Both curves start at level $\alpha$ when $\theta = 0$ and rise to 1 as $\theta$ grows. Larger $n$ makes the curve rise more sharply — smaller effects become detectable.</figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2>5. Asymptotic Tests and the Wald Test</h2>
+
+  <p>
+    In realistic problems (unknown variance, unknown distribution shape), constructing an <em>exact</em> level-$\alpha$ test is often impossible. We fall back on tests whose level holds <em>in the limit</em> as $n \to \infty$: <strong>asymptotic tests</strong>. The Wald test is the workhorse of this category.
+  </p>
+
+  <h3>5.1 Setup</h3>
+
+  <p>Observe $X_1, \dots, X_n \sim f(\cdot\,;\, \theta)$ with $\Theta \subseteq \mathbb{R}$. Test</p>
+
+  <div class="math-block">
+    $$H_0 : \theta = \theta_0 \quad \text{vs.} \quad H_1 : \theta \ne \theta_0.$$
+  </div>
+
+  <p>Suppose we have an <strong>asymptotically normal estimator</strong> $\hat{\theta}_n$ of $\theta$. Under $H_0$:</p>
+
+  <div class="math-block">
+    $$W_n := \frac{\hat{\theta}_n - \theta_0}{\widehat{\mathrm{se}}(\hat{\theta}_n)} \xrightarrow{d} \mathcal{N}(0, 1).$$
+  </div>
+
+  <p>where $\widehat{\mathrm{se}}(\hat{\theta}_n)$ is a consistent estimator of the standard error.</p>
+
+  <div class="callout-definition">
+    <div class="callout-title">The Wald Test (two-sided, asymptotic level $\alpha$)</div>
+    <div class="math-block">
+      $$\text{Reject } H_0 \iff |W_n| > z_{1-\alpha/2}.$$
+    </div>
+    <p>Equivalently: reject when the estimator is more than $z_{1-\alpha/2}$ standard errors away from the hypothesized value.</p>
+  </div>
+
+  <p>
+    <strong>Intuition.</strong> $W_n$ measures, in standard-error units, how far the data's best guess $\hat{\theta}_n$ lands from the hypothesized $\theta_0$. If $H_0$ holds, $W_n$ behaves like a standard normal — so $|W_n|$ exceeding ~1.96 (at $\alpha = 0.05$) would happen only 5% of the time by chance. When it does exceed the threshold, we take it as evidence against $H_0$.
+  </p>
+
+  <h3>5.2 Verifying the Asymptotic Level</h3>
+
+  <p>The probability of a false rejection under $H_0$ is:</p>
+
+  <div class="math-block">
+    $$
+    \begin{aligned}
+      \mathbb{P}_{\theta_0}(|W_n| > z_{1-\alpha/2})
+      &= 1 - \mathbb{P}_{\theta_0}(-z_{1-\alpha/2} \le W_n \le z_{1-\alpha/2}) \\
+      &\xrightarrow{n \to \infty} 1 - \bigl[F_Z(z_{1-\alpha/2}) - F_Z(-z_{1-\alpha/2})\bigr] \\
+      &= 1 - \bigl[(1 - \tfrac{\alpha}{2}) - \tfrac{\alpha}{2}\bigr] = \alpha.
+    \end{aligned}
+    $$
+  </div>
+
+  <p>The symmetry of the standard normal around 0 is what lets the two tails combine cleanly into $\alpha$.</p>
+</section>
+
+<section>
+  <h2>6. Wald Test for a Mean (Unknown Variance)</h2>
+
+  <p>
+    This is the most commonly applied Wald test. Let $X_1, \dots, X_n$ be i.i.d. with unknown mean $\theta \in \mathbb{R}$ and unknown variance $\sigma^2 \in (0, \infty)$. Test
+  </p>
+
+  <div class="math-block">
+    $$H_0 : \theta = \theta_0 \quad \text{vs.} \quad H_1 : \theta \ne \theta_0.$$
+  </div>
+
+  <h3>6.1 Two Ingredients</h3>
+
+  <p><strong>(i)</strong> By the CLT:</p>
+
+  <div class="math-block">
+    $$\frac{\sqrt{n}(\bar{X}_n - \theta)}{\sigma} \xrightarrow{d} \mathcal{N}(0, 1).$$
+  </div>
+
+  <p>But $\sigma$ is unknown — so we estimate it. Let $S_n^2 = \frac{1}{n}\sum_{i=1}^n (X_i - \bar{X}_n)^2$ be the sample variance.</p>
+
+  <p><strong>(ii)</strong> We need $S_n \xrightarrow{P} \sigma$. Here is the quick derivation:</p>
+
+  <div class="math-block">
+    $$
+    \begin{aligned}
+      S_n^2 &= \frac{1}{n}\sum_{i=1}^n (X_i - \bar{X}_n)^2 \\
+      &= \frac{1}{n}\sum_{i=1}^n (X_i - \theta)^2 - (\bar{X}_n - \theta)^2.
+    \end{aligned}
+    $$
+  </div>
+
+  <p>By the WLLN, $\frac{1}{n}\sum (X_i - \theta)^2 \xrightarrow{P} \mathbb{E}[(X-\theta)^2] = \sigma^2$. Also $\bar{X}_n \xrightarrow{P} \theta$, so by the continuous mapping theorem $(\bar{X}_n - \theta)^2 \xrightarrow{P} 0$. Therefore $S_n^2 \xrightarrow{P} \sigma^2$, and again by continuous mapping, $S_n \xrightarrow{P} \sigma$.</p>
+
+  <h3>6.2 Assembling the Test via Slutsky</h3>
+
+  <p>By <strong>Slutsky's theorem</strong> (a random sequence converging in distribution times a random sequence converging in probability to a constant):</p>
+
+  <div class="math-block">
+    $$\frac{\sqrt{n}(\bar{X}_n - \theta)}{S_n} = \underbrace{\frac{\sqrt{n}(\bar{X}_n - \theta)}{\sigma}}_{\xrightarrow{d}\, \mathcal{N}(0,1)} \cdot \underbrace{\frac{\sigma}{S_n}}_{\xrightarrow{P}\, 1} \xrightarrow{d} \mathcal{N}(0, 1).$$
+  </div>
+
+  <div class="callout-definition">
+    <div class="callout-title">Wald Test for a Mean</div>
+    <p>Reject $H_0: \theta = \theta_0$ at asymptotic level $\alpha$ if and only if</p>
+    <div class="math-block">
+      $$\left| \frac{\sqrt{n}(\bar{X}_n - \theta_0)}{S_n} \right| > z_{1-\alpha/2}.$$
+    </div>
+  </div>
+
+  <div class="callout-warning">
+    <div class="callout-title">Connection to the t-test</div>
+    <p>If you have seen the classical one-sample t-test, you will recognize this statistic. The difference: the t-test uses a $t$-distribution threshold (exact under normality); the Wald test uses a normal threshold (asymptotic, distribution-free). For large $n$ they agree, because $t_{n-1}$ converges to $\mathcal{N}(0,1)$.</p>
+  </div>
+</section>
+
+<section>
+  <h2>7. Application: Comparing Two Prediction Algorithms</h2>
+
+  <p>We now return to the opening motivation and solve it with the Wald machinery.</p>
+
+  <h3>7.1 Setup</h3>
+
+  <p>For each of $n$ test rows, record:</p>
+
+  <div class="math-block">
+    $$X_i = \mathbf{1}_{\{\text{algo 1 wrong on row } i\}}, \qquad Y_i = \mathbf{1}_{\{\text{algo 2 wrong on row } i\}}.$$
+  </div>
+
+  <p>Assume the <em>pairs</em> $(X_1, Y_1), \dots, (X_n, Y_n)$ are i.i.d. — reasonable because the test rows themselves are independent. Crucially, we do <strong>not</strong> assume $X_i$ and $Y_i$ are independent of each other; on the same row, both algorithms see the same input, so their errors are naturally correlated. The "paired" design handles this.</p>
+
+  <p>Test</p>
+  <div class="math-block">
+    $$H_0: p_1 = p_2 \quad \text{vs.} \quad H_1: p_1 \ne p_2.$$
+  </div>
+
+  <h3>7.2 The Paired-Differences Trick</h3>
+
+  <p>Define the per-row differences $D_i = X_i - Y_i \in \{-1, 0, 1\}$. Then $D_1, \dots, D_n$ are i.i.d. with</p>
+
+  <div class="math-block">
+    $$\mathbb{E}(D_1) = p_1 - p_2.$$
+  </div>
+
+  <p>So the original question — "is $p_1 = p_2$?" — becomes "<em>is the mean of the $D_i$'s zero?</em>" That is exactly the single-mean Wald setup.</p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Paired Wald Test (asymptotic level $\alpha$)</div>
+    <p>Reject $H_0: p_1 = p_2$ if and only if</p>
+    <div class="math-block">
+      $$\frac{\sqrt{n}\,|\bar{X}_n - \bar{Y}_n|}{\sqrt{\frac{1}{n}\sum_{i=1}^n (X_i - Y_i - (\bar{X}_n - \bar{Y}_n))^2}} > z_{1-\alpha/2}.$$
+    </div>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Numerical sketch</div>
+    <p>Suppose $n = 500$, algo 1 misclassified 82 rows, algo 2 misclassified 76, and they disagreed on 18 rows. Then $\bar{X}_n - \bar{Y}_n = (82 - 76)/500 = 0.012$. The denominator (sample SD of the $D_i$'s) is small because the algorithms agree on most rows — say around $0.19$. The Wald statistic is roughly</p>
+    <div class="math-block">
+      $$\frac{\sqrt{500} \cdot 0.012}{0.19} \approx 1.41.$$
+    </div>
+    <p>At $\alpha = 0.05$, $z_{0.975} \approx 1.96$. Since $1.41 < 1.96$, we do not reject $H_0$ — the 6-row difference is consistent with random noise on this test set.</p>
+  </div>
+
+  <div class="callout-warning">
+    <div class="callout-title">Why pairing matters</div>
+    <p>Had we treated $X$'s and $Y$'s as two independent samples, the denominator would instead estimate $\mathrm{Var}(X) + \mathrm{Var}(Y)$ — ignoring their positive correlation. This makes the test <em>much</em> less powerful: real differences between correlated algorithms routinely fail to be detected by the unpaired test. The paired test exploits the per-row common structure, which is why the sum $\sum (X_i - Y_i - (\bar{X}_n - \bar{Y}_n))^2$ appears — it estimates $\mathrm{Var}(D)$ directly and benefits from cancellation.</p>
+  </div>
+</section>
+
+<section>
+  <h2>8. Connection to Confidence Intervals</h2>
+
+  <p>
+    Tests and confidence intervals are <strong>two sides of the same coin</strong>. Given the Wald statistic construction, the set of values of $\theta_0$ for which we would <em>not</em> reject $H_0 : \theta = \theta_0$ at level $\alpha$ is exactly the $(1-\alpha)$ confidence interval:
+  </p>
+
+  <div class="math-block">
+    $$C_n = \left[\hat{\theta}_n - z_{1-\alpha/2} \cdot \widehat{\mathrm{se}}(\hat{\theta}_n), \;\; \hat{\theta}_n + z_{1-\alpha/2} \cdot \widehat{\mathrm{se}}(\hat{\theta}_n)\right].$$
+  </div>
+
+  <p>
+    This is the "<strong>duality</strong>" between tests and intervals: the Wald CI collects all null values that the data do not clearly rule out at level $\alpha$. If $\theta_0 \notin C_n$, we reject; if $\theta_0 \in C_n$, we do not. Seen this way, the asymptotic confidence interval for the Bernoulli parameter constructed in Lecture 3 is already implicitly a family of Wald tests.
+  </p>
+</section>
+
+<section>
+  <h2>9. Key Takeaways</h2>
+
+  <ul>
+    <li><strong>Testing vocabulary.</strong> A test splits $\Theta$ into $\Theta_0$ and $\Theta_1$; a <em>rejection region</em> encodes the decision rule. Level bounds the Type I error probability; power measures how often real effects are detected.</li>
+    <li><strong>Asymmetric treatment.</strong> We prioritize controlling Type I error (false alarms) to a chosen $\alpha$, then try to maximize power under that constraint. UMP tests are the ideal when they exist.</li>
+    <li><strong>The Wald recipe.</strong> Any asymptotically normal estimator $\hat{\theta}_n$ with a consistent standard error gives a Wald test: reject when $|\hat{\theta}_n - \theta_0| / \widehat{\mathrm{se}}$ exceeds $z_{1-\alpha/2}$.</li>
+    <li><strong>Slutsky is the glue.</strong> Plugging in a consistent variance estimator like $S_n^2$ preserves the limiting normal distribution — this is what makes Wald tests usable in practice.</li>
+    <li><strong>Pairing exploits dependence.</strong> For comparing two algorithms on the same test set, transforming to per-row differences $D_i$ reduces the problem to a one-sample mean test and correctly accounts for correlation.</li>
+    <li><strong>Duality.</strong> A two-sided Wald test at level $\alpha$ and the corresponding $(1-\alpha)$ Wald confidence interval are the same object, read from different sides.</li>
+  </ul>
+</section>
+
+</main>
+
+<footer>
+  <span>© 2026 piotr-marciniak.com</span>
+  <span>set in Inter &amp; JetBrains Mono</span>
+</footer>
+<script src="../../dark.js"></script>
+</body>
+</html>

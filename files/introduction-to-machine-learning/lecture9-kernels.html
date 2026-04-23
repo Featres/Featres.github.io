@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IML – Lecture 9: The Kernel Trick</title>
+  <link rel="icon" type="image/png" href="../../files/logo.png" />
+  <script>
+    try { var t=localStorage.getItem('theme')||'grain'; if(t) document.documentElement.setAttribute('data-theme',t); } catch(e){}
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../styles.css" />
+  <link rel="stylesheet" href="../../lecture.css" />
+  <script>
+      MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\(', '\)']],
+          displayMath: [['$$', '$$'], ['\[', '\]']]
+        },
+        svg: { fontCache: 'global' }
+      };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+<body>
+<div class="topbar">
+  <div class="left">
+    <div class="theme-switcher">
+      <button class="theme-dot" data-theme="stone" onclick="setTheme('stone')" title="stone"></button>
+      <button class="theme-dot" data-theme="dark"  onclick="setTheme('dark')"  title="dark"></button>
+      <button class="theme-dot" data-theme="ocean" onclick="setTheme('ocean')" title="ocean"></button>
+      <button class="theme-dot" data-theme="grain" onclick="setTheme('grain')" title="grain"></button>
+      <span class="theme-label">themes</span>
+    </div>
+    <span class="host">piotr@marciniak</span>
+    <span class="path">~/files/iml</span>
+  </div>
+  <div class="right">
+    <a href="../../">← home</a>
+    <a href="../../studying/">← notes</a>
+  </div>
+</div>
+
+
+<header>
+  <h1>The Kernel Trick</h1>
+  <div class="meta">
+    <span>Introduction to Machine Learning</span>
+    <span>Lecture 9</span>
+    <span>Fanny Yang – ETH Zürich</span>
+  </div>
+</header>
+
+<main>
+
+<section>
+  <p>
+    This lecture introduces <strong>kernels</strong>, a powerful technique for learning non-linear functions without explicitly computing (potentially huge or infinite-dimensional) feature maps. The core idea — the <em>kernel trick</em> — lets us replace expensive inner products in feature space with a single, cheap function evaluation. We motivate the trick from the computational limitations of polynomial features, walk through the three-step kernelization recipe, and conclude with prominent kernel families (polynomial and RBF kernels).
+  </p>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <h2>1. Motivation — Why We Need Something Beyond Feature Maps</h2>
+
+  <h3>1.1 From Linear to Non-Linear Models via Featurization</h3>
+  <p>
+    Recall the standard supervised-learning objective: given data $\{(x_i, y_i)\}_{i=1}^{n}$ we fit a linear function $f(x) = \langle w, x \rangle$ by minimising a loss over all training points. To capture non-linear relationships we introduced <strong>featurization</strong>: a map $\varphi : \mathbb{R}^d \to \mathbb{R}^p$ that transforms the raw input into a richer feature space, and we then minimise
+  </p>
+  <div class="math-block">
+    $$\min_{w \in \mathbb{R}^p} \; \frac{1}{n}\sum_{i=1}^{n} \ell\!\big(y_i,\; \langle w, \varphi(x_i) \rangle\big).$$
+  </div>
+  <p>
+    This is very flexible — but what happens when $p$ is enormous?
+  </p>
+
+  <h3>1.2 The Computational Explosion of Polynomial Features</h3>
+  <p>
+    Consider polynomial features of degree $m$ for a $d$-dimensional input. The number of distinct monomials (and hence the feature dimension) is $p = \binom{d+m}{m} = O(d^m)$. Storing the featurized training data requires $O(n \, d^m)$ memory.
+  </p>
+
+  <div class="callout-example">
+    <div class="callout-title">Concrete Example — Biological Data</div>
+    <p>
+      For genomic data with $d \sim 10^5$ features and $n \sim 10^2$ samples, even choosing a modest polynomial degree $m = 3$ gives $O(n \, d^m) \sim 10^{17}$ — far too large to store or compute with. We need a smarter approach.
+    </p>
+  </div>
+
+  <h3>1.3 Three Desiderata</h3>
+  <p>
+    We want a method that simultaneously gives us: (1) <strong>expressivity</strong> — the ability to represent rich non-linear functions; (2) <strong>computational efficiency</strong> — avoiding the $O(d^m)$ blowup; and (3) <strong>convexity</strong> — retaining a convex optimisation problem when the loss $\ell$ is convex. The kernel trick achieves all three.
+  </p>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <h2>2. The Kernel Trick — Kernelization in Three Steps</h2>
+
+  <p>
+    The key insight is that we never need to touch $\varphi(x)$ directly — all that matters are <em>inner products</em> between feature vectors. Below is the three-step recipe from the lecture notes.
+  </p>
+
+  <h3>Step I — Reparametrize &amp; Identify Inner Products</h3>
+  <p>
+    Instead of optimising over $w \in \mathbb{R}^p$, we write $w = \Phi^\top \alpha$ with $\alpha \in \mathbb{R}^n$, where $\Phi \in \mathbb{R}^{n \times p}$ is the feature matrix with rows $\varphi(x_i)^\top$. This constrains $w$ to lie in $\operatorname{span}\{\varphi(x_1), \dots, \varphi(x_n)\}$, a subspace of dimension at most $n$ inside $\mathbb{R}^p$.
+  </p>
+  <p>
+    Plugging into the model we get:
+  </p>
+  <div class="math-block">
+    $$f(x) = \langle w, \varphi(x) \rangle = \langle \Phi^\top \alpha, \varphi(x) \rangle = \sum_{i=1}^{n} \alpha_i \, \langle \varphi(x_i), \varphi(x) \rangle.$$
+  </div>
+  <p>
+    Notice that the data now appears <em>only</em> through inner products $\langle \varphi(x_i), \varphi(x_j) \rangle$.
+  </p>
+
+  <h3>Step II — Replace Inner Products by a Kernel Function</h3>
+  <p>
+    Define a bivariate function $k : \mathbb{R}^d \times \mathbb{R}^d \to \mathbb{R}$ with $k(x, x') = \langle \varphi(x), \varphi(x') \rangle$ and the <strong>kernel matrix</strong> $K \in \mathbb{R}^{n \times n}$ with entries $K_{ij} = k(x_i, x_j)$. The objective becomes:
+  </p>
+  <div class="math-block">
+    $$\min_{\alpha \in \mathbb{R}^n} \; \frac{1}{n}\sum_{i=1}^{n} \ell\!\Big(y_i,\; \sum_{j=1}^{n} \alpha_j\, k(x_i, x_j)\Big) \;=\; \min_{\alpha \in \mathbb{R}^n} \; \frac{1}{n}\sum_{i=1}^{n} \ell\!\big(y_i,\; (K\alpha)_i\big).$$
+  </div>
+  <p>
+    Memory drops from $O(np)$ to $O(n^2)$ — a huge saving when $p \gg n$.
+  </p>
+
+  <h3>Step III — Solve the Kernelized Training Loss &amp; Predict</h3>
+  <p>
+    We solve for $\hat\alpha \in \mathbb{R}^n$ and predict on a new point $x$ via
+  </p>
+  <div class="math-block">
+    $$\hat f(x) = \sum_{i=1}^{n} \hat\alpha_i \, k(x_i,\, x).$$
+  </div>
+
+  <div class="callout-definition">
+    <div class="callout-title">Summary of the Three Steps</div>
+    <p>
+      <strong>I.</strong> Reparametrize $w = \Phi^\top \alpha$ in the training loss to obtain $\frac{1}{n}\sum_{i=1}^{n}\ell(y_i, \alpha^\top \Phi\,\varphi(x_i))$.<br>
+      <strong>II.</strong> Replace all inner products $\langle \varphi(x_i), \varphi(x_j)\rangle$ with $k(x_i, x_j)$.<br>
+      <strong>III.</strong> Solve $\hat\alpha = \arg\min_{\alpha \in \mathbb{R}^n} \frac{1}{n}\sum_{i=1}^{n}\ell(y_i, (K\alpha)_i)$ and predict $\hat f(x) = \sum_{i=1}^{n}\hat\alpha_i\, k(x_i, x)$.
+    </p>
+  </div>
+
+  <div class="callout-note">
+    <div class="callout-title">Why Is the Reparametrization Valid?</div>
+    <p>
+      It may seem like restricting $w$ to $\operatorname{span}\{\varphi(x_1),\dots,\varphi(x_n)\}$ loses something, since $\mathbb{R}^p$ is a much bigger space. But it turns out that <strong>at least one minimiser</strong> of the original objective already lives in this subspace.
+    </p>
+    <p>
+      <em>Intuition via gradient descent:</em> If we run gradient descent initialised at $w_0 = 0$, every iterate $w_t$ is a linear combination of $\varphi(x_1),\dots,\varphi(x_n)$ (because the gradient of $\ell(y_i, \langle w, \varphi(x_i)\rangle)$ is proportional to $\varphi(x_i)$). So GD never leaves the span.
+    </p>
+    <p>
+      More generally, the <strong>Representer Theorem</strong> guarantees this for any objective of the form $\frac{1}{n}\sum \ell(\cdot) + g(\|w\|)$ with $g$ non-decreasing — the component of $w$ orthogonal to $\operatorname{span}\{\varphi(x_i)\}$ can only increase $g$ without changing the data-fit term, so a minimiser exists without that orthogonal component.
+    </p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <h2>3. What Makes a Valid Kernel?</h2>
+
+  <p>
+    The beauty of the kernel trick is that we can work with functions $k$ <em>directly</em>, without ever constructing the feature map $\varphi$. But not every function $k$ implicitly corresponds to some inner product in some feature space. The following definition characterises exactly which functions do.
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition — Kernel (positive semi-definite function)</div>
+    <p>
+      A function $k : \mathbb{R}^d \times \mathbb{R}^d \to \mathbb{R}$ is a <strong>kernel</strong> if:
+    </p>
+    <ol>
+      <li><strong>Symmetry:</strong> $k(x, x') = k(x', x)$ for all $x, x'$.</li>
+      <li><strong>Positive semi-definiteness:</strong> For every $n \in \mathbb{N}$ and every set $x_1, \dots, x_n \in \mathbb{R}^d$, the kernel matrix $K$ with $K_{ij} = k(x_i, x_j)$ is positive semi-definite.</li>
+    </ol>
+  </div>
+
+  <div class="callout-definition">
+    <div class="callout-title">Theorem (Mercer / Feature-map Correspondence)</div>
+    <p>
+      A function $k$ is a kernel if and only if there exists a Hilbert space $\mathcal{H}$ and a map $\varphi : \mathbb{R}^d \to \mathcal{H}$ such that $k(x, x') = \langle \varphi(x), \varphi(x') \rangle_{\mathcal{H}}$ for all $x, x'$.
+    </p>
+    <p>
+      You can think of $\mathcal{H}$ as simply $\mathbb{R}^p$ for some (possibly very large) $p$, or in the infinite-dimensional case, the space $\ell^2$ of square-summable sequences.
+    </p>
+  </div>
+
+  <h3>Building New Kernels from Old Ones</h3>
+  <p>
+    Given valid kernels $k_1, k_2$, the following constructions also produce valid kernels:
+  </p>
+  <ul>
+    <li><strong>Addition:</strong> $k(x, x') = k_1(x, x') + k_2(x, x')$</li>
+    <li><strong>Multiplication:</strong> $k(x, x') = k_1(x, x') \cdot k_2(x, x')$</li>
+    <li><strong>Feature composition:</strong> If $\psi$ is any map, then $k(x,x') = k_1(\psi(x), \psi(x'))$ is valid.</li>
+  </ul>
+  <p>
+    These composition rules let you flexibly build complex kernels from simpler building blocks.
+  </p>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <h2>4. Examples of Kernels</h2>
+
+  <h3>4.1 Polynomial Kernels</h3>
+  <p>
+    The <strong>polynomial kernel</strong> of degree $m$ is defined as
+  </p>
+  <div class="math-block">
+    $$k(x, x') = (1 + \langle x, x' \rangle)^m.$$
+  </div>
+  <p>
+    This implicitly represents <em>all</em> polynomial features up to degree $m$. The feature map $\varphi$ consists of all monomials (with appropriate scaling), so it is equivalent to explicit polynomial featurization — but much cheaper to compute.
+  </p>
+
+  <div class="callout-example">
+    <div class="callout-title">Example — Computational Savings with Polynomial Kernels</div>
+    <p>
+      For $d = 2$, the degree-2 polynomial kernel $k(x, x') = (1 + \langle x, x'\rangle)^2$ corresponds to the feature map $\varphi(x) = (1, \sqrt{2}\,x_1, \sqrt{2}\,x_2, x_1^2, x_2^2, \sqrt{2}\,x_1 x_2)^\top \in \mathbb{R}^6$.
+    </p>
+    <p>
+      Computing $k$ directly needs $O(d + \log m)$ operations (an inner product plus exponentiation), whereas explicitly computing and dotting the feature vectors takes $O(d^m)$. For $n = 5$, $d = 5$, $m = 4$: naïve approach does $\sim$31 500 operations; the kernel shortcut does only 225.
+    </p>
+  </div>
+
+  <h3>4.2 Radial Basis Function (RBF) Kernels</h3>
+  <p>
+    RBF kernels depend only on the <em>distance</em> between two points:
+  </p>
+  <div class="math-block">
+    $$k(x, x') = \exp\!\left(-\frac{\|x - x'\|_p^{\alpha}}{\tau}\right)$$
+  </div>
+  <p>
+    where $\tau > 0$ is the <strong>bandwidth</strong> parameter. Two important special cases:
+  </p>
+  <ul>
+    <li><strong>Gaussian kernel</strong> ($\alpha = 2$, $p = 2$): $k(x, x') = \exp\!\big(-\|x - x'\|_2^2 / \tau\big)$</li>
+    <li><strong>Laplacian kernel</strong> ($\alpha = 1$, $p = 2$): $k(x, x') = \exp\!\big(-\|x - x'\| / \tau\big)$</li>
+  </ul>
+
+  <div class="callout-note">
+    <div class="callout-title">Bandwidth Intuition</div>
+    <p>
+      The bandwidth $\tau$ controls how quickly the kernel decays with distance. A <strong>small $\tau$</strong> makes the kernel very "peaky" — only very nearby points have high similarity. A <strong>large $\tau$</strong> makes the kernel flatter — even distant points are still considered similar. Think of $\tau$ as controlling the "range of influence" of each training point.
+    </p>
+  </div>
+
+  <h4>RBF Kernels Have Infinite-Dimensional Feature Maps</h4>
+  <p>
+    Unlike polynomial kernels, the corresponding feature map of an RBF kernel is <strong>infinite-dimensional</strong>. For the Gaussian kernel with $d=1$, one can show (via Taylor-expanding the exponential) that the feature map sends $x$ to the sequence
+  </p>
+  <div class="math-block">
+    $$\varphi(x) = \left(e^{-x^2/\tau}\,\sqrt{\frac{(2/\tau)^k}{k!}}\; x^k \right)_{k \in \mathbb{N}} \;\in\; \ell^2.$$
+  </div>
+  <p>
+    You would never be able to compute or store this explicitly — but with the kernel trick, you don't have to! You just evaluate the closed-form expression $e^{-(x - x')^2/\tau}$.
+  </p>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <h2>5. Does Kernelization Meet Our Desiderata?</h2>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Desideratum</th>
+          <th>Satisfied?</th>
+          <th>Explanation</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Expressivity</strong></td>
+          <td>Yes</td>
+          <td>Although we optimise over only $n$ parameters $\alpha$, the function class $\mathcal{F}_k = \{f_\alpha(x) = \sum_i \alpha_i k(x_i, x)\}$ grows richer as $n$ increases. "Universal" kernels (like Gaussian) are dense in continuous functions.</td>
+        </tr>
+        <tr>
+          <td><strong>Efficiency</strong></td>
+          <td>Yes</td>
+          <td>Memory $O(n^2)$ instead of $O(np)$; computation per kernel evaluation can be $O(d)$ instead of $O(d^m)$.</td>
+        </tr>
+        <tr>
+          <td><strong>Convexity</strong></td>
+          <td>Yes</td>
+          <td>If $\ell$ is convex in its second argument, then $\frac{1}{n}\sum \ell(y_i, (K\alpha)_i)$ is convex in $\alpha$ (composition of convex with affine).</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <h2>6. Complexity Comparison at a Glance</h2>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Approach</th>
+          <th>Parameters</th>
+          <th>Memory</th>
+          <th>Compute (kernel matrix)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Explicit poly features</td>
+          <td>$p = O(d^m)$</td>
+          <td>$O(n \, d^m)$</td>
+          <td>$O(n^2 \, d^m)$</td>
+        </tr>
+        <tr>
+          <td>Polynomial kernel</td>
+          <td>$n$</td>
+          <td>$O(n^2)$</td>
+          <td>$O(n^2(d + m))$</td>
+        </tr>
+        <tr>
+          <td>RBF kernel</td>
+          <td>$n$</td>
+          <td>$O(n^2)$</td>
+          <td>$O(n^2 d)$</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <h2>7. Key Takeaways</h2>
+  <ul>
+    <li><strong>The kernel trick</strong> lets us work with non-linear feature maps implicitly by replacing all inner products $\langle \varphi(x), \varphi(x')\rangle$ with a kernel function $k(x, x')$, avoiding the explicit (and often prohibitively expensive) computation of $\varphi$.</li>
+    <li>Kernelization follows <strong>three steps</strong>: reparametrize $w = \Phi^\top\alpha$, express everything via inner products, then replace those with $k$.</li>
+    <li>This reparametrization is justified because <strong>at least one minimiser</strong> lies in $\operatorname{span}\{\varphi(x_1),\dots,\varphi(x_n)\}$ — intuitively shown via gradient descent, and formally by the Representer Theorem.</li>
+    <li>A valid kernel must be <strong>symmetric and positive semi-definite</strong>; this is equivalent to the existence of a feature map into some Hilbert space.</li>
+    <li><strong>Polynomial kernels</strong> $k(x,x') = (1+\langle x,x'\rangle)^m$ give dramatic computational savings over explicit polynomial features; <strong>RBF kernels</strong> implicitly use infinite-dimensional feature maps and are "universal" approximators.</li>
+  </ul>
+</section>
+
+</main>
+
+<footer>
+  <span>© 2026 piotr-marciniak.com</span>
+  <span>set in Inter &amp; JetBrains Mono</span>
+</footer>
+<script src="../../dark.js"></script>
+</body>
+</html>

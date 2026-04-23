@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IML – Lecture 2: Linear Regression</title>
+  <link rel="icon" type="image/png" href="../../files/logo.png" />
+  <script>
+    try { var t=localStorage.getItem('theme')||'grain'; if(t) document.documentElement.setAttribute('data-theme',t); } catch(e){}
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../styles.css" />
+  <link rel="stylesheet" href="../../lecture.css" />
+  <script>
+      MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\(', '\)']],
+          displayMath: [['$$', '$$'], ['\[', '\]']]
+        },
+        svg: { fontCache: 'global' }
+      };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+<body>
+<div class="topbar">
+  <div class="left">
+    <div class="theme-switcher">
+      <button class="theme-dot" data-theme="stone" onclick="setTheme('stone')" title="stone"></button>
+      <button class="theme-dot" data-theme="dark"  onclick="setTheme('dark')"  title="dark"></button>
+      <button class="theme-dot" data-theme="ocean" onclick="setTheme('ocean')" title="ocean"></button>
+      <button class="theme-dot" data-theme="grain" onclick="setTheme('grain')" title="grain"></button>
+      <span class="theme-label">themes</span>
+    </div>
+    <span class="host">piotr@marciniak</span>
+    <span class="path">~/files/iml</span>
+  </div>
+  <div class="right">
+    <a href="../../">← home</a>
+    <a href="../../studying/">← notes</a>
+  </div>
+</div>
+
+
+<header>
+  <h1>Lecture 2: Linear Regression</h1>
+  <div class="meta">
+    <span>Course: Introduction to Machine Learning (IML)</span>
+    <span>Lecture 2</span>
+    <span>ETH Zürich · Prof. Fanny Yang</span>
+  </div>
+</header>
+
+<main>
+
+<!-- Overview -->
+<section>
+  <p>
+    This lecture walks through the entire supervised learning pipeline using the motivating example of housing price prediction. The central method introduced is <strong>linear regression</strong> — the simplest machine learning method — which combines a linear function class with the squared loss and admits a closed-form solution. Starting with the one-dimensional case and building up to multiple dimensions, the lecture derives the optimal parameters via stationary point conditions and a geometric projection argument, and briefly surveys alternative loss functions for situations where the squared loss is not ideal.
+  </p>
+</section>
+
+<!-- 1. The Supervised Learning Pipeline -->
+<section>
+  <h2>1. The Supervised Learning Pipeline</h2>
+
+  <p>
+    The lecture uses a concrete scenario to motivate the entire ML workflow: you want to sell your house and need to estimate a fair average market price. Since the target (price) is a continuous real number and you have historical data of houses sold with their attributes and prices, this is a <strong>regression</strong> task within <strong>supervised learning</strong>.
+  </p>
+
+  <p>
+    The pipeline consists of three steps:
+  </p>
+
+  <h3>Step I: Collect Training Data</h3>
+  <p>
+    Gather $n$ historical examples. Each example $i$ consists of input attributes $x_i$ (e.g. house size, number of bathrooms) and a corresponding output $y_i$ (sale price). We can't feed physical houses into a computer, so we represent each house as a numerical vector of its attributes.
+  </p>
+
+  <h3>Step II: Learn a Model</h3>
+  <p>
+    Use an ML method to efficiently find a predictor $\hat{f}$ from a chosen function class $\mathcal{F}$ that "fits" the training data well. This step requires the ML scientist to make three design choices:
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition — The Three Components of an ML Method</div>
+    <p>
+      <strong>1. Function class $\mathcal{F}$</strong> — a parameterised set of candidate functions (e.g. linear functions).<br>
+      <strong>2. Training loss $L(f)$</strong> — the average loss of a predictor $f \in \mathcal{F}$ over the training set:
+    </p>
+    <div class="math-block">
+      $$L(f) := \frac{1}{n}\sum_{i=1}^{n} \ell\bigl(f(x_i),\, y_i\bigr)$$
+    </div>
+    <p>
+      where $\ell(f(x), y)$ is a pointwise loss measuring the gap between prediction and truth.<br>
+      <strong>3. Optimisation method</strong> — a procedure to (approximately) minimise $L$ and output the final predictor.
+    </p>
+  </div>
+
+  <h3>Step III: Predict</h3>
+  <p>
+    Feed the attributes of your (new, unseen) house into the learned model $\hat{f}$ and obtain a predicted average price $\hat{f}(x_{\text{new}})$.
+  </p>
+</section>
+
+<!-- 2. ML Terminology -->
+<section>
+  <h2>2. Supervised Learning Terminology</h2>
+
+  <div class="callout-definition">
+    <div class="callout-title">Key Terms</div>
+    <p>
+      <strong>Attributes / covariates:</strong> The raw inputs $x \in \mathbb{R}^d$ describing a single example (e.g. house size, location).<br>
+      <strong>Features:</strong> A (possibly nonlinear) transformation $\phi(x) \in \mathbb{R}^p$ of the raw attributes. In plain linear regression, features and attributes are the same thing.<br>
+      <strong>Outputs / targets / labels:</strong> The value $y \in \mathbb{R}$ we want to predict (e.g. price).<br>
+      <strong>Training set:</strong> The collection of $(x_i, y_i)$ pairs we learn from.<br>
+      <strong>Test set:</strong> A separate collection of $(x_i, y_i)$ pairs, disjoint from training, used to evaluate how well the model generalises.<br>
+      <strong>Predictor / model:</strong> A function $f: \mathbb{R}^p \to \mathbb{R}$ mapping inputs to outputs.
+    </p>
+  </div>
+</section>
+
+<!-- 3. Linear Regression in 1-D -->
+<section>
+  <h2>3. Linear Regression in One Dimension</h2>
+
+  <p>
+    The simplest setting: each house is described by a single attribute $x_i \in \mathbb{R}$ (e.g. size in m²) and we want to predict its price $y_i$. We plot the training data as points in the $(x, y)$-plane and look for a "good" line through them.
+  </p>
+
+  <h3>3.1 The Linear Function Class</h3>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition — Linear Function Class (1-D)</div>
+    <p>
+      The set of all affine functions of a single input:
+    </p>
+    <div class="math-block">
+      $$\mathcal{F}_{\text{lin}} = \bigl\{\, f(x) = w_0 + w_1\, x \;\big|\; w_0, w_1 \in \mathbb{R} \,\bigr\}$$
+    </div>
+    <p>Here $w_1$ is the slope and $w_0$ is the intercept (bias).</p>
+  </div>
+
+  <p>
+    Every choice of $(w_0, w_1)$ gives a different line. Since there are infinitely many candidates, we can't simply try them all — we need a principled way to pick the best one.
+  </p>
+
+  <h3>3.2 The Squared Loss</h3>
+  <p>
+    To measure how well a candidate function $f$ fits the data, we use the <strong>squared loss</strong>:
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition — Squared Loss</div>
+    <div class="math-block">
+      $$\ell\bigl(f(x),\, y\bigr) = \bigl(y - f(x)\bigr)^2$$
+    </div>
+    <p>
+      The training loss (average over all $n$ points) is then:
+    </p>
+    <div class="math-block">
+      $$L(w_0, w_1) = \frac{1}{n}\sum_{i=1}^{n}\bigl(y_i - w_0 - w_1\, x_i\bigr)^2$$
+    </div>
+  </div>
+
+  <p>
+    Visually, each term $(y_i - f(x_i))^2$ is the squared vertical distance from a data point to the line. Summing these up gives the total "cost" of a particular line — our goal is to find the $(w_0, w_1)$ that makes this sum as small as possible.
+  </p>
+
+  <div class="callout-note">
+    <div class="callout-title">Intuition — Why Squared Loss?</div>
+    <p>
+      The squared loss is convenient because it is smooth (differentiable everywhere), which lets us use calculus to find the minimum. It also penalises large errors more than small ones because of the quadratic growth. However, this sensitivity to large errors means it can be strongly influenced by outliers — a single far-away point can drag the fitted line significantly.
+    </p>
+  </div>
+
+  <h3>3.3 Finding the Minimiser via Stationary Points</h3>
+  <p>
+    For the 1-D case, consider the simplified setting with $w_0 = 0$ (no intercept). The training loss becomes a function of a single variable $w_1$:
+  </p>
+  <div class="math-block">
+    $$L(0, w_1) = \frac{1}{n}\sum_{i=1}^{n}\bigl(y_i - w_1\, x_i\bigr)^2$$
+  </div>
+  <p>
+    This is a quadratic function in $w_1$ (an "upward-opening parabola"), so it has exactly one minimum. We find it by setting the derivative to zero:
+  </p>
+  <div class="math-block">
+    $$\frac{\partial L}{\partial w_1} = 0 \quad \Longrightarrow \quad \hat{w}_1 = \frac{\sum_{i=1}^{n} x_i\, y_i}{\sum_{i=1}^{n} x_i^2}$$
+  </div>
+  <p>
+    This is a <strong>closed-form solution</strong> — no iterative algorithm needed. We can compute the optimal slope directly from the data.
+  </p>
+
+  <div class="callout-example">
+    <div class="callout-title">Example — Housing Price in 1-D</div>
+    <p>
+      Suppose we have 5 houses with sizes (in m²) and prices (in millions CHF):
+      $(120,\, 1.5)$, $(200,\, 3.0)$, $(130,\, 1.0)$, $(135,\, 0.7)$, $(80,\, 0.7)$.
+      Plotting these as points and fitting the best line through them via the formula above gives us $\hat{f}(x) = \hat{w}_0 + \hat{w}_1 x$, a line that minimises the total squared vertical distance to all data points.
+    </p>
+  </div>
+</section>
+
+<!-- 4. Multiple Linear Regression -->
+<section>
+  <h2>4. Multiple Linear Regression (General $d$)</h2>
+
+  <p>
+    In practice, houses have many attributes: size, number of bathrooms, location, age, etc. We now let $x_i \in \mathbb{R}^d$ be a $d$-dimensional vector of attributes for each house.
+  </p>
+
+  <h3>4.1 Function Class and Loss</h3>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition — Multivariate Linear Function Class</div>
+    <div class="math-block">
+      $$\mathcal{F}_{\text{lin}} = \bigl\{\, f(x) = w_0 + w^\top x \;\big|\; w_0 \in \mathbb{R},\; w \in \mathbb{R}^d \,\bigr\}$$
+    </div>
+    <p>
+      Here $w$ is the weight vector (generalising the slope) and $w_0$ the intercept. For $d=2$, the predictor is a plane through 3-D space; for general $d$, it is a hyperplane in $(d+1)$-dimensional space.
+    </p>
+  </div>
+
+  <p>
+    The training loss is the natural extension:
+  </p>
+  <div class="math-block">
+    $$L(w_0, w) = \frac{1}{n}\sum_{i=1}^{n}\bigl(y_i - w_0 - w^\top x_i\bigr)^2$$
+  </div>
+
+  <div class="callout-note">
+    <div class="callout-title">The Intercept Trick</div>
+    <p>
+      We can absorb the intercept into the weight vector by augmenting every input: replace $x_i$ with $\tilde{x}_i = (1, x_i) \in \mathbb{R}^{d+1}$ and define $\tilde{w} = (w_0, w) \in \mathbb{R}^{d+1}$. Then $f(\tilde{x}) = \tilde{w}^\top \tilde{x}$ and we only need to optimise over a single vector $\tilde{w}$. For the rest of this summary, we assume this has been done and write simply $f(x) = w^\top x$.
+    </p>
+  </div>
+
+  <h3>4.2 Matrix Notation</h3>
+  <p>
+    Stack all $n$ training inputs row-wise into the <strong>design matrix</strong> $X \in \mathbb{R}^{n \times d}$ and all targets into the vector $y \in \mathbb{R}^n$. Then:
+  </p>
+  <div class="math-block">
+    $$L(w) = \frac{1}{n}\|y - Xw\|_2^2$$
+  </div>
+  <p>
+    Since the factor $\frac{1}{n}$ doesn't affect the location of the minimum, minimising $L(w)$ is equivalent to minimising $\|y - Xw\|_2^2$.
+  </p>
+
+  <h3>4.3 Deriving the Closed-Form Solution</h3>
+  <p>
+    There are two complementary ways to derive the optimal $\hat{w}$:
+  </p>
+
+  <h4>Method 1: Stationary Point Condition</h4>
+  <p>
+    Any minimiser $\hat{w}$ must satisfy $\nabla_w L = 0$. Computing the gradient of $\|y - Xw\|_2^2$ and setting it to zero yields:
+  </p>
+  <div class="math-block">
+    $$\nabla_w \|y - Xw\|_2^2 = 2X^\top(Xw - y) = 0$$
+  </div>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition — Normal Equations</div>
+    <div class="math-block">
+      $$X^\top X\,\hat{w} = X^\top y$$
+    </div>
+    <p>These are the <strong>normal equations</strong>. Every minimiser of the squared loss must satisfy them.</p>
+  </div>
+
+  <p>
+    <strong>Why is this truly a minimum?</strong> The Hessian of $\|y - Xw\|_2^2$ is $2X^\top X$, which is always positive semi-definite (psd). This means the loss function is convex, so every stationary point is automatically a global minimum.
+  </p>
+
+  <p>
+    When $X^\top X$ is invertible (which happens when $d \leq n$ and $X$ has full column rank), we get the unique solution:
+  </p>
+  <div class="math-block">
+    $$\hat{w} = (X^\top X)^{-1} X^\top y$$
+  </div>
+
+  <h4>Method 2: Geometric (Projection) Argument</h4>
+  <p>
+    This viewpoint gives beautiful geometric insight. Consider the prediction vector $X w \in \mathbb{R}^n$ for a given $w$. As $w$ ranges over all of $\mathbb{R}^d$, the vector $Xw$ traces out $\text{span}(X) = \{Xw : w \in \mathbb{R}^d\}$, which is a subspace of $\mathbb{R}^n$ (spanned by the columns of $X$).
+  </p>
+  <p>
+    Minimising $\|y - Xw\|_2^2$ means finding the point in $\text{span}(X)$ that is closest to $y$. By linear algebra, this closest point is the <strong>orthogonal projection</strong> of $y$ onto $\text{span}(X)$:
+  </p>
+  <div class="math-block">
+    $$X\hat{w} = \Pi_X\, y$$
+  </div>
+  <p>
+    The residual vector $y - X\hat{w}$ is perpendicular to every column of $X$. Writing this orthogonality condition out gives exactly the normal equations $X^\top(y - X\hat{w}) = 0$.
+  </p>
+
+  <figure>
+    <svg viewBox="0 0 500 320" xmlns="http://www.w3.org/2000/svg" style="max-width:420px;">
+      <!-- span(X) plane -->
+      <polygon points="50,260 250,160 450,220 250,290" fill="#eef6ff" stroke="#1a73e8" stroke-width="1.5" opacity="0.6"/>
+      <text x="360" y="280" font-size="14" fill="#1a73e8" font-family="Inter">span(X)</text>
+      <!-- y point -->
+      <circle cx="260" cy="70" r="5" fill="#0f3460"/>
+      <text x="270" y="68" font-size="15" font-weight="600" fill="#0f3460" font-family="Inter">y</text>
+      <!-- projection point -->
+      <circle cx="260" cy="210" r="5" fill="#1a73e8"/>
+      <text x="215" y="235" font-size="14" fill="#1a73e8" font-family="Inter">Π<tspan baseline-shift="sub" font-size="11">X</tspan>y = Xŵ</text>
+      <!-- dashed line y to projection -->
+      <line x1="260" y1="75" x2="260" y2="205" stroke="#e65100" stroke-width="2" stroke-dasharray="6,4"/>
+      <!-- right angle -->
+      <polyline points="250,200 250,210 260,210" fill="none" stroke="#e65100" stroke-width="1.5"/>
+      <!-- label -->
+      <text x="270" y="145" font-size="13" fill="#e65100" font-family="Inter">‖y − Xŵ‖</text>
+      <!-- dot at origin area -->
+      <circle cx="180" cy="240" r="3" fill="#333"/>
+    </svg>
+    <figcaption>Figure 1: The linear regression estimate as an orthogonal projection of $y$ onto $\text{span}(X)$. The residual is perpendicular to the subspace.</figcaption>
+  </figure>
+
+  <div class="callout-note">
+    <div class="callout-title">How Many Solutions?</div>
+    <p>
+      The number of minimisers $\hat{w}$ depends on $n$, $d$, and the rank of $X$. If $d \leq n$ and $X$ has full column rank, $X^\top X$ is invertible and there is a <strong>unique</strong> $\hat{w}$. In the <strong>overparameterised</strong> case ($d > n$), there are infinitely many $w$ that achieve zero training loss ($y = Xw$ has infinitely many solutions). However, the <strong>prediction vector</strong> $X\hat{w} = \Pi_X y$ is always unique — only the weight vector is non-unique. The standard convention is to pick the minimum-norm solution $\hat{w} = X^\top(XX^\top)^{-1}y$.
+    </p>
+  </div>
+</section>
+
+<!-- 5. Alternative Loss Functions -->
+<section>
+  <h2>5. Beyond the Squared Loss</h2>
+
+  <p>
+    The squared loss is the default for linear regression, but it isn't always the best choice. The lecture briefly introduces two alternatives:
+  </p>
+
+  <h3>5.1 Huber Loss (Robustness to Outliers)</h3>
+  <p>
+    Since the squared loss grows quadratically, a single outlier with a very large residual can dominate the sum and pull the fitted line far from the bulk of the data.
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Definition — Huber Loss</div>
+    <div class="math-block">
+      $$\ell_{\text{huber}}(f(x), y) = \begin{cases} \frac{1}{2}(f(x) - y)^2, & \text{if } |f(x) - y| \leq \delta \\ \delta\bigl(|f(x) - y| - \tfrac{1}{2}\delta\bigr), & \text{if } |f(x) - y| > \delta \end{cases}$$
+    </div>
+    <p>
+      For small errors it behaves like the squared loss, but for large errors it grows only linearly, effectively down-weighting outliers. The parameter $\delta$ controls the transition point.
+    </p>
+  </div>
+
+  <h3>5.2 Asymmetric Losses</h3>
+  <p>
+    Sometimes over- and underestimation carry different costs. For instance, when selling a house, underestimating the price (leaving money on the table) may be worse than slightly overestimating it. Asymmetric loss functions penalise one direction more than the other. A prominent example is the <strong>quantile loss</strong> (pinball loss):
+  </p>
+  <div class="math-block">
+    $$\ell_\tau(f(x), y) = \tau\max\{y - f(x), 0\} + (1 - \tau)\max\{f(x) - y, 0\}$$
+  </div>
+  <p>
+    When $\tau < 0.5$, overestimation is penalised more and the model tends to underestimate; when $\tau > 0.5$, the reverse happens.
+  </p>
+
+  <div class="callout-note">
+    <div class="callout-title">Practical Takeaway</div>
+    <p>
+      The squared loss is a reasonable default, but always think about whether your application calls for robustness to outliers (→ Huber) or asymmetric error costs (→ quantile loss). The choice of loss implicitly encodes assumptions about your problem.
+    </p>
+  </div>
+</section>
+
+<!-- 6. Preview: Nonlinear Regression via Feature Maps -->
+<section>
+  <h2>6. Preview: From Linear to Nonlinear via Feature Maps</h2>
+
+  <p>
+    A natural question: what if the relationship between input and output is not linear? The lecture notes and subsequent lectures introduce the idea of a <strong>feature map</strong> $\phi: \mathbb{R}^d \to \mathbb{R}^p$ that transforms the raw inputs before feeding them into the linear regression machinery:
+  </p>
+  <div class="math-block">
+    $$f_w(x) = \langle w,\, \phi(x) \rangle = \sum_{j=1}^{p} w_j\, \phi_j(x)$$
+  </div>
+  <p>
+    The function $f_w$ is linear in the features $\phi(x)$ but can be highly nonlinear in the original input $x$.
+  </p>
+
+  <div class="callout-example">
+    <div class="callout-title">Example — Polynomial Regression</div>
+    <p>
+      For a scalar input $x \in \mathbb{R}$, define $\phi(x) = (1,\, x,\, x^2,\, \dots,\, x^p)$. Then $f_w(x) = w_0 + w_1 x + w_2 x^2 + \cdots + w_p x^p$ is a polynomial of degree $p$ — a very flexible nonlinear function — yet we can solve for the optimal $w$ using exactly the same normal equations, just with the feature matrix $\Phi$ in place of $X$.
+    </p>
+  </div>
+
+  <p>
+    The closed-form solution carries over directly: replace $X$ by the feature matrix $\Phi \in \mathbb{R}^{n \times p}$ (whose $i$-th row is $\phi(x_i)^\top$) to obtain $\hat{w} = (\Phi^\top \Phi)^{-1}\Phi^\top y$. This idea is developed fully in Lecture 3 and later chapters.
+  </p>
+</section>
+
+<!-- Key Takeaways -->
+<section>
+  <h2>Key Takeaways</h2>
+  <ul>
+    <li><strong>The ML pipeline has three steps:</strong> collect data, learn a model by minimising a training loss over a function class, and predict on new inputs. These three design choices — function class, loss, and optimisation — define any ML method.</li>
+    <li><strong>Linear regression = linear functions + squared loss + closed-form optimisation.</strong> It is the simplest and most fundamental supervised learning method, and understanding it deeply is the foundation for everything that follows.</li>
+    <li><strong>The normal equations $X^\top X \hat{w} = X^\top y$</strong> characterise all minimisers of the squared loss. When $X^\top X$ is invertible ($d \leq n$, full rank), the unique solution is $\hat{w} = (X^\top X)^{-1}X^\top y$.</li>
+    <li><strong>Geometric interpretation:</strong> the optimal prediction vector $X\hat{w}$ is the orthogonal projection of $y$ onto the column space of $X$. The residual $y - X\hat{w}$ is perpendicular to this subspace.</li>
+    <li><strong>Loss function choice matters:</strong> the squared loss is smooth and convex but sensitive to outliers. Huber loss provides robustness; asymmetric losses let you penalise over- and underestimation differently.</li>
+    <li><strong>Feature maps</strong> unlock nonlinear modelling while keeping the same linear algebra machinery — a powerful idea that reappears throughout the course in polynomial regression, kernel methods, and neural networks.</li>
+  </ul>
+</section>
+
+</main>
+
+<footer>
+  <span>© 2026 piotr-marciniak.com</span>
+  <span>set in Inter &amp; JetBrains Mono</span>
+</footer>
+<script src="../../dark.js"></script>
+</body>
+</html>

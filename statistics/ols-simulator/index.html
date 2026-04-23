@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OLS Simulator — Piotr Marciniak</title>
+  <meta name="description" content="Interactive visualization of ordinary least squares." />
+  <script>
+    try { var t=localStorage.getItem('theme')||'grain'; if(t) document.documentElement.setAttribute('data-theme',t); } catch(e){}
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../styles.css" />
+</head>
+<body>
+
+<div class="topbar">
+  <div class="left">
+    <div class="theme-switcher">
+      <button class="theme-dot" data-theme="stone" onclick="setTheme('stone')" title="stone"></button>
+      <button class="theme-dot" data-theme="dark"  onclick="setTheme('dark')"  title="dark"></button>
+      <button class="theme-dot" data-theme="ocean" onclick="setTheme('ocean')" title="ocean"></button>
+      <button class="theme-dot" data-theme="grain" onclick="setTheme('grain')" title="grain"></button>
+      <span class="theme-label">themes</span>
+    </div>
+    <span class="host">piotr@marciniak</span>
+    <span class="path">~/statistics/ols-simulator</span>
+  </div>
+  <div class="right">
+    <a href="../../">← home</a>
+    <a href="#summary">summary</a>
+    <a href="#content">content</a>
+  </div>
+</div>
+
+<div class="grid">
+
+  <section class="cell subhead span-12">
+    <div class="proj-line">
+      <span class="k">project ·</span>
+      <span class="v">Statistics</span>
+    </div>
+    <h1>OLS Simulator</h1>
+    <p class="tagline">Interactive visualization of ordinary least squares — drop points on the plane and watch the fit update in real time.</p>
+  </section>
+
+  <section class="cell modules span-12" style="grid-template-columns: repeat(4, 1fr);">
+    <div class="mod">
+      <div class="micro">Languages</div>
+      <div class="tags">
+        <span class="tag">JavaScript</span>
+        <span class="tag">HTML</span>
+        <span class="tag">CSS</span>
+      </div>
+    </div>
+    <div class="mod">
+      <div class="micro">Libraries</div>
+      <div class="tags">
+        <span class="tag">Canvas API</span>
+        <span class="tag">—</span>
+      </div>
+    </div>
+    <div class="mod">
+      <div class="micro">Concepts</div>
+      <div class="tags">
+        <span class="tag">OLS</span>
+        <span class="tag">Linear algebra</span>
+        <span class="tag">Interactive visualization</span>
+      </div>
+    </div>
+    <div class="mod">
+      <div class="micro">Deploy</div>
+      <div class="tags">
+        <span class="tag">GitHub Pages</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="cell sum span-12" id="summary">
+    <div class="micro">01 // summary</div>
+    <p>An exploratory tool for understanding how ordinary least squares regression reshapes itself as new observations arrive. The user adds points to a canvas; the estimator recomputes β̂ = (XᵀX)⁻¹Xᵀy on every tick and redraws the line.</p>
+    <p>Built as a static, dependency-free page so it runs anywhere a browser does — no server, no build step, no heavy framework.</p>
+  </section>
+
+  <section class="cell content span-12" id="content">
+    <div class="head">
+      <div class="micro">02 // content</div>
+      <div class="micro">5 sections</div>
+    </div>
+
+    <section>
+      <div class="micro">§</div>
+      <h2>Motivation</h2>
+    </section>
+    <section>
+      <p>Textbook OLS is usually presented as a closed-form solution and a static residual plot. This page makes the estimator a live object: every click adds an observation, recomputes the coefficients, and redraws. The hope is that the mechanics become intuitive — leverage, influence, sensitivity to outliers — rather than abstract.</p>
+    </section>
+
+    <section>
+      <div class="micro">§</div>
+      <h2>How it works</h2>
+    </section>
+    <section>
+      <ul>
+        <li>Observations live in a small matrix X ∈ ℝⁿˣ² (intercept + x) and vector y ∈ ℝⁿ.</li>
+        <li>On every insertion, β̂ is recomputed by solving XᵀXβ̂ = Xᵀy with a 2×2 inverse.</li>
+        <li>The canvas redraws the fit line and the residual segments for every point.</li>
+      </ul>
+    </section>
+    <section>
+      <div class="micro">javascript</div>
+      <pre>// Closed-form OLS for a simple 1D regression.
+function fit(points) {
+  const n = points.length;
+  if (n &lt; 2) return null;
+  let sx = 0, sy = 0, sxx = 0, sxy = 0;
+  for (const [x, y] of points) {
+    sx += x; sy += y; sxx += x*x; sxy += x*y;
+  }
+  const mx = sx / n, my = sy / n;
+  const slope     = (sxy - n*mx*my) / (sxx - n*mx*mx);
+  const intercept = my - slope * mx;
+  return { slope, intercept };
+}</pre>
+    </section>
+
+    <section>
+      <div class="micro">fig · live demo</div>
+      <div class="figure-box">// figure placeholder //</div>
+      <div class="figcaption">Fig. 1 — An embedded preview of the simulator. Click anywhere in the canvas to add a point.</div>
+    </section>
+
+    <section>
+      <div class="micro">§</div>
+      <h2>What I learned</h2>
+    </section>
+    <section>
+      <ul>
+        <li>How quickly OLS breaks under leverage — one point far from the mean of x can tilt the line dramatically.</li>
+        <li>That the same estimator, rendered interactively, makes asymptotic arguments feel local and concrete.</li>
+        <li>A small amount of animation (≈200 ms ease on the line) makes each update legible.</li>
+      </ul>
+    </section>
+
+    <section class="note">
+      <div class="label">note · next</div>
+      <p>Planned: switch between OLS, ridge, and Theil–Sen in the same canvas. A residuals panel that updates beside the fit. A small bootstrap button that draws 100 resamples and shows the pencil of fitted lines.</p>
+    </section>
+  </section>
+
+  <section class="cell subnav span-12">
+    <a href="../../">← back to work_log</a>
+    <span class="trail">piotr-marciniak.com / statistics</span>
+  </section>
+
+</div>
+
+<footer>
+  <span>© 2026 piotr-marciniak.com</span>
+  <span>set in Inter &amp; JetBrains Mono</span>
+</footer>
+
+<script src="../../dark.js"></script>
+</body>
+</html>

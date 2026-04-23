@@ -1,114 +1,150 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Piotr Marciniak</title>
-  <link rel="icon" type="image/png" href="files/logo.png" />
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      line-height: 1.6;
-      background-color: #f4f4f4;
-      color: #333;
-    }
-    nav ul {
-      list-style: none;
-      display: flex;
-      justify-content: center;
-      background: #444;
-    }
-    nav ul li {
-      margin: 0 15px;
-    }
-    nav ul li a {
-      color: #fff;
-      text-decoration: none;
-      padding: 14px 20px;
-      display: block;
-    }
-    nav ul li a:hover {
-      background: #555;
-    }
-    section {
-      padding: 40px 20px;
-      max-width: 1000px;
-      margin: auto;
-    }
-    footer {
-      text-align: center;
-      padding: 20px;
-      background: #333;
-      color: #fff;
-    }
-  
-    nav ul { align-items: center; }
-    #dark-toggle {
-      background: none;
-      border: 1px solid rgba(255,255,255,0.4);
-      color: #fff;
-      padding: 6px 12px;
-      cursor: pointer;
-      font-family: inherit;
-      font-size: 14px;
-      border-radius: 4px;
-    }
-    #dark-toggle:hover { background: rgba(255,255,255,0.15); }
-    body.dark { background-color: #1a1a1a; color: #e0e0e0; }
-    body.dark nav ul { background: #222; }
-    body.dark footer { background: #111; }
-    body.dark a { color: #6aabf7; }
-  </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Piotr Marciniak — statistics &amp; machine learning</title>
+  <meta name="description" content="Piotr Marciniak — statistics student, AI/ML focus. Notes, projects, and writing." />
+  <!-- pre-paint dark toggle to avoid flash -->
+  <script>
+    try { var t=localStorage.getItem('theme')||'grain'; if(t) document.documentElement.setAttribute('data-theme',t); } catch(e){}
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <script>if(localStorage.getItem('dark')==='1')document.body.classList.add('dark');</script>
-  <nav>
-    <ul>
-      <li><a href="#about">About</a></li>
-      <li><a href="#projects">Projects</a></li>
-      <li><a href="#contact">Contact</a></li>
-      <li><button id="dark-toggle" onclick="toggleDark()">Dark</button></li>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="left">
+    <div class="theme-switcher">
+      <button class="theme-dot" data-theme="stone" onclick="setTheme('stone')" title="stone"></button>
+      <button class="theme-dot" data-theme="dark"  onclick="setTheme('dark')"  title="dark"></button>
+      <button class="theme-dot" data-theme="ocean" onclick="setTheme('ocean')" title="ocean"></button>
+      <button class="theme-dot" data-theme="grain" onclick="setTheme('grain')" title="grain"></button>
+      <span class="theme-label">themes</span>
+    </div>
+    <span class="host">piotr@marciniak</span>
+    <span class="path">~/site</span>
+    <span class="sep">·</span>
+    <span class="ver">v2026.04</span>
+  </div>
+  <div class="right">
+    <a href="#about">01 about</a>
+    <a href="#now">02 now</a>
+    <a href="#work">03 work</a>
+    <a href="#contact">04 contact</a>
+  </div>
+</div>
+
+<div class="grid">
+
+  <!-- IDENTITY -->
+  <section class="cell identity span-8">
+    <div class="micro">// identity</div>
+    <h1>Piotr Marciniak</h1>
+    <div class="tagline"><span class="gt">&gt;</span> statistics.student · ai_ml.focus</div>
+    <p>I study the math behind modern ML — optimization, high-dimensional inference, kernels, neural nets.</p>
+    <div class="formulas" aria-hidden="true"><span class="sym">β̂</span> = (XᵀX)⁻¹Xᵀy
+<span class="sym">‖θ‖₂</span> ≤ t
+<span class="sym">f(x)</span> ≈ ∑ αᵢ k(x, xᵢ)</div>
+  </section>
+
+  <!-- STATUS -->
+  <section class="cell status span-4">
+    <div class="micro">// status</div>
+    <div class="row"><span class="k">role</span><span class="v">Statistics · MSc</span></div>
+    <div class="row"><span class="k">place</span><span class="v">ETH Zürich</span></div>
+    <div class="row"><span class="k">location</span><span class="v">Warsaw/Zürich · CET</span></div>
+    <div class="row"><span class="k">email</span><span class="v"><a href="mailto:contact@piotr-marciniak.com">contact@piotr-marciniak.com</a></span></div>
+    <div class="row"><span class="k">github</span><span class="v"><a href="https://github.com/Featres">/Featres</a></span></div>
+    <div class="spacer"></div>
+    <a class="cv" href="files/main.pdf">↓ download cv.pdf</a>
+  </section>
+
+  <!-- ABOUT -->
+  <section class="cell about span-7" id="about">
+    <div class="micro">01 // about</div>
+    <p>Statistics student at ETH Zürich. Before that, Data Science &amp; AI at Maastricht University.</p>
+    <div class="micro sub">interests</div>
+    <ul class="coursework">
+      <li><span class="mark">[x]</span> Statistical learning theory</li>
+      <li><span class="mark">[x]</span> Linear models</li>
+      <li><span class="mark">[~]</span> Triathlon</li>
+      <li><span class="mark">[x]</span> Regularization</li>
+      <li><span class="mark">[x]</span> Predictive modelling</li>
+      <li><span class="mark">[~]</span> Chess</li>
     </ul>
-  </nav>
-
-  <section id="about">
-    <h2>About Me</h2>
-    <a href="files/main.pdf" download>My CV - download</a>
   </section>
 
-  <section id="projects">
-    <h2>Projects</h2>
-    <p>Here are a few projects I've worked on recently:</p>
-    <ul>
-      <li><a href="https://piotr-marciniak.com/statistics">Statistics</a></li>
-      <li><a href="https://piotr-marciniak.com/studying">Studying</a></li>
-    </ul>
+  <!-- NOW 2x2 -->
+  <section class="cell now span-5" id="now">
+    <div class="head"><div class="micro">02 // currently</div></div>
+    <div class="item a"><div class="micro">Current projects</div><div class="v">Athena</div></div>
+    <div class="item b" style="grid-row: span 2; border-bottom: none;">
+      <div class="micro">Courses</div>
+      <ul class="now-list">
+        <li>Introduction to Machine Learning</li>
+        <li>Convex Optimization</li>
+        <li>Computational Statistics</li>
+        <li>High-Dimensional Statistics</li>
+        <li>Core Concepts in Statistical Learning</li>
+      </ul>
+    </div>
+    <div class="item c"><div class="micro">Notes</div><div class="v"><a href="studying/" style="text-decoration:none;color:inherit;">Study notes</a></div></div>
   </section>
 
-  <section id="contact">
-    <h2>Contact Me</h2>
-    <p>contact@piotr-marciniak.com</p>
+  <!-- WORK LOG -->
+  <section class="cell worklog span-12" id="work">
+    <div class="head">
+      <div class="micro">03 // work_log</div>
+      <div class="micro">3 entries</div>
+    </div>
+    <div class="columns">
+      <span>#</span>
+      <span>project</span>
+      <span>title</span>
+      <span class="hide-sm">summary</span>
+      <span class="arrow">↗</span>
+    </div>
+    <a class="entry" href="athena/">
+      <span class="n">/01</span>
+      <span class="project">Athena</span>
+      <span class="title">Personal project</span>
+      <span class="summary hide-sm">Personal quant research project — 145-feature pipeline across technical, fundamental, sentiment, and peer layers; XGBoost/LSTM models; walk-forward backtesting; ranked daily forecasts.</span>
+      <span class="arrow">↗</span>
+    </a>
+    <a class="entry" href="optimsim/">
+      <span class="n">/02</span>
+      <span class="project">OptimSim</span>
+      <span class="title">Data Analyst</span>
+      <span class="summary hide-sm">Part-time analyst role — warehouse optimization, anomaly detection, scheduling analysis, simulation, and automated reporting. Jun 2024 – Mar 2026.</span>
+      <span class="arrow">↗</span>
+    </a>
+    <a class="entry" href="sibelco/">
+      <span class="n">/03</span>
+      <span class="project">Sibelco</span>
+      <span class="title">Research Intern</span>
+      <span class="summary hide-sm">Two-year KE@Work internship — ball mill energy optimization via predictive modeling, time-series analysis, data quality engineering, and automated setpoint control. Sep 2023 – Jul 2025.</span>
+      <span class="arrow">↗</span>
+    </a>
   </section>
 
-  <footer>
-  <p>&copy; 2026 Piotr Marciniak. All rights reserved.</p>
+  <!-- CONTACT -->
+  <section class="cell contact span-12" id="contact">
+    <div class="micro">04 // contact</div>
+    <div class="heading">Want to talk? → <a href="mailto:contact@piotr-marciniak.com">contact@piotr-marciniak.com</a></div>
+  </section>
+
+</div>
+
+<footer>
+  <span>© 2026 piotr-marciniak.com</span>
+  <span>set in Inter &amp; JetBrains Mono</span>
 </footer>
-  <script>
-    function toggleDark() {
-      const d = document.body.classList.toggle('dark');
-      localStorage.setItem('dark', d ? '1' : '0');
-      const btn = document.getElementById('dark-toggle');
-      if (btn) btn.textContent = d ? 'Light' : 'Dark';
-    }
-    (function() {
-      const btn = document.getElementById('dark-toggle');
-      if (btn) btn.textContent = document.body.classList.contains('dark') ? 'Light' : 'Dark';
-    })();
-  </script>
+
+<script src="dark.js"></script>
 </body>
 </html>

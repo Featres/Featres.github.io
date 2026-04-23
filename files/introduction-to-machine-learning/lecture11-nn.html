@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IML – Lecture 11: Introduction to Neural Networks</title>
+  <link rel="icon" type="image/png" href="../../files/logo.png" />
+  <script>
+    try { var t=localStorage.getItem('theme')||'grain'; if(t) document.documentElement.setAttribute('data-theme',t); } catch(e){}
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../styles.css" />
+  <link rel="stylesheet" href="../../lecture.css" />
+  <script>
+      MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\(', '\)']],
+          displayMath: [['$$', '$$'], ['\[', '\]']]
+        },
+        svg: { fontCache: 'global' }
+      };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+<body>
+<div class="topbar">
+  <div class="left">
+    <div class="theme-switcher">
+      <button class="theme-dot" data-theme="stone" onclick="setTheme('stone')" title="stone"></button>
+      <button class="theme-dot" data-theme="dark"  onclick="setTheme('dark')"  title="dark"></button>
+      <button class="theme-dot" data-theme="ocean" onclick="setTheme('ocean')" title="ocean"></button>
+      <button class="theme-dot" data-theme="grain" onclick="setTheme('grain')" title="grain"></button>
+      <span class="theme-label">themes</span>
+    </div>
+    <span class="host">piotr@marciniak</span>
+    <span class="path">~/files/iml</span>
+  </div>
+  <div class="right">
+    <a href="../../">← home</a>
+    <a href="../../studying/">← notes</a>
+  </div>
+</div>
+
+
+<header>
+  <h1>Lecture 11: Introduction to Neural Networks</h1>
+  <div class="meta">
+    <span>Course: Introduction to Machine Learning (IML)</span>
+    <span>Lecture 11</span>
+    <span>Prof. Andreas Krause, ETH Zürich</span>
+  </div>
+</header>
+
+<main>
+
+<!-- Overview -->
+<section>
+  <p>
+    This lecture introduces <strong>artificial neural networks (ANNs)</strong>, the foundational architecture behind modern deep learning. The key idea is deceptively simple: instead of hand-designing feature transformations (as in kernel methods or polynomial features), neural networks <em>learn</em> the features directly from data. We cover the general architecture, the algorithms for making predictions (forward propagation) and training the network (backward propagation), and discuss the most common activation functions.
+  </p>
+</section>
+
+<!-- Section 1: Motivation -->
+<section>
+  <h2>1. Motivation — From Fixed to Learned Features</h2>
+
+  <p>
+    In earlier lectures, we saw how non-linear feature maps $\phi(x)$ allow linear models to capture non-linear relationships. Given a feature map $\phi: \mathbb{R}^d \to \mathbb{R}^p$, the model is $f(x) = w^T \phi(x)$, and we optimize over the weights $w$ while $\phi$ stays fixed.
+  </p>
+  <p>
+    The core problem: designing good features by hand is difficult. For something like handwritten digit recognition, it's unclear what features will generalize well — shifting a digit by a few pixels can completely change hand-crafted features even though the label hasn't changed.
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Key Insight — Neural Networks Learn Features</div>
+    <p>
+      Instead of fixing $\phi$ and only optimizing $w$, neural networks optimize <strong>both</strong> the feature map $\phi$ (parameterized by $\Theta$) and the output weights $w$ jointly:
+    </p>
+    <div class="math-block">
+      $$\hat{w}, \hat{\Theta} = \arg\min_{w \in \mathbb{R}^m,\, \Theta \in \mathbb{R}^{m \times d}} \frac{1}{n}\sum_{i=1}^{n} \ell\!\left(w^T \phi(x_i;\,\Theta),\; y_i\right)$$
+    </div>
+    <p>This is the fundamental difference: the features themselves are learned from the training data.</p>
+  </div>
+</section>
+
+<!-- Section 2: Architecture -->
+<section>
+  <h2>2. Architecture of a Neural Network</h2>
+
+  <h3>2.1 The Single Hidden Layer Network</h3>
+  <p>
+    The simplest ANN uses parameterized feature maps of the form $\phi_j(x;\,\theta_j) = \varphi(\theta_j^T x)$, where $\varphi: \mathbb{R} \to \mathbb{R}$ is a fixed nonlinear <em>activation function</em> and $\theta_j \in \mathbb{R}^d$ are learned parameters. In matrix form: $\phi(x;\,\Theta) = \varphi(\Theta x)$, where $\Theta \in \mathbb{R}^{m \times d}$ and $\varphi$ is applied element-wise.
+  </p>
+  <p>The network then outputs:</p>
+  <div class="math-block">
+    $$f(x;\, w, \Theta) = \sum_{j=1}^{m} w_j \,\varphi\!\left(\theta_j^T x\right)$$
+  </div>
+  <p>
+    Such nested functions — where learnable linear maps alternate with fixed nonlinearities — are called <strong>artificial neural networks</strong> (ANNs), also known as <strong>multi-layer perceptrons</strong> (MLPs).
+  </p>
+
+  <h3>2.2 How a Single-Layer Network Works</h3>
+  <p>The computation inside a one-hidden-layer network proceeds in three steps:</p>
+  <ol>
+    <li><strong>Input:</strong> The network receives a $d$-dimensional vector $x = (x_1, \ldots, x_d)$.</li>
+    <li><strong>Linear transform + activation:</strong> For each hidden unit $i = 1, \ldots, m$, compute the pre-activation $z_i = \sum_{j=1}^{d} \theta_{i,j}\, x_j$ (or $z = \Theta x$ in matrix form), then apply the activation: $h_i = \varphi(z_i)$. The number $m$ of hidden units is called the <strong>width</strong> of the layer.</li>
+    <li><strong>Output:</strong> Linearly combine the hidden units: $f = w^T h = \sum_{i=1}^{m} w_i\, h_i$.</li>
+  </ol>
+  <p>Bias terms $b$ are typically included, so the linear transform becomes $z = \Theta x + b$. In diagrams, bias nodes are often omitted for clarity.</p>
+
+  <h3>2.3 Going Deeper — Multiple Hidden Layers</h3>
+  <p>
+    While one hidden layer is theoretically sufficient (see the Universal Approximation Theorem below), in practice we often use deeper networks. We can increase complexity in several ways: increase the number of hidden layers (the <strong>depth</strong>), add multiple outputs (for tasks like multi-class classification), or use different activation functions across layers.
+  </p>
+  <p>
+    In a network with $L-1$ hidden layers, we denote the weight matrix and bias of the $l$-th layer by $W^{(l)}$ and $b^{(l)}$. The full parameter set is $\Theta = \left(W^{(1)}, \ldots, W^{(L)},\, b^{(1)}, \ldots, b^{(L)}\right)$. Such networks where every unit connects to all units in the adjacent layers are called <strong>fully connected</strong> networks.
+  </p>
+</section>
+
+<!-- Section 3: Activation Functions -->
+<section>
+  <h2>3. Activation Functions</h2>
+  <p>
+    The activation function $\varphi$ introduces the necessary nonlinearity. Without it, stacking linear layers would just produce another linear function (a composition of linear maps is still linear). The most common choices are:
+  </p>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr><th>Name</th><th>Formula</th><th>Range</th><th>Key Property</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Identity</td><td>$\varphi(z) = z$</td><td>$(-\infty, \infty)$</td><td>Linear — used in the output layer for regression</td></tr>
+        <tr><td>Sigmoid</td><td>$\varphi(z) = \frac{1}{1+\exp(-z)}$</td><td>$(0, 1)$</td><td>Smooth, outputs probabilities; derivative can vanish for large $|z|$</td></tr>
+        <tr><td>Tanh</td><td>$\varphi(z) = \tanh(z) = \frac{e^z - e^{-z}}{e^z + e^{-z}}$</td><td>$(-1, 1)$</td><td>Zero-centered; also suffers from vanishing gradients</td></tr>
+        <tr><td>ReLU</td><td>$\varphi(z) = \max(0, z)$</td><td>$[0, \infty)$</td><td>Simple, avoids vanishing gradient for $z > 0$; not differentiable at 0</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout-warning">
+    <div class="callout-title">Why Nonlinearity Matters</div>
+    <p>
+      If we used the identity activation everywhere, the entire network would collapse to a single linear transformation regardless of depth: $W^{(L)} \cdots W^{(1)} x$ is still just some matrix times $x$. The nonlinear activation is what gives neural networks the ability to represent complex, non-linear decision boundaries.
+    </p>
+  </div>
+</section>
+
+<!-- Section 4: Universal Approximation -->
+<section>
+  <h2>4. Universal Approximation Theorem</h2>
+
+  <div class="callout-definition">
+    <div class="callout-title">Theorem (Cybenko, 1989) — Universal Approximation</div>
+    <p>
+      Let $f: [0,1]^d \to \mathbb{R}$ be any continuous function, and let $\varphi$ be any <em>sigmoidal</em> activation function (i.e., a continuous function with $\lim_{t \to \infty} \sigma(t) = 1$ and $\lim_{t \to -\infty} \sigma(t) = 0$). Then $f$ can be uniformly approximated by a single hidden layer network:
+    </p>
+    <div class="math-block">
+      $$\hat{f}(x) = W^{(2)} \varphi\!\left(W^{(1)} x + b^{(1)}\right)$$
+    </div>
+    <p>
+      That is, for any $\varepsilon > 0$, there exist $W^{(1)} \in \mathbb{R}^{m \times d}$, $b^{(1)} \in \mathbb{R}^m$, and $W^{(2)} \in \mathbb{R}^{1 \times m}$ such that
+      $\sup_{x \in [0,1]^d} \left|\hat{f}(x) - f(x)\right| \leq \varepsilon.$
+    </p>
+  </div>
+
+  <div class="callout-warning">
+    <div class="callout-title">Important Caveat</div>
+    <p>
+      This theorem guarantees <em>existence</em> but says nothing about how many hidden units $m$ (the width) we need — it could be astronomically large. In practice, increasing <strong>depth</strong> (more layers) is often more efficient than making a single layer extremely wide, because deep networks can exploit compositional structure in the data.
+    </p>
+  </div>
+</section>
+
+<!-- Section 5: Forward Propagation -->
+<section>
+  <h2>5. Forward Propagation</h2>
+  <p>
+    Given a network with $L-1$ hidden layers and known parameters $\Theta$, <strong>forward propagation</strong> (or "forward pass") is the algorithm that computes the output $f(x;\, \Theta)$ for a given input $x$. The idea is straightforward — unroll the nested function and iterate through the layers:
+  </p>
+  <div class="math-block">
+    $$f(x;\,\Theta) = W^{(L)}\,\varphi\!\Big(W^{(L-1)}\,\varphi\!\big(\cdots\varphi\!\left(W^{(1)}x + b^{(1)}\right)\cdots\big) + b^{(L-1)}\Big) + b^{(L)}$$
+  </div>
+
+  <div class="callout-definition">
+    <div class="callout-title">Algorithm — Forward Propagation</div>
+    <p>For an $L$-layer neural network:</p>
+    <ol>
+      <li>Set $h^{(0)} = x$ (the input)</li>
+      <li><strong>For</strong> each hidden layer $l = 1, \ldots, L-1$:
+        <ul>
+          <li>Compute the pre-activation: $z^{(l)} = W^{(l)} h^{(l-1)} + b^{(l)}$</li>
+          <li>Apply the activation: $h^{(l)} = \varphi(z^{(l)})$</li>
+        </ul>
+      </li>
+      <li>Compute the output: $f = W^{(L)} h^{(L-1)} + b^{(L)}$</li>
+      <li><strong>Return</strong> $f$</li>
+    </ol>
+  </div>
+
+  <p>
+    Notice that the activation function is <em>not</em> applied at the output layer — the final layer is simply a linear transformation. For regression, $f$ is the predicted value directly. For classification, we typically apply a decision rule like $\hat{y} = \text{sign}(f)$ or $\hat{y} = \arg\max_i f_i$.
+  </p>
+
+  <div class="callout-example">
+    <div class="callout-title">Example — Two Hidden Layers with Sigmoid Activation</div>
+    <p>Consider a network with input dimension $d=3$, two hidden layers of width 2 each, and sigmoid activation $\varphi(z) = \frac{1}{1+\exp(-z)}$.</p>
+    <p><strong>Layer 1:</strong> $h_i^{(1)} = \varphi\!\left(\sum_{k=1}^{3} w_{k,i}^{(1)} x_k\right)$ for $i = 1, 2$.</p>
+    <p><strong>Layer 2:</strong> $h_i^{(2)} = \varphi\!\left(\sum_{k=1}^{2} w_{k,i}^{(2)} h_k^{(1)}\right)$ for $i = 1, 2$.</p>
+    <p><strong>Output:</strong> $f = w_1^{(3)} h_1^{(2)} + w_2^{(3)} h_2^{(2)}$ — no activation function at the final step.</p>
+  </div>
+</section>
+
+<!-- Section 6: Backward Propagation -->
+<section>
+  <h2>6. Backward Propagation (Backpropagation)</h2>
+
+  <p>
+    Forward propagation handles inference. But how do we <em>train</em> the network? As with previous models, training means finding parameters $\Theta^*$ that minimize the empirical loss:
+  </p>
+  <div class="math-block">
+    $$\Theta^* = \arg\min_\Theta \; \mathcal{L}(\Theta;\,\mathcal{D}) = \arg\min_\Theta \; \frac{1}{n}\sum_{i=1}^{n} \ell(\Theta;\, x_i, y_i)$$
+  </div>
+  <p>
+    where $\ell$ is a loss function such as the squared loss $(y - f(x;\,\Theta))^2$ or the logistic loss $\log(1 + \exp\{-y \cdot f(x;\,\Theta)\})$.
+  </p>
+
+  <div class="callout-warning">
+    <div class="callout-title">Non-Convexity</div>
+    <p>
+      Unlike linear regression or logistic regression, the loss surface of a neural network is generally <strong>not convex</strong>. Gradient descent may converge to a local minimum, a saddle point, or even get stuck at a stationary point depending on the initialization. Despite this, gradient-based methods — particularly variants of stochastic gradient descent (SGD) — work remarkably well in practice.
+    </p>
+  </div>
+
+  <h3>6.1 The Idea: Efficient Gradient Computation via the Chain Rule</h3>
+  <p>
+    Training requires computing the gradient $\nabla_\Theta \ell$ with respect to all weights in the network. For a network with many layers, this means computing partial derivatives like $\frac{\partial \ell}{\partial w_{i,j}^{(l)}}$ for every layer $l$. Doing this naively would be extremely expensive.
+  </p>
+  <p>
+    <strong>Backpropagation</strong> solves this by exploiting the chain structure of the network. The key insight is that through repeated application of the <em>chain rule</em>, we can propagate gradient information backwards through the layers, reusing intermediate results computed during the forward pass and from subsequent layers.
+  </p>
+
+  <h3>6.2 Step-by-Step for a General Network</h3>
+  <p>Starting from the output layer and moving backwards:</p>
+
+  <p><strong>Step 1 — Last layer ($W^{(L)}$):</strong></p>
+  <div class="math-block">
+    $$\nabla_{W^{(L)}} \ell = \frac{\partial \ell}{\partial f} \cdot \frac{\partial f}{\partial W^{(L)}}$$
+  </div>
+  <p>Since $f = W^{(L)} h^{(L-1)} + b^{(L)}$, the second factor involves $h^{(L-1)}$ which was already computed during the forward pass.</p>
+
+  <p><strong>Step 2 — Previous layer ($W^{(L-1)}$):</strong></p>
+  <div class="math-block">
+    $$\nabla_{W^{(L-1)}} \ell = \frac{\partial \ell}{\partial f} \cdot \frac{\partial f}{\partial h^{(L-1)}} \cdot \frac{\partial h^{(L-1)}}{\partial z^{(L-1)}} \cdot \frac{\partial z^{(L-1)}}{\partial W^{(L-1)}}$$
+  </div>
+  <p>
+    Here $\frac{\partial h^{(L-1)}}{\partial z^{(L-1)}} = \text{diag}\!\left(\varphi'(z^{(L-1)})\right)$ — a diagonal matrix of the activation function's derivatives. The first two factors were already computed in Step 1 and can be reused.
+  </p>
+
+  <p><strong>General pattern — Layer $l$:</strong></p>
+  <div class="math-block">
+    $$\nabla_{W^{(l)}} \ell = \frac{\partial \ell}{\partial f} \cdot \frac{\partial f}{\partial z^{(L-1)}} \cdot \frac{\partial z^{(L-1)}}{\partial z^{(L-2)}} \cdots \frac{\partial z^{(l+1)}}{\partial z^{(l)}} \cdot \frac{\partial z^{(l)}}{\partial W^{(l)}}$$
+  </div>
+  <p>
+    At each step, only <strong>one new factor</strong> needs to be computed — everything else is reused from the forward pass or from the previous backpropagation step. This is what makes the algorithm efficient.
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Backpropagation — Matrix Form Summary</div>
+    <p>Define the "error signal" $\delta^{(l)}$ at layer $l$:</p>
+    <ol>
+      <li><strong>Output layer:</strong> $\delta^{(L)} = \nabla_f \ell$</li>
+      <li><strong>Hidden layers</strong> (for $l = L-1, L-2, \ldots, 1$):
+        $\delta^{(l)} = \varphi'(z^{(l)}) \odot \left({W^{(l+1)}}^T \delta^{(l+1)}\right)$
+        where $\odot$ denotes element-wise multiplication.</li>
+    </ol>
+    <p>The gradient with respect to the weights at layer $l$ is then: $\nabla_{W^{(l)}} \ell = \delta^{(l)} \cdot {h^{(l-1)}}^T$</p>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Intuition — Why "Backward"?</div>
+    <p>
+      The name "backpropagation" comes from the fact that we start computing gradients at the output and propagate them backwards, layer by layer, towards the input. Each layer's gradient builds on the gradient of the layer above it. This is simply a systematic application of the multivariate chain rule.
+    </p>
+  </div>
+</section>
+
+<!-- Section 7: Vanishing / Exploding Gradients -->
+<section>
+  <h2>7. Vanishing and Exploding Gradients</h2>
+  <p>
+    A critical practical concern is that the gradient factors $\text{diag}\!\left(\varphi'(z^{(l)})\right)$ and the weight matrices $W^{(l)}$ are multiplied together across layers. If these products shrink at each layer, the gradient signal becomes vanishingly small in the early layers (<strong>vanishing gradients</strong>). If they grow, the gradient can blow up (<strong>exploding gradients</strong>). In either case, optimization fails.
+  </p>
+
+  <h3>7.1 The Role of Activation Functions</h3>
+  <p>
+    The sigmoid activation has derivative $\varphi'(z) = \varphi(z)(1 - \varphi(z))$, which peaks at $0.25$ (when $z = 0$) and approaches zero rapidly for large $|z|$. This means that in deep networks with sigmoid activations, gradients tend to shrink exponentially with depth — a primary reason for the "vanishing gradient problem."
+  </p>
+  <p>
+    The <strong>ReLU</strong> activation $\varphi(z) = \max(0, z)$ has derivative $\varphi'(z) = 1$ for $z > 0$ and $\varphi'(z) = 0$ for $z < 0$. For positive pre-activations, the gradient passes through unchanged, which helps mitigate vanishing gradients. This is one of the main reasons ReLU became the default activation in deep networks.
+  </p>
+
+  <h3>7.2 Weight Initialization</h3>
+  <p>
+    Even with good activation functions, poorly initialized weights can cause the hidden layer activations $h^{(l)}$ to grow or shrink as they propagate through layers, which also affects gradient magnitudes. The solution is to initialize weights randomly with carefully chosen variance.
+  </p>
+  <p>
+    For a one-hidden-layer network with ReLU activation and $d$ inputs with zero mean and unit variance: if the weights $w_i$ are drawn i.i.d. with zero mean and variance $\sigma^2$, then $\text{Var}(h_j) = \frac{d \,\sigma^2}{2}$. To keep the variance of activations roughly constant across layers, we should set $\sigma^2 = \frac{2}{d}$. This principle generalizes to the well-known <strong>He initialization</strong> scheme used in practice.
+  </p>
+</section>
+
+<!-- Section 8: Optimization Practicalities -->
+<section>
+  <h2>8. Training in Practice</h2>
+  <p>
+    Since the loss surface is non-convex, gradient descent's convergence depends heavily on initialization. In practice, we use <strong>minibatch stochastic gradient descent (SGD)</strong>: at each iteration, compute the gradient on a small random subset $S$ of training points rather than all $n$, making each step much cheaper:
+  </p>
+  <div class="math-block">
+    $$\Theta_{t+1} = \Theta_t - \eta \cdot \frac{1}{|S|} \sum_{i \in S} \nabla_\Theta \,\ell(\Theta_t;\, x_i, y_i)$$
+  </div>
+  <p>
+    The stochasticity in SGD is actually beneficial — the noise in gradient estimates can help the optimizer escape saddle points and poor local minima. Modern deep learning frameworks like PyTorch and TensorFlow implement <strong>automatic differentiation</strong>, so in practice you specify the network architecture and the framework computes all gradients via backpropagation automatically.
+  </p>
+</section>
+
+<!-- Key Takeaways -->
+<section>
+  <h2>Key Takeaways</h2>
+  <ul>
+    <li><strong>Neural networks learn features from data</strong> — unlike kernel methods or polynomial features, both the feature map $\phi$ and the output weights $w$ are optimized jointly during training.</li>
+    <li><strong>Architecture:</strong> An ANN is a nested composition of learnable linear transformations and fixed nonlinear activation functions. Key design choices are the width (units per layer), depth (number of layers), and activation functions.</li>
+    <li><strong>Forward propagation</strong> computes the network's output by iterating layer-by-layer from input to output, alternating linear transforms with activation functions.</li>
+    <li><strong>Backpropagation</strong> efficiently computes gradients by applying the chain rule backwards through the layers, reusing computations from the forward pass and from later layers.</li>
+    <li><strong>Activation function choice and weight initialization</strong> are critical to avoid vanishing or exploding gradients, especially in deep networks. ReLU and careful random initialization (e.g., He initialization) are standard remedies.</li>
+  </ul>
+</section>
+
+</main>
+
+<footer>
+  <span>© 2026 piotr-marciniak.com</span>
+  <span>set in Inter &amp; JetBrains Mono</span>
+</footer>
+<script src="../../dark.js"></script>
+</body>
+</html>

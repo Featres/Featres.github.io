@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IML – Lecture 13: Neural Networks 3</title>
+  <link rel="icon" type="image/png" href="../../files/logo.png" />
+  <script>
+    try { var t=localStorage.getItem('theme')||'grain'; if(t) document.documentElement.setAttribute('data-theme',t); } catch(e){}
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../styles.css" />
+  <link rel="stylesheet" href="../../lecture.css" />
+  <script>
+      MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\(', '\)']],
+          displayMath: [['$$', '$$'], ['\[', '\]']]
+        },
+        svg: { fontCache: 'global' }
+      };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+<body>
+<div class="topbar">
+  <div class="left">
+    <div class="theme-switcher">
+      <button class="theme-dot" data-theme="stone" onclick="setTheme('stone')" title="stone"></button>
+      <button class="theme-dot" data-theme="dark"  onclick="setTheme('dark')"  title="dark"></button>
+      <button class="theme-dot" data-theme="ocean" onclick="setTheme('ocean')" title="ocean"></button>
+      <button class="theme-dot" data-theme="grain" onclick="setTheme('grain')" title="grain"></button>
+      <span class="theme-label">themes</span>
+    </div>
+    <span class="host">piotr@marciniak</span>
+    <span class="path">~/files/iml</span>
+  </div>
+  <div class="right">
+    <a href="../../">← home</a>
+    <a href="../../studying/">← notes</a>
+  </div>
+</div>
+
+
+<header>
+  <h1>Neural Networks 3: Training Techniques & Regularization</h1>
+  <div class="meta">
+    <span>Course: Introduction to Machine Learning</span>
+    <span>Lecture 13</span>
+    <span>Spring 2026, Prof. Andreas Krause</span>
+  </div>
+</header>
+
+<main>
+
+<section>
+  <p>
+    This lecture addresses the practical challenges of training deep neural networks. Building on the backpropagation and architecture foundations from Lectures 11–12, we now tackle three critical questions: how should we <strong>initialize</strong> weights, how should we <strong>tune the learning rate</strong> and optimizer, and how do we <strong>prevent overfitting</strong> in models with millions of parameters? The lecture also introduces <strong>convolutional neural networks (CNNs)</strong> as a specialized architecture for image data.
+  </p>
+</section>
+
+<!-- ======== SECTION 1: Weight Initialization ======== -->
+<section>
+  <h2>1. Weight Initialization</h2>
+
+  <h3>1.1 Why Initialization Matters</h3>
+  <p>
+    Because the NN loss function is <strong>non-convex</strong>, the starting point of optimization directly affects where gradient descent converges. If we initialize all weights to the same value (e.g., zero), every hidden unit computes the same thing and receives the same gradient — the network can never break this symmetry. Random initialization breaks this symmetry, but we still need to be careful about the <em>scale</em> of the random values.
+  </p>
+
+  <h3>1.2 The Vanishing & Exploding Gradients Problem</h3>
+  <p>
+    Recall from backpropagation that the gradient with respect to the weights at layer $l$ is:
+  </p>
+  <div class="math-block">
+    $$\nabla_{W^{(l)}} \ell = \frac{\partial \ell}{\partial f} \cdot \frac{\partial f}{\partial h^{(l)}} \cdot \frac{\partial h^{(l)}}{\partial z^{(l)}} \cdot \frac{\partial z^{(l)}}{\partial W^{(l)}}$$
+  </div>
+  <p>
+    This is a <strong>product of many terms</strong> — one for each layer the signal has to pass through. If the individual factors are consistently greater than 1, the product grows exponentially (<span class="highlight">exploding gradients</span>). If they are consistently less than 1, the product shrinks to zero (<span class="highlight">vanishing gradients</span>). Either scenario makes training fail: exploding gradients cause divergence, while vanishing gradients cause the early layers to stop learning entirely.
+  </p>
+
+  <div class="callout-warning">
+    <div class="callout-title">Key Insight</div>
+    <p>The factors $\text{diag}(\varphi'(z^{(l)}))$ and the activations $h^{(l-1)}$ both appear in the gradient chain. If the norms of these vectors grow or shrink uncontrollably across layers, optimization breaks down. This is why both the <em>activation function</em> and the <em>weight scale</em> matter so much.</p>
+  </div>
+
+  <h3>1.3 Activation Function Choice</h3>
+  <p>
+    The <strong>sigmoid</strong> activation $\varphi(z) = \frac{1}{1+e^{-z}}$ has a derivative $\varphi'(z) = \varphi(z)(1-\varphi(z))$ that is essentially zero outside a narrow band around $z=0$. This makes it prone to vanishing gradients in deep networks. The <strong>ReLU</strong> activation $\varphi(z) = \max(z, 0)$ has derivative 1 for positive inputs and 0 for negative ones — the gradient neither amplifies nor shrinks for active units, which generally helps training.
+  </p>
+
+  <h3>1.4 Initialization Schemes</h3>
+  <p>
+    The goal of smart initialization is to keep the <strong>variance of activations approximately constant</strong> across layers, so that signals and gradients neither explode nor vanish at the start of training.
+  </p>
+
+  <div class="callout-example">
+    <div class="callout-title">Intuition: A Single-Layer Example</div>
+    <p>Consider one hidden unit with ReLU and $d$ inputs $x_1, \ldots, x_d$ (zero-mean, unit variance). If weights are drawn i.i.d. from $\mathcal{N}(0, \sigma^2)$, then the pre-activation $Z = \sum_{i=1}^d w_i x_i$ has variance $d \cdot \sigma^2$. After ReLU, $\mathbb{E}[\max(Z,0)^2] = \frac{1}{2} d \sigma^2$. Setting $\sigma^2 = 2/d$ makes the output variance equal to 1 — matching the input variance.</p>
+  </div>
+
+  <p>
+    This reasoning extends to practical initialization schemes used in deep networks:
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Xavier / Glorot Initialization (for tanh)</div>
+    <p>Draw each weight from $w_{i,j} \sim \mathcal{N}\!\left(0, \frac{1}{n_{\text{in}}}\right)$ or $w_{i,j} \sim \mathcal{N}\!\left(0, \frac{2}{n_{\text{in}} + n_{\text{out}}}\right)$, where $n_{\text{in}}$ and $n_{\text{out}}$ are the number of incoming and outgoing units of the layer.</p>
+  </div>
+
+  <div class="callout-definition">
+    <div class="callout-title">He Initialization (for ReLU)</div>
+    <p>Draw each weight from $w_{i,j} \sim \mathcal{N}\!\left(0, \frac{2}{n_{\text{in}}}\right)$. The factor of 2 accounts for ReLU zeroing out roughly half of the inputs.</p>
+  </div>
+</section>
+
+<!-- ======== SECTION 2: Learning Rate & Momentum ======== -->
+<section>
+  <h2>2. Learning Rate & Momentum</h2>
+
+  <h3>2.1 Choosing the Learning Rate</h3>
+  <p>
+    The SGD update rule is $W \leftarrow W - \eta_t \nabla_W \ell(W; x, y)$. The learning rate $\eta_t$ is perhaps the single most important hyperparameter:
+  </p>
+  <ul>
+    <li><strong>Too small:</strong> Convergence is painfully slow — you waste computation without making meaningful progress toward the minimum.</li>
+    <li><strong>Too large:</strong> SGD overshoots the minimum and may diverge entirely, bouncing farther and farther away from good solutions.</li>
+  </ul>
+
+  <h4>Learning Rate Schedules</h4>
+  <p>
+    In practice, a common strategy is to use a <strong>decaying learning rate schedule</strong>. The intuition is straightforward: at the beginning of training, the parameters are far from any good solution, so we want large steps to make quick progress. As we get closer to a minimum, we want smaller steps to avoid overshooting. Popular choices include piecewise constant decay (drop the rate by a factor at set epochs) and linear or cosine decay.
+  </p>
+
+  <h4>Monitoring the Update Ratio</h4>
+  <p>
+    A useful diagnostic is to track the ratio of the gradient norm to the weight norm: $\frac{\|\nabla_\Theta L(\Theta; \mathcal{D})\|}{\|\Theta\|_2}$. If this ratio is very small, the updates are negligible relative to the weights, suggesting the learning rate should increase. If it's very large, the opposite applies.
+  </p>
+
+  <h3>2.2 Momentum</h3>
+  <p>
+    Plain SGD often oscillates erratically, especially in loss landscapes where the curvature differs a lot across directions (ill-conditioned landscapes). <strong>Momentum</strong> smooths out these oscillations by incorporating information from past update directions:
+  </p>
+  <div class="math-block">
+    $$\mathbf{d} \leftarrow m \cdot \mathbf{d} + \eta_t \nabla_W \ell(W; x, y)$$
+    $$W \leftarrow W - \mathbf{d}$$
+  </div>
+  <p>
+    Here $m \in [0, 1)$ is the momentum coefficient. The vector $\mathbf{d}$ accumulates a running average of past gradients (with exponential decay). The effect is that consistent gradient directions get reinforced, while oscillating components cancel out — leading to faster, more stable convergence.
+  </p>
+
+  <div class="callout-warning">
+    <div class="callout-title">Practical Note</div>
+    <p>There are also <strong>adaptive methods</strong> (AdaGrad, RMSProp, Adam) that maintain per-parameter learning rates. The core idea: coordinates that have already changed a lot get a smaller effective step size. These are very popular in modern deep learning and often work well out of the box with less learning rate tuning.</p>
+  </div>
+</section>
+
+<!-- ======== SECTION 3: Regularization ======== -->
+<section>
+  <h2>3. Regularization in Neural Networks</h2>
+  <p>
+    Neural networks can have thousands to millions of parameters, which makes them highly expressive but also prone to <strong>overfitting</strong>. This section covers the main countermeasures.
+  </p>
+
+  <h3>3.1 Weight Decay (L2 Regularization)</h3>
+  <p>
+    Just like ridge regression, we add a penalty term that discourages large weights:
+  </p>
+  <div class="math-block">
+    $$\Theta^* = \arg\min_\Theta \sum_{i=1}^{n} \ell(\Theta; x_i, y_i) + \lambda \|\Theta\|_2^2$$
+  </div>
+  <p>
+    The hyperparameter $\lambda > 0$ controls the strength of the penalty. Larger $\lambda$ pushes weights toward zero, reducing model complexity at the cost of potentially underfitting. This technique is also called <strong>weight decay</strong> because the gradient of the penalty term $2\lambda \Theta$ effectively "decays" the weights a little at every step.
+  </p>
+
+  <h3>3.2 Early Stopping</h3>
+  <p>
+    Instead of training until the optimization converges fully, we monitor the model's performance on a <strong>validation set</strong> during training. When the training error keeps going down but the validation error starts to rise, the model is beginning to overfit. We stop training right before this point and use the model from that epoch.
+  </p>
+
+  <div class="callout-example">
+    <div class="callout-title">Why does this work?</div>
+    <p>Early stopping effectively limits how far the parameters can travel from their initialization. Since the parameters start small (from random initialization), stopping early means the learned function stays relatively "simple." This acts as an implicit form of regularization — conceptually similar to constraining the norm of the weight vector.</p>
+  </div>
+
+  <h3>3.3 Dropout</h3>
+  <p>
+    Dropout (Srivastava et al., 2014) is a regularization technique unique to neural networks. The idea is elegant: during each iteration of SGD, we randomly "drop out" (remove) each hidden unit independently with probability $1-p$. The remaining sub-network is trained normally. In the next iteration, a different random subset of units is dropped.
+  </p>
+
+  <h4>Training Phase</h4>
+  <p>
+    For each SGD step, every hidden unit is kept with probability $p$ and deleted with probability $1-p$. The weights associated with deleted units are frozen for that step. Only the surviving sub-network receives gradient updates.
+  </p>
+
+  <h4>Test Phase</h4>
+  <p>
+    At test time, <strong>all units are used</strong> (no dropout), but all weights are multiplied by $p$ to compensate. The reasoning: during training, each unit was active only a fraction $p$ of the time, so its weights were calibrated for a network where roughly $p$ fraction of units are active. Multiplying by $p$ ensures the expected activation magnitude matches what was seen during training.
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Why Dropout Works — Intuition</div>
+    <p>Dropout prevents units from <strong>co-adapting</strong> — relying too heavily on specific other units. Since any unit may be absent in a given training step, each unit must learn features that are useful on their own, in combination with many different random subsets of other units. This encourages more robust, generalizable representations. You can also think of it as training an exponential number of different "thinned" networks simultaneously, then averaging their predictions at test time.</p>
+  </div>
+</section>
+
+<!-- ======== SECTION 4: Batch Normalization ======== -->
+<section>
+  <h2>4. Batch Normalization</h2>
+
+  <h3>4.1 Motivation</h3>
+  <p>
+    We normalize input data (zero mean, unit variance) as a standard preprocessing step — it helps optimization converge faster. But in deep networks, each layer receives input from the previous layer, and as the weights change during training, the distribution of these intermediate inputs keeps shifting. This phenomenon is called <strong>internal covariate shift</strong>. Weight initialization helps at the start, but after a few SGD steps the weights may drift far from their initial values, and the benefits of careful initialization are lost.
+  </p>
+
+  <h3>4.2 The Batch Normalization Layer</h3>
+  <p>
+    Batch normalization (Ioffe & Szegedy, 2015) addresses this by standardizing activations <em>during training</em>, not just at initialization. It is inserted as an additional layer in the network. Given a mini-batch $S$ of activation values, it computes:
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Batch Normalization — Algorithm</div>
+    <p><strong>Input:</strong> Activation values $x_j$ for all $j \in S$ in the current mini-batch.</p>
+    <p><strong>Learnable parameters:</strong> $\gamma$ (scale), $\beta$ (shift)</p>
+    <ol>
+      <li>Compute mini-batch mean: $\mu_S = \frac{1}{|S|} \sum_{j \in S} x_j$</li>
+      <li>Compute mini-batch variance: $\sigma_S^2 = \frac{1}{|S|} \sum_{j \in S} (x_j - \mu_S)^2$</li>
+      <li>Normalize: $\hat{x}_j = \frac{x_j - \mu_S}{\sqrt{\sigma_S^2 + \varepsilon}}$ (where $\varepsilon$ prevents division by zero)</li>
+      <li>Scale and shift: $\bar{x}_j = \gamma \hat{x}_j + \beta$</li>
+    </ol>
+    <p><strong>Output:</strong> $\bar{x}_j$ for all $j \in S$</p>
+  </div>
+
+  <h4>Why include learnable $\gamma$ and $\beta$?</h4>
+  <p>
+    After step 3, the activations have zero mean and unit variance. But this isn't necessarily optimal — maybe a different mean and variance would make learning easier. The learnable parameters $\gamma$ and $\beta$ give the network the flexibility to undo the normalization if that helps. Crucially, if the network "wants" mean 0 and variance 1, it simply learns $\beta = 0$ and $\gamma = 1$.
+  </p>
+
+  <h4>Test-Time Behavior</h4>
+  <p>
+    During inference, we may not have a mini-batch to compute statistics over (e.g., predicting a single example). To handle this, batch normalization maintains a <strong>moving average</strong> of the mean and variance during training (using an exponential moving average with momentum $\alpha$). At test time, these stored statistics are used instead of mini-batch statistics.
+  </p>
+
+  <h3>4.3 Benefits of Batch Normalization</h3>
+  <ul>
+    <li><strong>Reduces internal covariate shift</strong> — activation distributions stay stable during training.</li>
+    <li><strong>Enables larger learning rates</strong> — when gradients are well-behaved, we can afford bigger steps without diverging.</li>
+    <li><strong>Has a regularizing effect</strong> — because each sample's normalization depends on the other samples in its mini-batch, this introduces noise that acts like a mild regularizer.</li>
+  </ul>
+
+  <div class="callout-warning">
+    <div class="callout-title">Beyond Batch Normalization</div>
+    <p>Batch normalization is not the only normalization technique. Alternatives include <strong>Layer Normalization</strong> (normalizes across features instead of across the batch — popular in NLP/transformers), <strong>Group Normalization</strong>, <strong>Instance Normalization</strong>, and <strong>Weight Standardization</strong>. Each has different trade-offs depending on the architecture and task.</p>
+  </div>
+</section>
+
+<!-- ======== SECTION 5: CNNs ======== -->
+<section>
+  <h2>5. Convolutional Neural Networks (CNNs)</h2>
+
+  <h3>5.1 Motivation: Images as Input</h3>
+  <p>
+    In computer vision tasks, the input is a digital image represented as a grid of pixel values. A grayscale image of size $m \times n$ is a matrix; an RGB image is a tensor of shape $m \times n \times 3$ (one matrix per color channel). We could flatten this into a vector and feed it to a fully connected NN, but this ignores the <strong>spatial structure</strong> of images: nearby pixels are strongly correlated, while distant pixels are less so.
+  </p>
+  <p>
+    A fully connected layer connecting, say, a $100 \times 100$ image to a hidden layer of 1000 units would require $10{,}000 \times 1{,}000 = 10{,}000{,}000$ parameters — just for one layer. This is both wasteful and overfitting-prone.
+  </p>
+
+  <h3>5.2 Key Idea: Local Connectivity & Weight Sharing</h3>
+  <p>
+    CNNs replace the fully connected layers (at least in the early part of the network) with <strong>convolutional layers</strong>, which exploit two principles:
+  </p>
+  <ul>
+    <li><strong>Local connectivity:</strong> Each output unit depends only on a small local region of the input (not the entire image).</li>
+    <li><strong>Weight sharing:</strong> The same small set of weights (called a <strong>filter</strong> or <strong>kernel</strong>) is applied at every position in the image. This dramatically reduces the parameter count.</li>
+  </ul>
+
+  <h3>5.3 The Convolution Operation</h3>
+  <p>
+    Given an input (e.g., a matrix representing a grayscale image) and a small filter $W$, the convolution $x * W$ is computed by sliding $W$ across every position in $x$ and computing the dot product at each position. The result is a new matrix (often called a <strong>feature map</strong>).
+  </p>
+
+  <div class="callout-example">
+    <div class="callout-title">2D Convolution Example</div>
+    <p>Place a $3 \times 3$ filter at the top-left corner of a $7 \times 7$ image. Treat both the overlapping $3\times3$ patch and the filter as 9-dimensional vectors, and compute their dot product — that gives you the $(1,1)$ entry of the output. Slide the filter one step to the right, repeat, and so on through all positions. The result is a $5 \times 5$ feature map.</p>
+  </div>
+
+  <p>
+    For RGB images (3D tensors), the filter is also 3D (e.g., $3 \times 3 \times 3$). You still slide it across spatial positions, taking the dot product of the full 3D patch with the 3D filter at each location. Applying multiple filters gives multiple feature maps, stacked into an output tensor.
+  </p>
+
+  <h3>5.4 Padding and Stride</h3>
+  <p>
+    Two important hyperparameters control how the convolution is performed:
+  </p>
+  <ul>
+    <li><strong>Padding ($p$):</strong> Adding a frame of zeros around the border of the image. Without padding, boundary pixels participate in fewer dot products than central pixels. Padding ensures all pixels are treated more equally and can preserve the spatial dimensions of the output.</li>
+    <li><strong>Stride ($s$):</strong> The step size of the filter as it slides. A stride of 1 means the filter moves one pixel at a time; a stride of 2 means it jumps two pixels, reducing the output dimensions.</li>
+  </ul>
+
+  <div class="callout-definition">
+    <div class="callout-title">Output Dimension Formula</div>
+    <p>For an $n \times n$ image, $m$ filters of size $f \times f$, padding $p$, and stride $s$, the output tensor has dimensions:</p>
+    <div class="math-block">
+      $$\left(\frac{n + 2p - f}{s} + 1\right) \times \left(\frac{n + 2p - f}{s} + 1\right) \times m$$
+    </div>
+    <p>This requires that $s$ divides $(n + 2p - f)$.</p>
+  </div>
+
+  <h3>5.5 Putting It Together</h3>
+  <p>
+    A typical CNN alternates convolutional layers (which extract local features) with nonlinear activations and sometimes pooling layers (which downsample feature maps). The later layers may be fully connected. The key advantage over fully connected networks is a massive reduction in parameters due to weight sharing, and the architecture's natural ability to recognize patterns regardless of their position in the image (translation equivariance).
+  </p>
+</section>
+
+<!-- ======== KEY TAKEAWAYS ======== -->
+<section>
+  <h2>Key Takeaways</h2>
+  <ul>
+    <li><strong>Weight initialization</strong> must keep activation variance stable across layers. Use Xavier/Glorot for tanh, He initialization for ReLU — both derived by analyzing how variance propagates through layers.</li>
+    <li><strong>Vanishing/exploding gradients</strong> occur because the gradient is a product of many layer-wise factors. Careful initialization, activation function choice (ReLU), and batch normalization are the main countermeasures.</li>
+    <li><strong>Learning rate scheduling</strong> (decaying over time) and <strong>momentum</strong> (smoothing out oscillations by accumulating past gradient directions) are essential for efficient SGD convergence.</li>
+    <li>Neural networks are regularized via <strong>weight decay</strong> ($L_2$ penalty), <strong>early stopping</strong> (halt when validation error rises), and <strong>dropout</strong> (randomly disabling units during training to prevent co-adaptation).</li>
+    <li><strong>Batch normalization</strong> standardizes hidden activations during training, enabling larger learning rates, more stable gradients, and a mild regularization effect.</li>
+    <li><strong>CNNs</strong> exploit local connectivity and weight sharing via the convolution operation, dramatically reducing parameters and naturally capturing spatial patterns in image data.</li>
+  </ul>
+</section>
+
+</main>
+
+<footer>
+  <span>© 2026 piotr-marciniak.com</span>
+  <span>set in Inter &amp; JetBrains Mono</span>
+</footer>
+<script src="../../dark.js"></script>
+</body>
+</html>

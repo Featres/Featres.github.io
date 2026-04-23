@@ -1,0 +1,528 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>High-Dimensional Statistics – Lecture 9: Stability Selection & Multi Sample Splitting</title>
+  <link rel="icon" type="image/png" href="../../files/logo.png" />
+  <script>
+    try { var t=localStorage.getItem('theme')||'grain'; if(t) document.documentElement.setAttribute('data-theme',t); } catch(e){}
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../styles.css" />
+  <link rel="stylesheet" href="../../lecture.css" />
+  <script>
+      MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\(', '\)']],
+          displayMath: [['$$', '$$'], ['\[', '\]']]
+        },
+        svg: { fontCache: 'global' }
+      };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+<body>
+<div class="topbar">
+  <div class="left">
+    <div class="theme-switcher">
+      <button class="theme-dot" data-theme="stone" onclick="setTheme('stone')" title="stone"></button>
+      <button class="theme-dot" data-theme="dark"  onclick="setTheme('dark')"  title="dark"></button>
+      <button class="theme-dot" data-theme="ocean" onclick="setTheme('ocean')" title="ocean"></button>
+      <button class="theme-dot" data-theme="grain" onclick="setTheme('grain')" title="grain"></button>
+      <span class="theme-label">themes</span>
+    </div>
+    <span class="host">piotr@marciniak</span>
+    <span class="path">~/files/hds</span>
+  </div>
+  <div class="right">
+    <a href="../../">← home</a>
+    <a href="../../studying/">← notes</a>
+  </div>
+</div>
+
+
+<header>
+  <h1>Lecture 9 – Stability Selection &amp; Multi Sample Splitting</h1>
+  <div class="meta">
+    <span>Course: Statistics for High-Dimensional Data</span>
+    <span>Lecture 9</span>
+    <span>Based on Bühlmann &amp; van de Geer (2011), Ch. 10–11</span>
+  </div>
+</header>
+
+<main>
+
+<section>
+  <p>
+    This lecture tackles the problem of <strong>quantifying uncertainty</strong> in high-dimensional variable selection: given that the Lasso picks a handful of variables from thousands of candidates, which of them are we actually confident about? Because the usual statistical tools — bootstrap, asymptotic normality — fail for the Lasso, we need different strategies. Two generic resampling-based approaches are introduced: <strong>Stability Selection</strong>, which turns subsampling into a way to control the expected number of false positives, and <strong>Multi Sample Splitting</strong>, which combines p-values from many half-sample splits to produce valid p-values for high-dimensional linear models.
+  </p>
+</section>
+
+<section>
+  <h2>1. Why Inference on the Lasso Is Hard</h2>
+
+  <p>
+    The Lasso gives us a point estimate $\hat\beta(\lambda)$, but it does <em>not</em> naturally come with confidence intervals or p-values. The obvious idea — bootstrap the Lasso — doesn't work.
+  </p>
+
+  <div class="callout-warning">
+    <div class="callout-title">Why the Lasso Bootstrap Fails</div>
+    <p>
+      The Lasso has a <strong>non-Gaussian limiting distribution</strong>, especially near zero where soft-thresholding kicks in. Formally, if
+    </p>
+    <div class="math-block">
+      $$ a_n\bigl(\hat\beta_{\mathrm{Lasso};j} - \beta_j^0\bigr) \Longrightarrow Z, \qquad Z \sim F \text{ (non-Gaussian)}, $$
+    </div>
+    <p>
+      then the bootstrap analogue does <em>not</em> converge to the same distribution:
+    </p>
+    <div class="math-block">
+      $$ a_n\bigl(\hat\beta^{*}_{\mathrm{Lasso};j} - \hat\beta_{\mathrm{Lasso};j}\bigr) \not\Longrightarrow Z \quad \text{in probability.} $$
+    </div>
+    <p>
+      Bootstrap consistency requires sufficient smoothness of the estimator; soft-thresholding is non-smooth exactly at zero, which is where much of the action is in a sparse model.
+    </p>
+  </div>
+
+  <h3>1.1 Two Paths Forward</h3>
+
+  <p>
+    There are (at least) two routes around this problem:
+  </p>
+  <ul>
+    <li><strong>De-biased / de-sparsified Lasso</strong> (previous lectures): remove the shrinkage bias analytically so a central limit theorem kicks in, giving asymptotic normality and classical confidence intervals. Statistically optimal but requires more machinery.</li>
+    <li><strong>Resampling-based approaches</strong> (this lecture): use subsampling or sample splitting to bypass the Lasso's pathological distribution entirely. Less statistically efficient but extremely generic — they work for almost any selector, not just the Lasso.</li>
+  </ul>
+
+  <div class="callout-note">
+    <div class="callout-title">Intuition</div>
+    <p>
+      Think of the Lasso as a machine that <em>picks</em> variables. The question we're asking is: how do I trust what came out? Option 1 (de-biasing) opens the machine and fixes its internal bias. Option 2 (resampling) doesn't touch the machine — instead, we feed it many slightly different datasets and see which variables it keeps picking. The second option is the spirit of Chapter 10 and 11.
+    </p>
+  </div>
+</section>
+
+<section>
+  <h2>2. Stability Selection</h2>
+
+  <p>
+    Stability Selection (Meinshausen &amp; Bühlmann, 2010) starts from a very simple observation: if a variable is truly relevant, it should be selected <em>consistently</em> across perturbations of the data; noise variables, on the other hand, will be picked by pure luck and rarely repeat.
+  </p>
+
+  <h3>2.1 Setup and Subsampling Probability</h3>
+
+  <div class="callout-definition">
+    <div class="callout-title">Setup</div>
+    <p>
+      We have i.i.d. data $Z_1, \ldots, Z_n$ (main example: $Z_i = (X_i, Y_i)$ for regression), and a generic selector $\hat S_\lambda \subseteq \{1, \ldots, p\}$ that depends on a regularization parameter $\lambda$. The prime example is the Lasso, where $\hat S(\lambda) = \{j : \hat\beta_j(\lambda) \neq 0\}$.
+    </p>
+  </div>
+
+  <p>
+    Let $I^*$ be a <strong>random subsample of $\lfloor n/2 \rfloor$ observations</strong>, drawn without replacement. For each variable $j$, we define its <em>selection probability</em> under subsampling:
+  </p>
+
+  <div class="math-block">
+    $$ \hat\Pi_j(\lambda) \;=\; \mathbb{P}^*\bigl[\, j \in \hat S_\lambda(I^*) \,\bigr], $$
+  </div>
+
+  <p>
+    where $\mathbb{P}^*$ is probability over the random subsample. In practice we approximate this by running $B$ subsamples and counting:
+  </p>
+
+  <div class="math-block">
+    $$ \hat\Pi_j(\lambda) \;\approx\; \frac{1}{B}\sum_{b=1}^{B} \mathbb{1}\bigl\{ j \in \hat S_\lambda(I^{*b}) \bigr\}. $$
+  </div>
+
+  <h3>2.2 Stable Variables</h3>
+
+  <div class="callout-definition">
+    <div class="callout-title">Set of Stable Variables</div>
+    <p>
+      For a threshold $\pi_{\mathrm{thr}} \in (0, 1)$ and a set $\Lambda$ of regularization values,
+    </p>
+    <div class="math-block">
+      $$ \hat S_{\mathrm{stable}} \;=\; \Bigl\{\, j \;:\; \max_{\lambda \in \Lambda} \hat\Pi_j(\lambda) \;\geq\; \pi_{\mathrm{thr}} \,\Bigr\}. $$
+    </div>
+    <p>
+      We keep variables selected in a <em>large fraction</em> of subsamples and disregard the rest.
+    </p>
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Toy Example</div>
+    <p>
+      Suppose we run the Lasso on $B = 100$ subsamples with $p = 1000$ candidate variables. Say gene $X_{17}$ appears in 92 of the 100 fitted models, while gene $X_{253}$ appears in 4. With threshold $\pi_{\mathrm{thr}} = 0.6$, we declare $X_{17}$ stable (relevant) and $X_{253}$ unstable (noise). The magic is that we did not need to pick a single "correct" $\lambda$ — we just took the maximum over $\lambda \in \Lambda$.
+    </p>
+  </div>
+
+  <h3>2.3 Error Control</h3>
+
+  <p>
+    Choosing $\pi_{\mathrm{thr}}$ well matters — how do we do it? The main theorem of Meinshausen &amp; Bühlmann gives a bound on the expected number of false positives. Let $q_\Lambda = \mathbb{E}\bigl|\bigcup_{\lambda \in \Lambda} \hat S(\lambda)\bigr|$ be the expected number of variables ever selected across $\Lambda$, and let $V$ be the number of false positives in $\hat S_{\mathrm{stable}}$.
+  </p>
+
+  <div class="callout-definition">
+    <div class="callout-title">Theorem 10.1 (Error control, informal)</div>
+    <p>
+      Under an exchangeability assumption on noise-variable selection and mild non-triviality, for $\pi_{\mathrm{thr}} \in (1/2, 1)$:
+    </p>
+    <div class="math-block">
+      $$ \mathbb{E}[V] \;\leq\; \frac{1}{2\pi_{\mathrm{thr}} - 1} \cdot \frac{q_\Lambda^2}{p}. $$
+    </div>
+  </div>
+
+  <p>
+    This is wonderfully useful in practice. If we want $\mathbb{E}[V] \leq \nu$ (a pre-specified error budget — say $\nu = 2.5$ false positives allowed), we can <em>solve for the threshold</em>:
+  </p>
+
+  <div class="math-block">
+    $$ \pi_{\mathrm{thr}} \;=\; \frac{1}{2}\!\left(1 + \frac{q_\Lambda^2}{p\,\nu}\right). $$
+  </div>
+
+  <div class="callout-example">
+    <div class="callout-title">Worked Calculation</div>
+    <p>
+      With $p = 1000$ covariates, an expected number of selected variables of $q_\Lambda = 30$ ("top 30" entering the regularization path), and an error budget of $\nu = 5$ expected false positives, the threshold is
+    </p>
+    <div class="math-block">
+      $$ \pi_{\mathrm{thr}} \;=\; \frac{1}{2} + \frac{30^2}{2 \cdot 1000 \cdot 5} \;=\; 0.5 + 0.09 \;=\; 0.59. $$
+    </div>
+    <p>
+      So we keep every variable selected in at least 59% of subsamples.
+    </p>
+  </div>
+
+  <div class="callout-note">
+    <div class="callout-title">Why $\pi_{\mathrm{thr}} &gt; 1/2$?</div>
+    <p>
+      Looking at the formula: if $\pi_{\mathrm{thr}} \leq 1/2$ the denominator $2\pi_{\mathrm{thr}} - 1$ becomes $\leq 0$ and the bound breaks down. Intuitively, a variable "selected more than half the time" is meaningful; "selected less than half the time" is essentially uninformative.
+    </p>
+  </div>
+
+  <h3>2.4 Practical Recommendations</h3>
+
+  <ul>
+    <li><strong>Don't agonize over $\lambda$.</strong> Take $|\hat S_\lambda|$ fairly large (loose regularization) and let stability selection do the pruning for you.</li>
+    <li><strong>Results are robust to $\Lambda$.</strong> Empirically, as long as $\Lambda$ contains values leading to overselection of $S_0$, the stability-selected set barely changes.</li>
+    <li><strong>It's very generic.</strong> The method works for <em>any</em> selector: Lasso, adaptive Lasso, boosting, forward selection, GLasso for graphical models, etc.</li>
+  </ul>
+
+  <div class="callout-warning">
+    <div class="callout-title">Caveat on Assumptions</div>
+    <p>
+      Theorem 10.1 relies on an <em>exchangeability</em> assumption on noise variables that is <strong>restrictive and rarely holds exactly</strong>. In practice, though, the method usually works very well — simulations show error control holds beyond the strict theoretical conditions. As the slides summarize: "the sufficient assumptions (far from necessary) are restrictive, but the method seems to work very well in practice."
+    </p>
+  </div>
+
+  <h3>2.5 Extension: Randomized Lasso</h3>
+
+  <p>
+    An interesting refinement is to add random perturbations to the penalty. The <strong>Randomized Lasso</strong> uses weighted $\ell_1$-norm with random weights:
+  </p>
+
+  <div class="math-block">
+    $$ \hat\beta_{\mathrm{random}}(\lambda) \;=\; \arg\min_\beta \left( \|Y - X\beta\|_2^2 / n + \lambda \sum_{j=1}^{p} W_j |\beta_j| \right), $$
+  </div>
+
+  <p>
+    where the weights $W_j$ are drawn i.i.d. from a two-point distribution $\{\gamma, 1\}$ with $\gamma \in (0.2, 0.8)$ (the "weakness" parameter). Applied many times in combination with stability selection, this further improves variable selection and can weaken the assumptions needed for consistency — from the irrepresentable condition down to a sparse eigenvalue condition.
+  </p>
+</section>
+
+<section>
+  <h2>3. From Stability Selection to P-values</h2>
+
+  <p>
+    Stability Selection controls <em>the expected number of false positives</em>, $\mathbb{E}[V]$. In many applications we want stronger error control — specifically, the <strong>familywise error rate</strong>:
+  </p>
+
+  <div class="math-block">
+    $$ \mathrm{FWER} \;=\; \mathbb{P}[V &gt; 0] \;=\; \text{probability of at least one false selection}. $$
+  </div>
+
+  <p>
+    To get real p-values with FWER (or FDR) control, we turn to a different resampling idea: <strong>sample splitting</strong>.
+  </p>
+</section>
+
+<section>
+  <h2>4. Single Sample Splitting (Wasserman &amp; Roeder)</h2>
+
+  <p>
+    The idea, proposed by Wasserman &amp; Roeder (2009), is disarmingly simple. Use one half of the data to select a manageable subset of variables; then use the other half — which is independent — to run classical inference on the selected subset.
+  </p>
+
+  <h3>4.1 The Procedure</h3>
+
+  <ol>
+    <li><strong>Split</strong> the data randomly into two disjoint halves $I_1, I_2 \subset \{1, \ldots, n\}$ of equal size $\lfloor n/2 \rfloor$.</li>
+    <li><strong>Select</strong> on $I_1$: run Lasso (or any screening procedure) to get $\hat S(I_1) \subseteq \{1, \ldots, p\}$.</li>
+    <li><strong>Test</strong> on $I_2$: fit <em>ordinary least squares</em> using only the variables in $\hat S(I_1)$ on the data $(X_{I_2}, Y_{I_2})$, and run standard t-tests.</li>
+  </ol>
+
+  <p>
+    For each variable $j$, the raw p-value is defined as
+  </p>
+
+  <div class="math-block">
+    $$ \tilde P_j \;=\; \begin{cases} P_{\mathrm{raw},j} \text{ from t-test on } Y_{I_2},\, X_{I_2}^{(\hat S(I_1))}, & \text{if } j \in \hat S(I_1), \\ 1, & \text{if } j \notin \hat S(I_1). \end{cases} $$
+  </div>
+
+  <p>
+    Variables not even selected get p-value 1 (we assume they're null). The crucial subtlety: because $I_1$ and $I_2$ are <em>independent</em>, the selection step doesn't invalidate the t-test. This sidesteps the "selective inference" problem.
+  </p>
+
+  <h3>4.2 Why It's a Valid P-value</h3>
+
+  <div class="callout-definition">
+    <div class="callout-title">Validity of single-split p-values</div>
+    <p>
+      Testing $H_{0,j}: \beta_j^0 = 0$ versus $H_{A,j}: \beta_j^0 \neq 0$, under the fixed-design linear model with Gaussian errors:
+    </p>
+    <ul>
+      <li>If the <strong>screening property</strong> $\hat S(I_1) \supseteq S_0$ holds, then $P_{\mathrm{raw},j}$ is a valid p-value for $H_{0,j}$ (type-I error control).</li>
+      <li>If the screening property fails, $P_{\mathrm{raw},j}$ is still a valid p-value — but for the <em>projected</em> hypothesis $H_{0,j}(M): \beta_j(M) = 0$ where $M = \hat S(I_1)$ is the sub-model and $\beta(M) = ((X^{(M)})^T X^{(M)})^{-1} (X^{(M)})^T Y$ is the OLS coefficient within that sub-model.</li>
+    </ul>
+  </div>
+
+  <h3>4.3 Multiplicity Correction</h3>
+
+  <p>
+    Since we can have at most $|\hat S(I_1)|$ false positives (non-selected variables automatically get p-value 1), we can use <strong>Bonferroni with factor $|\hat S(I_1)|$</strong> rather than with factor $p$ — a much tighter correction:
+  </p>
+
+  <div class="math-block">
+    $$ \tilde P_{\mathrm{corr},j} \;=\; \min\bigl(\tilde P_j \cdot |\hat S(I_1)|,\; 1\bigr), \qquad j = 1, \ldots, p. $$
+  </div>
+
+  <p>
+    Rejecting whenever $\tilde P_{\mathrm{corr},j} \leq \alpha$ yields $\mathrm{FWER} \leq \alpha$ (asymptotically).
+  </p>
+
+  <div class="callout-example">
+    <div class="callout-title">Numerical Example</div>
+    <p>
+      Suppose $p = 1000$ and the Lasso on $I_1$ selects 20 variables. A variable $j$ in $\hat S(I_1)$ has raw t-test p-value $P_{\mathrm{raw},j} = 0.002$. Naïve Bonferroni over all $p$ would give $0.002 \times 1000 = 2.0 \to 1$ — not significant. Using the sample-splitting correction, we only multiply by 20: $\tilde P_{\mathrm{corr},j} = 0.002 \times 20 = 0.04$ — significant at $\alpha = 0.05$. The screening step gives us a <em>power gain</em> because we didn't have to pay for testing all $p$ hypotheses.
+    </p>
+  </div>
+</section>
+
+<section>
+  <h2>5. The "P-value Lottery" Problem</h2>
+
+  <p>
+    The single-split method is elegant, but has a serious flaw: <strong>the result depends drastically on the random split</strong>. Different splits give wildly different p-values for the same variable.
+  </p>
+
+  <figure>
+    <svg viewBox="0 0 500 260" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto;">
+      <!-- axes -->
+      <line x1="60" y1="220" x2="470" y2="220" stroke="#1a1a2e" stroke-width="2"/>
+      <line x1="60" y1="30" x2="60" y2="220" stroke="#1a1a2e" stroke-width="2"/>
+      <!-- bars: histogram -->
+      <rect x="62" y="40" width="16" height="180" fill="#0f3460"/>
+      <rect x="80" y="130" width="16" height="90" fill="#0f3460"/>
+      <rect x="98" y="170" width="16" height="50" fill="#0f3460"/>
+      <rect x="116" y="180" width="16" height="40" fill="#0f3460"/>
+      <rect x="134" y="195" width="16" height="25" fill="#0f3460"/>
+      <rect x="152" y="200" width="16" height="20" fill="#0f3460"/>
+      <rect x="170" y="205" width="16" height="15" fill="#0f3460"/>
+      <rect x="188" y="208" width="16" height="12" fill="#0f3460"/>
+      <rect x="206" y="210" width="16" height="10" fill="#0f3460"/>
+      <rect x="224" y="212" width="16" height="8" fill="#0f3460"/>
+      <rect x="300" y="207" width="16" height="13" fill="#0f3460"/>
+      <rect x="318" y="205" width="16" height="15" fill="#0f3460"/>
+      <rect x="420" y="110" width="16" height="110" fill="#1a73e8"/>
+      <!-- labels -->
+      <text x="60" y="240" font-size="11" fill="#555">0.0</text>
+      <text x="160" y="240" font-size="11" fill="#555">0.2</text>
+      <text x="260" y="240" font-size="11" fill="#555">0.5</text>
+      <text x="420" y="240" font-size="11" fill="#555">1.0</text>
+      <text x="220" y="255" font-size="12" fill="#1a1a2e">Adjusted p-value</text>
+      <text x="20" y="130" font-size="12" fill="#1a1a2e" transform="rotate(-90 20 130)">Frequency</text>
+      <!-- title -->
+      <text x="120" y="20" font-size="13" font-weight="600" fill="#16213e">Distribution of p-values across 200 random splits</text>
+    </svg>
+    <figcaption>Illustration of the "p-value lottery": for the <em>same</em> variable in a motif regression problem, different random splits of the data produce p-values ranging from ≈ 0 to 1. The single-split method essentially picks one of these at random.</figcaption>
+  </figure>
+
+  <p>
+    This is clearly unsatisfactory — scientific conclusions shouldn't flip based on a random seed. The natural fix is to <strong>average over many splits</strong>.
+  </p>
+</section>
+
+<section>
+  <h2>6. Multi Sample Splitting</h2>
+
+  <p>
+    Proposed by Meinshausen, Meier &amp; Bühlmann (2009), the idea is to repeat the sample-splitting procedure $B$ times and aggregate the resulting p-values in a principled way.
+  </p>
+
+  <h3>6.1 Procedure</h3>
+
+  <div class="callout-definition">
+    <div class="callout-title">Multi Sample Split Algorithm</div>
+    <p>For $b = 1, \ldots, B$:</p>
+    <ol>
+      <li>Randomly split the data into two disjoint halves $I_1^{[b]}$ and $I_2^{[b]}$.</li>
+      <li>On $I_1^{[b]}$: estimate $\hat S^{[b]} = \hat S(I_1^{[b]})$ (e.g., Lasso).</li>
+      <li>On $I_2^{[b]}$: compute adjusted p-values $\tilde P_{\mathrm{corr},j}^{[b]} = \min(\tilde P_j^{[b]} \cdot |\hat S^{[b]}|,\, 1)$.</li>
+    </ol>
+    <p>Then aggregate $\tilde P_{\mathrm{corr},j}^{[1]}, \ldots, \tilde P_{\mathrm{corr},j}^{[B]}$ into a single p-value for each $j$.</p>
+  </div>
+
+  <h3>6.2 The Aggregation Problem</h3>
+
+  <p>
+    The p-values from different splits are <em>dependent</em> (the splits share observations), so we can't simply use Fisher's method or Stouffer's method. Instead, Meinshausen et al. use a <strong>quantile-based aggregation</strong>. For $\gamma \in (0, 1)$:
+  </p>
+
+  <div class="math-block">
+    $$ Q_j(\gamma) \;=\; \min\!\left\{\, q_\gamma\!\bigl(\bigl\{ \tilde P_{\mathrm{corr},j}^{[b]} / \gamma \;:\; b = 1, \ldots, B \bigr\}\bigr),\; 1 \,\right\}, $$
+  </div>
+
+  <p>
+    where $q_\gamma(\cdot)$ denotes the empirical $\gamma$-quantile. For any fixed $\gamma$, $Q_j(\gamma)$ is an asymptotically valid FWER-controlling p-value.
+  </p>
+
+  <div class="callout-note">
+    <div class="callout-title">Why dividing by $\gamma$?</div>
+    <p>
+      The division by $\gamma$ compensates for taking a quantile: if we take the 25th percentile (small $\gamma$) we're looking at small p-values, which would naturally be too optimistic without a correction. The factor $1/\gamma$ restores conservativeness.
+    </p>
+  </div>
+
+  <h3>6.3 Adaptive Aggregation</h3>
+
+  <p>
+    Picking a single $\gamma$ is arbitrary. An adaptive version optimizes over $\gamma$ at a small cost:
+  </p>
+
+  <div class="math-block">
+    $$ P_j \;=\; \min\!\left\{ (1 - \log \gamma_{\min})\, \inf_{\gamma \in (\gamma_{\min},\, 1)} Q_j(\gamma),\; 1 \right\}. $$
+  </div>
+
+  <p>
+    With the recommended $\gamma_{\min} = 0.05$, the correction factor is $1 - \log(0.05) \approx 3.996$, a modest price for being allowed to search over $\gamma$.
+  </p>
+
+  <h3>6.4 Main Theorem</h3>
+
+  <div class="callout-definition">
+    <div class="callout-title">Theorem 11.1 (FWER control for multi sample split)</div>
+    <p>
+      Consider the fixed-design linear model $Y = X\beta + \varepsilon$ with Gaussian errors, and assume the screening property $\mathbb{P}[\hat S_{\lfloor n/2 \rfloor} \supseteq S_0] \to 1$, a sparsity bound $\mathbb{P}[|\hat S_{\lfloor n/2 \rfloor}| &lt; n/2] \to 1$, and a mild design condition. With a fixed number $B$ of random splits and $\gamma_{\min} \in (0, 1)$:
+    </p>
+    <div class="math-block">
+      $$ \limsup_{n \to \infty} \mathbb{P}\bigl[V_{\mathrm{multi-split\;FWER}}(\alpha) &gt; 0\bigr] \;\leq\; \alpha, $$
+    </div>
+    <p>
+      where $\hat S_{\mathrm{multi-split\;FWER}}(\alpha) = \{j : P_j \leq \alpha\}$.
+    </p>
+  </div>
+
+  <h3>6.5 FDR Control</h3>
+
+  <p>
+    If FWER is too conservative, the same $P_j$'s can be fed into a Benjamini–Hochberg-type procedure for <strong>False Discovery Rate</strong> control. Since these p-values are already multiplicity-corrected at the sub-model level, we don't need the usual factor of $p$ in BH:
+  </p>
+
+  <div class="math-block">
+    $$ h(q) \;=\; \max\bigl\{\, i \;:\; P_{(i)} \leq i \cdot q \,\bigr\}, \qquad \hat S_{\mathrm{multi-split\;FDR}}(q) = \{ j : P_j \leq P_{(h(q))}\}. $$
+  </div>
+
+  <p>
+    For FDR control at level $\alpha$, choose $q(\alpha) = \alpha / \sum_{i=1}^{p} i^{-1}$ (the extra sum comes from Benjamini–Yekutieli for dependent p-values).
+  </p>
+</section>
+
+<section>
+  <h2>7. Comparing Stability Selection and Multi Sample Splitting</h2>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Aspect</th>
+          <th>Stability Selection</th>
+          <th>Multi Sample Splitting</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Resampling</td>
+          <td>Subsampling (size $\lfloor n/2 \rfloor$), $B$ times</td>
+          <td>Random split into two halves, $B$ times</td>
+        </tr>
+        <tr>
+          <td>Output</td>
+          <td>Set of "stable" variables</td>
+          <td>P-value $P_j$ for each variable</td>
+        </tr>
+        <tr>
+          <td>Error controlled</td>
+          <td>$\mathbb{E}[V]$ (expected # false positives)</td>
+          <td>FWER or FDR</td>
+        </tr>
+        <tr>
+          <td>Key assumption</td>
+          <td>Exchangeability (restrictive)</td>
+          <td>Screening property + sparsity</td>
+        </tr>
+        <tr>
+          <td>Generality</td>
+          <td>Very generic — any selector, any model</td>
+          <td>Generic; needs valid low-dimensional test on $I_2$</td>
+        </tr>
+        <tr>
+          <td>Multiplicity correction</td>
+          <td>Implicit via $\pi_{\mathrm{thr}}$ and $q_\Lambda$</td>
+          <td>Bonferroni factor $|\hat S(I_1)|$, not $p$</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout-note">
+    <div class="callout-title">Which to Use When?</div>
+    <p>
+      Use <strong>stability selection</strong> when you want a shortlist of reliably-selected variables and don't need formal p-values — or when you're using a non-standard selector (e.g., GLasso, boosting) where building a proper test is hard. Use <strong>multi sample splitting</strong> when you need formal p-values with FWER or FDR control, especially for downstream decisions or publication. Both can be combined with refitting (e.g., OLS on the selected variables) for prediction.
+    </p>
+  </div>
+</section>
+
+<section>
+  <h2>8. Practical Notes and Software</h2>
+
+  <ul>
+    <li><strong>R package <code>hdi</code></strong> (Meier et al.) implements multi sample splitting, stability selection, de-sparsified Lasso, and bootstrap-based variants.</li>
+    <li><strong>Multiple-testing correction</strong> on the resulting p-values: use <code>p.adjust</code> in R with method <code>"holm"</code> (Bonferroni–Holm) for FWER or <code>"BH"</code> (Benjamini–Hochberg) for FDR.</li>
+    <li><strong>Recent developments</strong> (Schultheiss et al., 2021): "multi carve" methods combine sample splitting with selective inference for additional power.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Key Takeaways</h2>
+  <ul>
+    <li><strong>Standard Lasso inference is broken.</strong> The Lasso bootstrap is inconsistent because the Lasso has a non-Gaussian limiting distribution — especially around zero where soft-thresholding creates non-smoothness. We need different tools for p-values and confidence intervals.</li>
+    <li><strong>Stability Selection uses subsampling to identify reliably-selected variables.</strong> A variable is kept if it appears in the selected set of at least a fraction $\pi_{\mathrm{thr}}$ of random $\lfloor n/2 \rfloor$-subsamples. Theorem 10.1 gives a tunable bound on the expected number of false positives, at the cost of an exchangeability assumption that is often unrealistic but rarely fatal in practice.</li>
+    <li><strong>Single sample splitting exploits independence.</strong> Split the data; select on $I_1$; test classically (t-tests) on $I_2$. Because the two halves are independent, the selection step does not invalidate the test — a rare clean solution to post-selection inference. Multiplicity correction uses Bonferroni with factor $|\hat S(I_1)|$, much tighter than factor $p$.</li>
+    <li><strong>The p-value lottery motivates multi sample splitting.</strong> A single split's p-value varies wildly across splits. Repeating $B$ times and aggregating via quantile-based statistics yields reproducible, asymptotically valid p-values — the recipe is $Q_j(\gamma) = q_\gamma(\{\tilde P^{[b]}_{\mathrm{corr},j}/\gamma\})$, with an adaptive correction $(1 - \log \gamma_{\min})$ for searching over $\gamma$.</li>
+    <li><strong>Both methods are extremely generic.</strong> They work with any reasonable selector and any model where downstream inference is feasible on $I_2$ — GLMs, additive models, graphical models, not just linear regression. This genericity is often more valuable than the statistical optimality of the de-sparsified Lasso.</li>
+    <li><strong>Choose the method by the error measure you need.</strong> Stability selection controls $\mathbb{E}[V]$ (per-family error rate). Multi sample splitting controls FWER or FDR. They are complementary, not competing — Meinshausen–Bühlmann gives a variable list; Meinshausen–Meier–Bühlmann gives inferential p-values.</li>
+  </ul>
+</section>
+
+</main>
+
+<footer>
+  <span>© 2026 piotr-marciniak.com</span>
+  <span>set in Inter &amp; JetBrains Mono</span>
+</footer>
+<script src="../../dark.js"></script>
+</body>
+</html>

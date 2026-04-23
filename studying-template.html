@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[Course Short] – Lecture N: [Title]</title>
+  <link rel="icon" type="image/png" href="../../files/logo.png" />
+  <script>
+    try { var t=localStorage.getItem('theme')||'grain'; if(t) document.documentElement.setAttribute('data-theme',t); } catch(e){}
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../styles.css" />
+  <link rel="stylesheet" href="../../lecture.css" />
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="left">
+    <div class="theme-switcher">
+      <button class="theme-dot" data-theme="stone" onclick="setTheme('stone')" title="stone"></button>
+      <button class="theme-dot" data-theme="dark"  onclick="setTheme('dark')"  title="dark"></button>
+      <button class="theme-dot" data-theme="ocean" onclick="setTheme('ocean')" title="ocean"></button>
+      <button class="theme-dot" data-theme="grain" onclick="setTheme('grain')" title="grain"></button>
+      <span class="theme-label">themes</span>
+    </div>
+    <span class="host">piotr@marciniak</span>
+    <span class="path">~/files/[course-short]</span>
+  </div>
+  <div class="right">
+    <a href="../../">← home</a>
+    <a href="../../studying/">← notes</a>
+  </div>
+</div>
+
+<header>
+  <h1>[Lecture Title]</h1>
+  <div class="meta">
+    <span>Course: [Full Course Name] (ETH Zürich)</span>
+    <span>Lecture N</span>
+  </div>
+</header>
+
+<main>
+
+  <section>
+    <h2>Section Title</h2>
+
+    <p>Body text. Inline math uses $f(x)$ and display math uses:</p>
+
+    <div class="math-block">
+      $$\hat{\beta} = (X^\top X)^{-1} X^\top y$$
+    </div>
+
+    <div class="callout-definition">
+      <div class="callout-title">Definition — Name</div>
+      <p>Definition text.</p>
+    </div>
+
+    <div class="callout-example">
+      <div class="callout-title">Example</div>
+      <p>Example text.</p>
+    </div>
+
+    <div class="callout-note">
+      <div class="callout-title">Note</div>
+      <p>Note text.</p>
+    </div>
+
+    <ul>
+      <li>Item one</li>
+      <li>Item two</li>
+    </ul>
+  </section>
+
+</main>
+
+<footer>
+  <span>© 2026 piotr-marciniak.com</span>
+  <span>set in Inter &amp; JetBrains Mono</span>
+</footer>
+
+<script src="../../dark.js"></script>
+</body>
+</html>

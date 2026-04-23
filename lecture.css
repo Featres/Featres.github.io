@@ -1,0 +1,175 @@
+/* lecture.css — content styles for individual lecture notes pages
+   Loaded alongside styles.css which handles topbar, footer, and theme variables. */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  font-size: 17px;
+  line-height: 1.75;
+  /* background and color intentionally omitted — controlled by styles.css theme */
+}
+
+header, main {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+header {
+  margin-top: 2.5rem;
+  border-top: 3px solid var(--accent);
+  padding-top: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+header h1 {
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 0.5rem;
+}
+
+.meta {
+  font-size: 14px;
+  color: var(--muted);
+}
+.meta span + span::before { content: ' · '; }
+
+h2 {
+  font-family: 'Inter', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--ink);
+  border-bottom: 1px solid var(--rule);
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.3rem;
+}
+
+h3 {
+  font-family: 'Inter', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+h4 {
+  font-family: 'Inter', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--muted);
+  font-style: italic;
+  margin-top: 1rem;
+  margin-bottom: 0.3rem;
+}
+
+section { margin-bottom: 2.5rem; }
+p { margin-bottom: 0.75rem; }
+
+a { color: #1a73e8; text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+code {
+  font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+  font-size: 15px;
+  background: var(--panel);
+  color: var(--ink);
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+pre {
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 1rem 1.25rem;
+  overflow-x: auto;
+  font-size: 15px;
+  line-height: 1.6;
+  margin: 1rem 0;
+  font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+}
+
+.math-block {
+  margin: 1.25rem 0;
+  margin-left: 1rem;
+  overflow-x: auto;
+}
+
+.callout-definition {
+  background: #eef6ff;
+  border-left: 4px solid #1a73e8;
+  padding: 1rem 1.25rem;
+  margin: 1.5rem 0;
+  border-radius: 0 6px 6px 0;
+}
+.callout-definition .callout-title {
+  font-weight: 700;
+  color: #1a73e8;
+  margin-bottom: 0.4rem;
+}
+
+.callout-example {
+  background: #f1f8f1;
+  border-left: 4px solid #2e7d32;
+  padding: 1rem 1.25rem;
+  margin: 1.5rem 0;
+  border-radius: 0 6px 6px 0;
+}
+.callout-example .callout-title {
+  font-weight: 700;
+  color: #2e7d32;
+  margin-bottom: 0.4rem;
+}
+
+.callout-note,
+.callout-warning {
+  background: #fff8e1;
+  border-left: 4px solid #f9a825;
+  padding: 1rem 1.25rem;
+  margin: 1.5rem 0;
+  border-radius: 0 6px 6px 0;
+}
+.callout-note .callout-title,
+.callout-warning .callout-title {
+  font-weight: 700;
+  color: #e65100;
+  margin-bottom: 0.4rem;
+}
+
+ul, ol {
+  padding-left: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+li { margin-bottom: 0.4rem; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 15px;
+}
+th, td {
+  border: 1px solid var(--rule);
+  padding: 0.6rem 1rem;
+  text-align: left;
+}
+th { background: var(--panel); font-weight: 600; }
+tr:nth-child(even) { background: var(--panel); }
+.table-wrapper { overflow-x: auto; }
+
+figure { margin: 1.5rem 0; text-align: center; }
+figcaption {
+  font-size: 14px;
+  font-style: italic;
+  color: var(--muted);
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 600px) {
+  header, main { padding: 0 1rem; }
+  header h1 { font-size: 1.5rem; }
+}
