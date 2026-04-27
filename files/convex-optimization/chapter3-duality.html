@@ -16,13 +16,13 @@
   <script>
       MathJax = {
         tex: {
-          inlineMath: [['$', '$'], ['\(', '\)']],
-          displayMath: [['$$', '$$'], ['\[', '\]']]
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          displayMath: [['$$', '$$'], ['\\[', '\\]']]
         },
-        svg: { fontCache: 'global' }
+        chtml: {}
       };
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
 </head>
 <body>
 <div class="topbar">
@@ -73,80 +73,80 @@
     Consider a general mathematical program with inequality and equality constraints:
   </p>
   <div class="math-block">
-    $$\min f(x) \quad \text{s.t.} \quad g_i(x) \le 0 \;\; (i \in [m]), \quad h_j(x) = 0 \;\; (j \in [\ell]).$$
+    \[\min f(x) \quad \text{s.t.} \quad g_i(x) \le 0 \;\; (i \in [m]), \quad h_j(x) = 0 \;\; (j \in [\ell]).\]
   </div>
   <p>
-    The domain of the program is $P := F \cap \bigcap_{i=1}^m G_i \cap \bigcap_{j=1}^\ell H_j$ and the optimal value is $f^*$.
+    The domain of the program is \(P := F \cap \bigcap_{i=1}^m G_i \cap \bigcap_{j=1}^\ell H_j\) and the optimal value is \(f^*\).
   </p>
   <p>
     A key observation is that we can absorb the constraints into the objective using <strong>indicator functions</strong>:
   </p>
   <div class="math-block">
-    $$I_-(x) = \begin{cases} 0 & x \le 0 \\ +\infty & x > 0 \end{cases}, \qquad I_0(x) = \begin{cases} 0 & x = 0 \\ +\infty & x \ne 0. \end{cases}$$
+    \[I_-(x) = \begin{cases} 0 & x \le 0 \\ +\infty & x > 0 \end{cases}, \qquad I_0(x) = \begin{cases} 0 & x = 0 \\ +\infty & x \ne 0. \end{cases}\]
   </div>
   <p>
     This lets us rewrite the constrained problem as the unconstrained equivalent:
   </p>
   <div class="math-block">
-    $$\min_{x} \; f(x) + \sum_{i=1}^m I_-(g_i(x)) + \sum_{j=1}^\ell I_0(h_j(x)).$$
+    \[\min_{x} \; f(x) + \sum_{i=1}^m I_-(g_i(x)) + \sum_{j=1}^\ell I_0(h_j(x)).\]
   </div>
 
   <div class="callout-note">
     <div class="callout-title">Intuition</div>
     <p>
-      If $x$ satisfies all constraints, the indicators contribute zero. If it violates any constraint, the penalty is $+\infty$, so the point is effectively excluded. The problem is equivalent but the objective is nasty (non-convex, non-differentiable). The trick: replace these infinite-jump indicators with <em>linear lower bounds</em>.
+      If \(x\) satisfies all constraints, the indicators contribute zero. If it violates any constraint, the penalty is \(+\infty\), so the point is effectively excluded. The problem is equivalent but the objective is nasty (non-convex, non-differentiable). The trick: replace these infinite-jump indicators with <em>linear lower bounds</em>.
     </p>
   </div>
 
   <p>
-    For any $\lambda_i \ge 0$ and any $\nu_j \in \mathbb{R}$, we have:
+    For any \(\lambda_i \ge 0\) and any \(\nu_j \in \mathbb{R}\), we have:
   </p>
   <div class="math-block">
-    $$\lambda_i \cdot x_i \;\le\; I_-(x_i) \qquad \text{and} \qquad \nu_j \cdot x_j \;\le\; I_0(x_j).$$
+    \[\lambda_i \cdot x_i \;\le\; I_-(x_i) \qquad \text{and} \qquad \nu_j \cdot x_j \;\le\; I_0(x_j).\]
   </div>
   <p>
-    Replacing each indicator with its linear lower bound gives us something smaller than the true objective — in other words, a <em>lower bound</em> on $f^*$.
+    Replacing each indicator with its linear lower bound gives us something smaller than the true objective — in other words, a <em>lower bound</em> on \(f^*\).
   </p>
 
   <div class="callout-definition">
     <div class="callout-title">Definition — Lagrangian</div>
     <p>
-      The <strong>Lagrangian</strong> $L: P \times \mathbb{R}^m \times \mathbb{R}^\ell \to \mathbb{R}$ is defined as:
+      The <strong>Lagrangian</strong> \(L: P \times \mathbb{R}^m \times \mathbb{R}^\ell \to \mathbb{R}\) is defined as:
     </p>
     <div class="math-block">
-      $$L(x, \lambda, \nu) := f(x) + \sum_{i=1}^m \lambda_i g_i(x) + \sum_{j=1}^\ell \nu_j h_j(x).$$
+      \[L(x, \lambda, \nu) := f(x) + \sum_{i=1}^m \lambda_i g_i(x) + \sum_{j=1}^\ell \nu_j h_j(x).\]
     </div>
-    <p>The vectors $\lambda \in \mathbb{R}^m$ and $\nu \in \mathbb{R}^\ell$ are called <strong>Lagrange multipliers</strong>.</p>
+    <p>The vectors \(\lambda \in \mathbb{R}^m\) and \(\nu \in \mathbb{R}^\ell\) are called <strong>Lagrange multipliers</strong>.</p>
   </div>
 
   <div class="callout-definition">
     <div class="callout-title">Definition — Lagrange Dual Function</div>
     <p>
-      The <strong>Lagrange dual function</strong> $\hat{L}: \mathbb{R}^m \times \mathbb{R}^\ell \to \mathbb{R} \cup \{-\infty\}$ is:
+      The <strong>Lagrange dual function</strong> \(\hat{L}: \mathbb{R}^m \times \mathbb{R}^\ell \to \mathbb{R} \cup \{-\infty\}\) is:
     </p>
     <div class="math-block">
-      $$\hat{L}(\lambda, \nu) := \inf_{x \in P} L(x, \lambda, \nu).$$
+      \[\hat{L}(\lambda, \nu) := \inf_{x \in P} L(x, \lambda, \nu).\]
     </div>
   </div>
 
   <p>
-    Think of it this way: for a fixed choice of multipliers $(\lambda, \nu)$, the dual function asks "what is the best (smallest) value the Lagrangian can take?" This infimum over $x$ eliminates the primal variable and gives us a function purely in terms of $(\lambda, \nu)$.
+    Think of it this way: for a fixed choice of multipliers \((\lambda, \nu)\), the dual function asks "what is the best (smallest) value the Lagrangian can take?" This infimum over \(x\) eliminates the primal variable and gives us a function purely in terms of \((\lambda, \nu)\).
   </p>
 
   <div class="callout-definition">
     <div class="callout-title">Proposition — The Dual Function is Always Concave</div>
     <p>
-      $\hat{L}(\lambda, \nu)$ is concave in $(\lambda, \nu)$, even if the original problem is not convex. This follows because $\hat{L}$ is a pointwise infimum of functions that are affine in $(\lambda, \nu)$, and the infimum of affine (hence concave) functions is concave.
+      \(\hat{L}(\lambda, \nu)\) is concave in \((\lambda, \nu)\), even if the original problem is not convex. This follows because \(\hat{L}\) is a pointwise infimum of functions that are affine in \((\lambda, \nu)\), and the infimum of affine (hence concave) functions is concave.
     </p>
   </div>
 
   <div class="callout-definition">
     <div class="callout-title">Definition — Dual Feasible Region &amp; Dual Program</div>
     <p>
-      The <strong>dual feasible region</strong> is $D := \{(\lambda, \nu) \in \mathbb{R}^m_{\ge 0} \times \mathbb{R}^\ell \mid \hat{L}(\lambda, \nu) > -\infty\}$. The <strong>Lagrange dual program</strong> is:
+      The <strong>dual feasible region</strong> is \(D := \{(\lambda, \nu) \in \mathbb{R}^m_{\ge 0} \times \mathbb{R}^\ell \mid \hat{L}(\lambda, \nu) > -\infty\}\). The <strong>Lagrange dual program</strong> is:
     </p>
     <div class="math-block">
-      $$\hat{f}^* := \max_{\lambda \ge 0,\; \nu} \; \hat{L}(\lambda, \nu).$$
+      \[\hat{f}^* := \max_{\lambda \ge 0,\; \nu} \; \hat{L}(\lambda, \nu).\]
     </div>
   </div>
 
@@ -154,13 +154,13 @@
 
   <div class="callout-example">
     <div class="callout-title">Example — LP Duality</div>
-    <p>Consider the standard-form LP: $\min c^\top x$ subject to $Ax = b$, $x \ge 0$. With multipliers $\lambda \ge 0$ (for $-x \le 0$) and $\nu$ (for $Ax = b$), the Lagrangian is:</p>
+    <p>Consider the standard-form LP: \(\min c^\top x\) subject to \(Ax = b\), \(x \ge 0\). With multipliers \(\lambda \ge 0\) (for \(-x \le 0\)) and \(\nu\) (for \(Ax = b\)), the Lagrangian is:</p>
     <div class="math-block">
-      $$L(x, \lambda, \nu) = -b^\top \nu + (c + A^\top \nu - \lambda)^\top x.$$
+      \[L(x, \lambda, \nu) = -b^\top \nu + (c + A^\top \nu - \lambda)^\top x.\]
     </div>
-    <p>Since this is linear in $x$, the infimum is $-\infty$ unless $c + A^\top \nu - \lambda = 0$, giving the dual:</p>
+    <p>Since this is linear in \(x\), the infimum is \(-\infty\) unless \(c + A^\top \nu - \lambda = 0\), giving the dual:</p>
     <div class="math-block">
-      $$\max\; -b^\top \nu \quad \text{s.t.} \quad c + A^\top \nu \ge 0,$$
+      \[\max\; -b^\top \nu \quad \text{s.t.} \quad c + A^\top \nu \ge 0,\]
     </div>
     <p>which is exactly the classical LP dual (after flipping sign conventions).</p>
   </div>
@@ -168,7 +168,7 @@
   <div class="callout-note">
     <div class="callout-title">Important — The Dual Depends on the Formulation</div>
     <p>
-      Even cosmetic changes to the primal (adding a redundant variable, composing the objective with an increasing function) can change the dual problem. For instance, the unconstrained problem $\min f(Ax+b)$ has a trivial dual (just $f^*$), but rewriting it as $\min f(y)$ s.t. $Ax+b = y$ produces the more informative dual $\max\; b^\top\nu - f^*(\nu)$ subject to $A^\top \nu = 0$, where $f^*$ is the <em>conjugate function</em>.
+      Even cosmetic changes to the primal (adding a redundant variable, composing the objective with an increasing function) can change the dual problem. For instance, the unconstrained problem \(\min f(Ax+b)\) has a trivial dual (just \(f^*\)), but rewriting it as \(\min f(y)\) s.t. \(Ax+b = y\) produces the more informative dual \(\max\; b^\top\nu - f^*(\nu)\) subject to \(A^\top \nu = 0\), where \(f^*\) is the <em>conjugate function</em>.
     </p>
   </div>
 </section>
@@ -179,43 +179,43 @@
 
   <div class="callout-definition">
     <div class="callout-title">Theorem — Weak Duality</div>
-    <p>For every $(\lambda, \nu) \in D$:</p>
+    <p>For every \((\lambda, \nu) \in D\):</p>
     <div class="math-block">
-      $$\hat{L}(\lambda, \nu) \;\le\; f^*.$$
+      \[\hat{L}(\lambda, \nu) \;\le\; f^*.\]
     </div>
-    <p>In particular, $\hat{f}^* \le f^*$.</p>
+    <p>In particular, \(\hat{f}^* \le f^*\).</p>
   </div>
 
   <p>
-    The proof is elegant. Let $\tilde{x}$ be any primal feasible point. Since $g_i(\tilde{x}) \le 0$ and $\lambda_i \ge 0$, and $h_j(\tilde{x}) = 0$, the penalty terms $\sum \lambda_i g_i(\tilde{x}) + \sum \nu_j h_j(\tilde{x})$ are non-positive. Therefore:
+    The proof is elegant. Let \(\tilde{x}\) be any primal feasible point. Since \(g_i(\tilde{x}) \le 0\) and \(\lambda_i \ge 0\), and \(h_j(\tilde{x}) = 0\), the penalty terms \(\sum \lambda_i g_i(\tilde{x}) + \sum \nu_j h_j(\tilde{x})\) are non-positive. Therefore:
   </p>
   <div class="math-block">
-    $$\hat{L}(\lambda,\nu) = \inf_{x \in P} L(x,\lambda,\nu) \;\le\; L(\tilde{x},\lambda,\nu) \;\le\; f(\tilde{x}).$$
+    \[\hat{L}(\lambda,\nu) = \inf_{x \in P} L(x,\lambda,\nu) \;\le\; L(\tilde{x},\lambda,\nu) \;\le\; f(\tilde{x}).\]
   </div>
   <p>
-    Since this holds for every feasible $\tilde{x}$, it holds for the best one, so $\hat{L}(\lambda,\nu) \le f^*$.
+    Since this holds for every feasible \(\tilde{x}\), it holds for the best one, so \(\hat{L}(\lambda,\nu) \le f^*\).
   </p>
 
   <div class="callout-note">
     <div class="callout-title">Why This Matters</div>
     <p>
-      Even for <strong>non-convex</strong> problems, the dual is always a convex program (since $\hat{L}$ is concave). This means we can always compute a lower bound on $f^*$ by solving a convex problem. This is extremely valuable for hard combinatorial problems.
+      Even for <strong>non-convex</strong> problems, the dual is always a convex program (since \(\hat{L}\) is concave). This means we can always compute a lower bound on \(f^*\) by solving a convex problem. This is extremely valuable for hard combinatorial problems.
     </p>
   </div>
 
   <div class="callout-example">
     <div class="callout-title">Example — Two-Way Partitioning</div>
     <p>
-      Consider the non-convex problem $\min x^\top W x$ subject to $x_i^2 = 1$ for all $i$ (so each $x_i \in \{-1, +1\}$). This is NP-hard for large $n$. But the Lagrangian gives:
+      Consider the non-convex problem \(\min x^\top W x\) subject to \(x_i^2 = 1\) for all \(i\) (so each \(x_i \in \{-1, +1\}\)). This is NP-hard for large \(n\). But the Lagrangian gives:
     </p>
     <div class="math-block">
-      $$L(x, \nu) = x^\top(W + \text{diag}(\nu))x - \mathbf{1}^\top\nu.$$
+      \[L(x, \nu) = x^\top(W + \text{diag}(\nu))x - \mathbf{1}^\top\nu.\]
     </div>
-    <p>The infimum of this quadratic form is $0$ when $W + \text{diag}(\nu) \succeq 0$ and $-\infty$ otherwise, yielding the convex dual:</p>
+    <p>The infimum of this quadratic form is \(0\) when \(W + \text{diag}(\nu) \succeq 0\) and \(-\infty\) otherwise, yielding the convex dual:</p>
     <div class="math-block">
-      $$\max -\mathbf{1}^\top\nu \quad \text{s.t.} \quad W + \text{diag}(\nu) \succeq 0.$$
+      \[\max -\mathbf{1}^\top\nu \quad \text{s.t.} \quad W + \text{diag}(\nu) \succeq 0.\]
     </div>
-    <p>A simple feasible point is $\nu = -\lambda_{\min}(W) \cdot \mathbf{1}$, giving the lower bound $n \cdot \lambda_{\min}(W)$.</p>
+    <p>A simple feasible point is \(\nu = -\lambda_{\min}(W) \cdot \mathbf{1}\), giving the lower bound \(n \cdot \lambda_{\min}(W)\).</p>
   </div>
 </section>
 
@@ -226,7 +226,7 @@
   <div class="callout-definition">
     <div class="callout-title">Definition — Duality Gap &amp; Strong Duality</div>
     <p>
-      The <strong>duality gap</strong> is the quantity $f^* - \hat{f}^* \ge 0$. We say <strong>strong duality</strong> holds when this gap is zero, i.e., $f^* = \hat{f}^*$.
+      The <strong>duality gap</strong> is the quantity \(f^* - \hat{f}^* \ge 0\). We say <strong>strong duality</strong> holds when this gap is zero, i.e., \(f^* = \hat{f}^*\).
     </p>
   </div>
 
@@ -239,10 +239,10 @@
   <div class="callout-definition">
     <div class="callout-title">Proposition — Complementary Slackness</div>
     <p>
-      Let $x^*$ and $(\lambda^*, \nu^*)$ be optimal primal and dual solutions with $f^* = \hat{f}^*$. Then for every $i \in [m]$:
+      Let \(x^*\) and \((\lambda^*, \nu^*)\) be optimal primal and dual solutions with \(f^* = \hat{f}^*\). Then for every \(i \in [m]\):
     </p>
     <div class="math-block">
-      $$\lambda^*_i \cdot g_i(x^*) = 0.$$
+      \[\lambda^*_i \cdot g_i(x^*) = 0.\]
     </div>
   </div>
 
@@ -253,7 +253,7 @@
   <div class="callout-example">
     <div class="callout-title">Intuition — Resource Allocation</div>
     <p>
-      Think of $\lambda_i$ as the "price" of relaxing constraint $i$. If constraint $i$ has slack ($g_i(x^*) < 0$), then relaxing it wouldn't help — it's not a bottleneck — so its price $\lambda_i^*$ is zero. If $\lambda_i^* > 0$, the constraint must be tight: it's actively limiting the objective, so relaxing it would improve the optimum.
+      Think of \(\lambda_i\) as the "price" of relaxing constraint \(i\). If constraint \(i\) has slack (\(g_i(x^*) < 0\)), then relaxing it wouldn't help — it's not a bottleneck — so its price \(\lambda_i^*\) is zero. If \(\lambda_i^* > 0\), the constraint must be tight: it's actively limiting the objective, so relaxing it would improve the optimum.
     </p>
   </div>
 </section>
@@ -269,13 +269,13 @@
   <div class="callout-definition">
     <div class="callout-title">Definition — KKT Conditions</div>
     <p>
-      A point $(\tilde{x}, \tilde{\lambda}, \tilde{\nu})$ is a <strong>KKT-point</strong> if it satisfies:
+      A point \((\tilde{x}, \tilde{\lambda}, \tilde{\nu})\) is a <strong>KKT-point</strong> if it satisfies:
     </p>
     <ol>
-      <li><strong>Primal feasibility:</strong> $g_i(\tilde{x}) \le 0$ for all $i$, and $h_j(\tilde{x}) = 0$ for all $j$.</li>
-      <li><strong>Dual feasibility:</strong> $\tilde{\lambda}_i \ge 0$ for all $i$.</li>
-      <li><strong>Complementary slackness:</strong> $\tilde{\lambda}_i g_i(\tilde{x}) = 0$ for all $i$.</li>
-      <li><strong>Stationarity:</strong> $\nabla f(\tilde{x}) + \sum_{i=1}^m \tilde{\lambda}_i \nabla g_i(\tilde{x}) + \sum_{j=1}^\ell \tilde{\nu}_j \nabla h_j(\tilde{x}) = 0.$</li>
+      <li><strong>Primal feasibility:</strong> \(g_i(\tilde{x}) \le 0\) for all \(i\), and \(h_j(\tilde{x}) = 0\) for all \(j\).</li>
+      <li><strong>Dual feasibility:</strong> \(\tilde{\lambda}_i \ge 0\) for all \(i\).</li>
+      <li><strong>Complementary slackness:</strong> \(\tilde{\lambda}_i g_i(\tilde{x}) = 0\) for all \(i\).</li>
+      <li><strong>Stationarity:</strong> \(\nabla f(\tilde{x}) + \sum_{i=1}^m \tilde{\lambda}_i \nabla g_i(\tilde{x}) + \sum_{j=1}^\ell \tilde{\nu}_j \nabla h_j(\tilde{x}) = 0.\)</li>
     </ol>
   </div>
 
@@ -286,14 +286,14 @@
   <div class="callout-definition">
     <div class="callout-title">Proposition — KKT for General Programs (Necessary)</div>
     <p>
-      For any mathematical program with differentiable $f$, $g_i$, $h_j$ in which strong duality holds, any pair $x^*, (\lambda^*, \nu^*)$ of primal and dual optimal solutions forms a KKT-point.
+      For any mathematical program with differentiable \(f\), \(g_i\), \(h_j\) in which strong duality holds, any pair \(x^*, (\lambda^*, \nu^*)\) of primal and dual optimal solutions forms a KKT-point.
     </p>
   </div>
 
   <div class="callout-definition">
     <div class="callout-title">Proposition — KKT for Convex Programs (Sufficient)</div>
     <p>
-      For any <strong>convex</strong> program with differentiable $f$, $g_i$, $h_j$: if $(\tilde{x}, \tilde{\lambda}, \tilde{\nu})$ is a KKT-point, then $\tilde{x}$ and $(\tilde{\lambda}, \tilde{\nu})$ are primal and dual optimal, and strong duality holds.
+      For any <strong>convex</strong> program with differentiable \(f\), \(g_i\), \(h_j\): if \((\tilde{x}, \tilde{\lambda}, \tilde{\nu})\) is a KKT-point, then \(\tilde{x}\) and \((\tilde{\lambda}, \tilde{\nu})\) are primal and dual optimal, and strong duality holds.
     </p>
   </div>
 
@@ -307,7 +307,7 @@
   <div class="callout-example">
     <div class="callout-title">Example — When KKT Points Don't Exist</div>
     <p>
-      Consider $\min x$ subject to $x^2 \le 0$. The only feasible point is $x = 0$ with value $0$. The dual gives $\hat{L}(\lambda) = -1/(4\lambda)$ for $\lambda > 0$, approaching $0$ as $\lambda \to \infty$ but never reaching it. So strong duality holds ($f^* = \hat{f}^* = 0$) but the dual optimum is never attained, and there is no KKT-point. This happens because Slater's condition fails (you can't have $x^2 < 0$).
+      Consider \(\min x\) subject to \(x^2 \le 0\). The only feasible point is \(x = 0\) with value \(0\). The dual gives \(\hat{L}(\lambda) = -1/(4\lambda)\) for \(\lambda > 0\), approaching \(0\) as \(\lambda \to \infty\) but never reaching it. So strong duality holds (\(f^* = \hat{f}^* = 0\)) but the dual optimum is never attained, and there is no KKT-point. This happens because Slater's condition fails (you can't have \(x^2 < 0\)).
     </p>
   </div>
 </section>
@@ -323,11 +323,11 @@
   <div class="callout-definition">
     <div class="callout-title">Theorem — Slater's Condition</div>
     <p>
-      For any convex program, if there exists a point $x^* \in \text{relint}(P)$ such that $g_i(x^*) < 0$ for all non-affine $g_i$ and $h_j(x^*) = 0$ for all $j$, then:
+      For any convex program, if there exists a point \(x^* \in \text{relint}(P)\) such that \(g_i(x^*) < 0\) for all non-affine \(g_i\) and \(h_j(x^*) = 0\) for all \(j\), then:
     </p>
     <ol>
-      <li><strong>Strong duality holds:</strong> $f^* = \hat{f}^*$.</li>
-      <li><strong>The dual optimum is attained:</strong> there exist $\lambda^*, \nu^*$ achieving $\hat{f}^*$.</li>
+      <li><strong>Strong duality holds:</strong> \(f^* = \hat{f}^*\).</li>
+      <li><strong>The dual optimum is attained:</strong> there exist \(\lambda^*, \nu^*\) achieving \(\hat{f}^*\).</li>
     </ol>
   </div>
 
@@ -339,7 +339,7 @@
   </div>
 
   <p>
-    Two important consequences deserve highlighting. First, since every feasible point of an LP satisfies all constraints with either equality or strict inequality (and all constraints are affine), <strong>strong duality always holds for linear programs</strong>. Second, Slater's condition is sufficient but not necessary: the example $\min x$ s.t. $x^2 \le 0$ has strong duality but Slater's condition fails.
+    Two important consequences deserve highlighting. First, since every feasible point of an LP satisfies all constraints with either equality or strict inequality (and all constraints are affine), <strong>strong duality always holds for linear programs</strong>. Second, Slater's condition is sufficient but not necessary: the example \(\min x\) s.t. \(x^2 \le 0\) has strong duality but Slater's condition fails.
   </p>
 
   <div class="callout-note">
@@ -358,52 +358,52 @@
     This section provides a beautiful visual way to understand weak duality, strong duality, and Slater's condition using a single geometric construction.
   </p>
 
-  <h3>The Set $G$</h3>
+  <h3>The Set \(G\)</h3>
   <p>
-    For a mathematical program with one inequality constraint ($m = 1$, $\ell = 0$ for simplicity), define the set of achievable constraint-value and objective-value pairs:
+    For a mathematical program with one inequality constraint (\(m = 1\), \(\ell = 0\) for simplicity), define the set of achievable constraint-value and objective-value pairs:
   </p>
   <div class="math-block">
-    $$G := \{(g_1(x), f(x)) : x \in P\} \subseteq \mathbb{R}^2.$$
+    \[G := \{(g_1(x), f(x)) : x \in P\} \subseteq \mathbb{R}^2.\]
   </div>
   <p>
-    In the $(u, t)$-plane, the primal optimum $f^*$ is the lowest point on the $t$-axis that the set $G$ achieves when $u \le 0$:
+    In the \((u, t)\)-plane, the primal optimum \(f^*\) is the lowest point on the \(t\)-axis that the set \(G\) achieves when \(u \le 0\):
   </p>
   <div class="math-block">
-    $$f^* = \inf\{t : (u, t) \in G,\; u \le 0\}.$$
+    \[f^* = \inf\{t : (u, t) \in G,\; u \le 0\}.\]
   </div>
 
   <h3>Dual Values as Supporting Hyperplanes</h3>
   <p>
-    For a given $\lambda \ge 0$, the dual value $\hat{L}(\lambda)$ equals the minimum of $\lambda u + t$ over $G$. Geometrically, the line $\lambda u + t = \hat{L}(\lambda)$ is a <strong>non-vertical supporting hyperplane</strong> of $G$. Its intersection with the $t$-axis (at $u = 0$) gives $\hat{L}(\lambda)$.
+    For a given \(\lambda \ge 0\), the dual value \(\hat{L}(\lambda)\) equals the minimum of \(\lambda u + t\) over \(G\). Geometrically, the line \(\lambda u + t = \hat{L}(\lambda)\) is a <strong>non-vertical supporting hyperplane</strong> of \(G\). Its intersection with the \(t\)-axis (at \(u = 0\)) gives \(\hat{L}(\lambda)\).
   </p>
 
   <div class="callout-example">
     <div class="callout-title">Visualizing the Duality Gap</div>
     <p>
-      Picture the set $G$ in the $(u, t)$-plane. The primal value $f^*$ is found by looking at where $G$ meets (or approaches) the vertical line $u = 0$ from the left. The dual value $\hat{L}(\lambda)$ is where the supporting line with slope $-\lambda$ meets the $t$-axis. The duality gap is the vertical distance between $f^*$ and $\hat{f}^*$ on the $t$-axis.
+      Picture the set \(G\) in the \((u, t)\)-plane. The primal value \(f^*\) is found by looking at where \(G\) meets (or approaches) the vertical line \(u = 0\) from the left. The dual value \(\hat{L}(\lambda)\) is where the supporting line with slope \(-\lambda\) meets the \(t\)-axis. The duality gap is the vertical distance between \(f^*\) and \(\hat{f}^*\) on the \(t\)-axis.
     </p>
   </div>
 
-  <h3>The Epigraph Set $A$</h3>
+  <h3>The Epigraph Set \(A\)</h3>
   <p>
-    Extending $G$ by allowing worse constraint and objective values gives:
+    Extending \(G\) by allowing worse constraint and objective values gives:
   </p>
   <div class="math-block">
-    $$A := G \oplus (\mathbb{R}_{\ge 0} \times \mathbb{R}_{\ge 0}) = \{(u, t) : \exists\, x \in P,\; g_1(x) \le u,\; f(x) \le t\}.$$
+    \[A := G \oplus (\mathbb{R}_{\ge 0} \times \mathbb{R}_{\ge 0}) = \{(u, t) : \exists\, x \in P,\; g_1(x) \le u,\; f(x) \le t\}.\]
   </div>
   <p>
-    This set is always convex for convex programs (since $g_1$ and $f$ are convex). Now $f^* = \inf\{t : (0, t) \in A\}$ and the dual values are still given by supporting hyperplanes of $A$.
+    This set is always convex for convex programs (since \(g_1\) and \(f\) are convex). Now \(f^* = \inf\{t : (0, t) \in A\}\) and the dual values are still given by supporting hyperplanes of \(A\).
   </p>
 
   <div class="callout-definition">
     <div class="callout-title">Geometric Criterion for Strong Duality</div>
     <p>
-      Strong duality holds if and only if $A$ has a <strong>non-vertical supporting hyperplane</strong> at the point $(0, f^*)$. Slater's condition guarantees this by ensuring the boundary of $A$ at $u = 0$ is "smooth enough" for such a hyperplane to exist.
+      Strong duality holds if and only if \(A\) has a <strong>non-vertical supporting hyperplane</strong> at the point \((0, f^*)\). Slater's condition guarantees this by ensuring the boundary of \(A\) at \(u = 0\) is "smooth enough" for such a hyperplane to exist.
     </p>
   </div>
 
   <p>
-    This geometric picture provides an elegant alternative proof of weak duality. Since $(0, f^*) \in A$, for any supporting hyperplane $(\lambda, 1)^\top(u, t) \ge \hat{L}(\lambda)$ we get $\hat{L}(\lambda) \le ({\lambda}, 1)^\top(0, f^*) = f^*$.
+    This geometric picture provides an elegant alternative proof of weak duality. Since \((0, f^*) \in A\), for any supporting hyperplane \((\lambda, 1)^\top(u, t) \ge \hat{L}(\lambda)\) we get \(\hat{L}(\lambda) \le ({\lambda}, 1)^\top(0, f^*) = f^*\).
   </p>
 </section>
 
@@ -423,7 +423,7 @@
   </div>
 
   <p>
-    Consider the primal system $g_i(x) \le 0$, $h_j(x) = 0$ versus the dual system $\hat{L}(\lambda, \nu) > 0$, $\lambda \ge 0$. By weak duality, at most one of these can be feasible: if the primal is feasible then $f^* = 0$ (the objective is zero) so $\hat{f}^* \le 0$, ruling out $\hat{L} > 0$.
+    Consider the primal system \(g_i(x) \le 0\), \(h_j(x) = 0\) versus the dual system \(\hat{L}(\lambda, \nu) > 0\), \(\lambda \ge 0\). By weak duality, at most one of these can be feasible: if the primal is feasible then \(f^* = 0\) (the objective is zero) so \(\hat{f}^* \le 0\), ruling out \(\hat{L} > 0\).
   </p>
 
   <h3>Strong Alternatives</h3>
@@ -434,7 +434,7 @@
   </div>
 
   <p>
-    When the constraints $g_i$ are convex and $h_j$ are affine, and a mild regularity condition holds (a point in $\text{relint}(P)$ satisfying the equalities exists), we upgrade from weak to strong alternatives. For instance, for strict inequalities:
+    When the constraints \(g_i\) are convex and \(h_j\) are affine, and a mild regularity condition holds (a point in \(\text{relint}(P)\) satisfying the equalities exists), we upgrade from weak to strong alternatives. For instance, for strict inequalities:
   </p>
 
   <div class="callout-definition">
@@ -443,7 +443,7 @@
       Under a regularity condition, exactly one of the following two systems is feasible:
     </p>
     <div class="math-block">
-      $$\text{(I)}\;\; g_i(x) < 0,\; Ax = b \qquad \text{vs.} \qquad \text{(II)}\;\; \hat{L}(\lambda, \nu) \ge 0,\; \lambda \ge 0,\; \lambda \ne 0.$$
+      \[\text{(I)}\;\; g_i(x) < 0,\; Ax = b \qquad \text{vs.} \qquad \text{(II)}\;\; \hat{L}(\lambda, \nu) \ge 0,\; \lambda \ge 0,\; \lambda \ne 0.\]
     </div>
   </div>
 
@@ -463,21 +463,21 @@
     One of the most impactful applications of duality is the <strong>dual formulation of the Support Vector Machine</strong> (SVM). Recall from Chapter 2 that the (primal) SVM seeks the maximum-margin separating hyperplane:
   </p>
   <div class="math-block">
-    $$\min_{w, b}\; \|w\|^2 \quad \text{s.t.} \quad y_i(w^\top x_i + b) \ge 1 \;\;\forall\, i \in [m]. \tag{P}$$
+    \[\min_{w, b}\; \|w\|^2 \quad \text{s.t.} \quad y_i(w^\top x_i + b) \ge 1 \;\;\forall\, i \in [m]. \tag{P}\]
   </div>
 
   <h3>Deriving the Dual</h3>
   <p>
-    Introducing multipliers $\lambda_i \ge 0$ for each constraint and forming the Lagrangian:
+    Introducing multipliers \(\lambda_i \ge 0\) for each constraint and forming the Lagrangian:
   </p>
   <div class="math-block">
-    $$L(w, b, \lambda) = \|w\|^2 - \sum_{i=1}^m \lambda_i\big(y_i(w^\top x_i + b) - 1\big).$$
+    \[L(w, b, \lambda) = \|w\|^2 - \sum_{i=1}^m \lambda_i\big(y_i(w^\top x_i + b) - 1\big).\]
   </div>
   <p>
-    Setting partial derivatives to zero gives two conditions: $w = \frac{1}{2}\sum_i \lambda_i y_i x_i$ and $\sum_i \lambda_i y_i = 0$. Substituting back yields the dual:
+    Setting partial derivatives to zero gives two conditions: \(w = \frac{1}{2}\sum_i \lambda_i y_i x_i\) and \(\sum_i \lambda_i y_i = 0\). Substituting back yields the dual:
   </p>
   <div class="math-block">
-    $$\max_\lambda \; \sum_{i=1}^m \lambda_i - \frac{1}{4}\sum_{i,j} \lambda_i \lambda_j y_i y_j (x_i^\top x_j) \quad \text{s.t.} \quad \sum_i \lambda_i y_i = 0,\; \lambda_i \ge 0. \tag{D}$$
+    \[\max_\lambda \; \sum_{i=1}^m \lambda_i - \frac{1}{4}\sum_{i,j} \lambda_i \lambda_j y_i y_j (x_i^\top x_j) \quad \text{s.t.} \quad \sum_i \lambda_i y_i = 0,\; \lambda_i \ge 0. \tag{D}\]
   </div>
 
   <h3>Why the Dual Formulation is Powerful</h3>
@@ -485,14 +485,14 @@
     The dual has two major advantages over the primal:
   </p>
   <ol>
-    <li><strong>Dimension independence:</strong> The primal has $n + 1$ variables (dimension of feature space), while the dual has $m$ variables (number of data points). In high-dimensional settings like image classification where $n \gg m$, the dual is much smaller.</li>
-    <li><strong>The kernel trick:</strong> The dual and the classification rule depend only on inner products $x_i^\top x_j$ and $x_i^\top z$. This means we can replace these with a <em>kernel function</em> $k(x, y) = \Phi(x) \cdot \Phi(y)$ for some feature map $\Phi$ without ever computing $\Phi$ explicitly. For example, the Gaussian kernel $k(x, y) = e^{-\|x-y\|^2 / 2\sigma^2}$ implicitly maps into an infinite-dimensional space.</li>
+    <li><strong>Dimension independence:</strong> The primal has \(n + 1\) variables (dimension of feature space), while the dual has \(m\) variables (number of data points). In high-dimensional settings like image classification where \(n \gg m\), the dual is much smaller.</li>
+    <li><strong>The kernel trick:</strong> The dual and the classification rule depend only on inner products \(x_i^\top x_j\) and \(x_i^\top z\). This means we can replace these with a <em>kernel function</em> \(k(x, y) = \Phi(x) \cdot \Phi(y)\) for some feature map \(\Phi\) without ever computing \(\Phi\) explicitly. For example, the Gaussian kernel \(k(x, y) = e^{-\|x-y\|^2 / 2\sigma^2}\) implicitly maps into an infinite-dimensional space.</li>
   </ol>
 
   <div class="callout-example">
     <div class="callout-title">Example — Polynomial Kernel</div>
     <p>
-      Consider the feature map $\Phi: (x_1, x_2)^\top \mapsto (x_1^2, x_2^2, \sqrt{2}\, x_1 x_2)^\top$. Its kernel is simply $k(x, y) = (x^\top y)^2$. So instead of working in 3D, we stay in 2D and use this kernel in the dual — the math handles the "lifting" for us automatically.
+      Consider the feature map \(\Phi: (x_1, x_2)^\top \mapsto (x_1^2, x_2^2, \sqrt{2}\, x_1 x_2)^\top\). Its kernel is simply \(k(x, y) = (x^\top y)^2\). So instead of working in 3D, we stay in 2D and use this kernel in the dual — the math handles the "lifting" for us automatically.
     </p>
   </div>
 </section>
@@ -501,11 +501,11 @@
 <section>
   <h2>Key Takeaways</h2>
   <ul>
-    <li><strong>The Lagrangian</strong> replaces hard indicator-function penalties with soft linear penalties parametrized by multipliers $\lambda, \nu$. The dual function $\hat{L}(\lambda, \nu) = \inf_x L(x, \lambda, \nu)$ is always concave.</li>
-    <li><strong>Weak duality</strong> ($\hat{f}^* \le f^*$) always holds, giving a lower bound on the primal. This makes the dual valuable even for non-convex problems.</li>
-    <li><strong>Strong duality</strong> ($\hat{f}^* = f^*$) holds under Slater's condition: a strictly feasible point for non-affine constraints must exist. It always holds for LPs.</li>
+    <li><strong>The Lagrangian</strong> replaces hard indicator-function penalties with soft linear penalties parametrized by multipliers \(\lambda, \nu\). The dual function \(\hat{L}(\lambda, \nu) = \inf_x L(x, \lambda, \nu)\) is always concave.</li>
+    <li><strong>Weak duality</strong> (\(\hat{f}^* \le f^*\)) always holds, giving a lower bound on the primal. This makes the dual valuable even for non-convex problems.</li>
+    <li><strong>Strong duality</strong> (\(\hat{f}^* = f^*\)) holds under Slater's condition: a strictly feasible point for non-affine constraints must exist. It always holds for LPs.</li>
     <li><strong>KKT conditions</strong> are necessary (under strong duality) and sufficient (for convex programs) for optimality. Most optimization algorithms are methods for finding KKT-points.</li>
-    <li><strong>Complementary slackness</strong> ($\lambda_i^* g_i(x^*) = 0$) tells us inactive constraints have zero multipliers. This connects structure of the primal to structure of the dual.</li>
+    <li><strong>Complementary slackness</strong> (\(\lambda_i^* g_i(x^*) = 0\)) tells us inactive constraints have zero multipliers. This connects structure of the primal to structure of the dual.</li>
     <li><strong>Theorems of alternatives</strong> use duality to certify infeasibility: either a system has a solution, or multipliers certifying its impossibility exist.</li>
     <li><strong>The Dual SVM</strong> demonstrates practical power: duality reduces dimensionality and enables the kernel trick for non-linear classification.</li>
   </ul>

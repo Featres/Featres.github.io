@@ -16,13 +16,13 @@
   <script>
       MathJax = {
         tex: {
-          inlineMath: [['$', '$'], ['\(', '\)']],
-          displayMath: [['$$', '$$'], ['\[', '\]']]
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          displayMath: [['$$', '$$'], ['\\[', '\\]']]
         },
-        svg: { fontCache: 'global' }
+        chtml: {}
       };
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
 </head>
 <body>
 <div class="topbar">
@@ -66,11 +66,11 @@
 
       <div class="callout-definition">
         <div class="callout-title">The Lasso (Recap)</div>
-        <p>Given a linear model $Y_i = \sum_{j=1}^p \beta_j^0 X_i^{(j)} + \varepsilon_i$, the Lasso estimator is:</p>
+        <p>Given a linear model \(Y_i = \sum_{j=1}^p \beta_j^0 X_i^{(j)} + \varepsilon_i\), the Lasso estimator is:</p>
         <div class="math-block">
-          $$\hat{\beta}(\lambda) = \arg\min_{\beta} \left( \|Y - X\beta\|_2^2 / n + \lambda \|\beta\|_1 \right)$$
+          \[\hat{\beta}(\lambda) = \arg\min_{\beta} \left( \|Y - X\beta\|_2^2 / n + \lambda \|\beta\|_1 \right)\]
         </div>
-        <p>The $\ell_1$-penalty $\|\beta\|_1 = \sum_j |\beta_j|$ encourages <em>sparsity</em>: many estimated coefficients are set exactly to zero. The tuning parameter $\lambda$ is typically chosen via cross-validation.</p>
+        <p>The \(\ell_1\)-penalty \(\|\beta\|_1 = \sum_j |\beta_j|\) encourages <em>sparsity</em>: many estimated coefficients are set exactly to zero. The tuning parameter \(\lambda\) is typically chosen via cross-validation.</p>
       </div>
 
       <p>
@@ -79,16 +79,16 @@
 
       <div class="callout-definition">
         <div class="callout-title">The Adaptive Lasso</div>
-        <p>First, compute an initial Lasso estimate $\hat{\beta}_{\mathrm{init}}$. Then solve:</p>
+        <p>First, compute an initial Lasso estimate \(\hat{\beta}_{\mathrm{init}}\). Then solve:</p>
         <div class="math-block">
-          $$\hat{\beta}_{\mathrm{adapt}}(\lambda) = \arg\min_{\beta} \left( \|Y - X\beta\|_2^2 / n + \lambda \sum_{j=1}^p \frac{|\beta_j|}{|\hat{\beta}_{\mathrm{init},j}|} \right)$$
+          \[\hat{\beta}_{\mathrm{adapt}}(\lambda) = \arg\min_{\beta} \left( \|Y - X\beta\|_2^2 / n + \lambda \sum_{j=1}^p \frac{|\beta_j|}{|\hat{\beta}_{\mathrm{init},j}|} \right)\]
         </div>
         <p>The idea: variables with large initial estimates get <em>small</em> penalties (less shrinkage), while variables with small or zero initial estimates get <em>large</em> penalties (more shrinkage). This produces sparser and less biased estimates.</p>
       </div>
 
       <div class="callout-example">
         <div class="callout-title">Example — Motif Regression</div>
-        <p>In a DNA motif regression dataset with $p = 195$ predictors and $n = 143$ samples, the Lasso (with $\lambda$ from CV) selects 26 variables. The Adaptive Lasso further refines this to 16 variables, producing a sparser model that often better identifies the truly important predictors while maintaining predictive accuracy.</p>
+        <p>In a DNA motif regression dataset with \(p = 195\) predictors and \(n = 143\) samples, the Lasso (with \(\lambda\) from CV) selects 26 variables. The Adaptive Lasso further refines this to 16 variables, producing a sparser model that often better identifies the truly important predictors while maintaining predictive accuracy.</p>
       </div>
     </section>
 
@@ -97,22 +97,22 @@
       <h2>II. Generalized Linear Models (GLMs) and the Lasso</h2>
 
       <p>
-        So far the Lasso used squared error loss, appropriate when $Y$ is continuous. But what if $Y$ is binary (e.g. disease yes/no), a count (e.g. number of events), or categorical? <strong>Generalized Linear Models</strong> provide a unified framework for all these cases.
+        So far the Lasso used squared error loss, appropriate when \(Y\) is continuous. But what if \(Y\) is binary (e.g. disease yes/no), a count (e.g. number of events), or categorical? <strong>Generalized Linear Models</strong> provide a unified framework for all these cases.
       </p>
 
       <h3>2.1 The GLM Framework</h3>
 
       <div class="callout-definition">
         <div class="callout-title">Definition — Generalized Linear Model</div>
-        <p>Given observations $Y_1, \ldots, Y_n$ (independent) and covariates $X_i \in \mathbb{R}^p$, a GLM specifies:</p>
+        <p>Given observations \(Y_1, \ldots, Y_n\) (independent) and covariates \(X_i \in \mathbb{R}^p\), a GLM specifies:</p>
         <div class="math-block">
-          $$g\big(\mathbb{E}[Y_i | X_i = x]\big) = \underbrace{\mu + \sum_{j=1}^p \beta_j x^{(j)}}_{= f_{\mu,\beta}(x)}$$
+          \[g\big(\mathbb{E}[Y_i | X_i = x]\big) = \underbrace{\mu + \sum_{j=1}^p \beta_j x^{(j)}}_{= f_{\mu,\beta}(x)}\]
         </div>
-        <p>where $g(\cdot)$ is a known <strong>link function</strong> and $f_{\mu,\beta}(x)$ is the <strong>linear predictor</strong>. The intercept $\mu$ is important and should <em>not</em> be penalized.</p>
+        <p>where \(g(\cdot)\) is a known <strong>link function</strong> and \(f_{\mu,\beta}(x)\) is the <strong>linear predictor</strong>. The intercept \(\mu\) is important and should <em>not</em> be penalized.</p>
       </div>
 
       <p>
-        The intuition is simple: instead of directly modelling $\mathbb{E}[Y|X]$ as a linear function of $X$, we apply a transformation $g(\cdot)$ first. A standard linear model is just the special case where $g$ is the identity function.
+        The intuition is simple: instead of directly modelling \(\mathbb{E}[Y|X]\) as a linear function of \(X\), we apply a transformation \(g(\cdot)\) first. A standard linear model is just the special case where \(g\) is the identity function.
       </p>
 
       <h3>2.2 Lasso for GLMs</h3>
@@ -124,42 +124,42 @@
       <div class="callout-definition">
         <div class="callout-title">Lasso for GLMs</div>
         <div class="math-block">
-          $$\hat{\mu}, \hat{\beta}(\lambda) = \arg\min_{\mu, \beta} \left( \underbrace{-\ell(\mu, \beta)}_{\text{neg. log-likelihood}} + \lambda \|\beta\|_1 \right)$$
+          \[\hat{\mu}, \hat{\beta}(\lambda) = \arg\min_{\mu, \beta} \left( \underbrace{-\ell(\mu, \beta)}_{\text{neg. log-likelihood}} + \lambda \|\beta\|_1 \right)\]
         </div>
-        <p>The intercept $\mu$ is <em>not</em> penalized. Software: <code>glmnet</code> in R handles this efficiently for many GLM families.</p>
+        <p>The intercept \(\mu\) is <em>not</em> penalized. Software: <code>glmnet</code> in R handles this efficiently for many GLM families.</p>
       </div>
 
       <p>
-        A key property: for exponential family distributions, the negative log-likelihood is <strong>convex</strong> in $(\mu, \beta)$. This means all the nice computational and theoretical properties of the Lasso carry over. Specifically, high-dimensional consistency, oracle inequalities, and variable screening properties all hold under analogous conditions.
+        A key property: for exponential family distributions, the negative log-likelihood is <strong>convex</strong> in \((\mu, \beta)\). This means all the nice computational and theoretical properties of the Lasso carry over. Specifically, high-dimensional consistency, oracle inequalities, and variable screening properties all hold under analogous conditions.
       </p>
 
       <h3>2.3 Important GLM Examples</h3>
 
       <h4>Logistic Regression (Binary Response)</h4>
       <p>
-        When $Y_i \in \{0, 1\}$ follows a Bernoulli distribution with $Y_i | X_i \sim \text{Bernoulli}(\pi(X_i))$, we use the <strong>logit link</strong>:
+        When \(Y_i \in \{0, 1\}\) follows a Bernoulli distribution with \(Y_i | X_i \sim \text{Bernoulli}(\pi(X_i))\), we use the <strong>logit link</strong>:
       </p>
       <div class="math-block">
-        $$\log\frac{\pi(x)}{1 - \pi(x)} = \mu + \sum_{j=1}^p \beta_j x^{(j)}$$
+        \[\log\frac{\pi(x)}{1 - \pi(x)} = \mu + \sum_{j=1}^p \beta_j x^{(j)}\]
       </div>
       <p>The loss function (negative log-likelihood per observation) is:</p>
       <div class="math-block">
-        $$\rho_{\mu,\beta}(x, y) = -y \cdot f_{\mu,\beta}(x) + \log\big(1 + \exp(f_{\mu,\beta}(x))\big)$$
+        \[\rho_{\mu,\beta}(x, y) = -y \cdot f_{\mu,\beta}(x) + \log\big(1 + \exp(f_{\mu,\beta}(x))\big)\]
       </div>
-      <p>This is convex in $(\mu, \beta)$ because the first term is linear and the second has a positive second derivative. An equivalent "margin" formulation writes the loss as $\log(1 + e^{-\tilde{y}f})$ where $\tilde{y} = 2y - 1 \in \{-1, +1\}$, showing that it upper-bounds the misclassification error.</p>
+      <p>This is convex in \((\mu, \beta)\) because the first term is linear and the second has a positive second derivative. An equivalent "margin" formulation writes the loss as \(\log(1 + e^{-\tilde{y}f})\) where \(\tilde{y} = 2y - 1 \in \{-1, +1\}\), showing that it upper-bounds the misclassification error.</p>
 
       <h4>Poisson Regression (Count Data)</h4>
       <p>
-        For count data $Y_i \in \{0, 1, 2, \ldots\}$ with $Y_i | X_i \sim \text{Poisson}(\lambda(X_i))$, the link function is $\log(\lambda(x)) = f_{\mu,\beta}(x)$. The loss is:
+        For count data \(Y_i \in \{0, 1, 2, \ldots\}\) with \(Y_i | X_i \sim \text{Poisson}(\lambda(X_i))\), the link function is \(\log(\lambda(x)) = f_{\mu,\beta}(x)\). The loss is:
       </p>
       <div class="math-block">
-        $$\rho_{\mu,\beta}(x, y) = -y \cdot f_{\mu,\beta}(x) + \exp(f_{\mu,\beta}(x))$$
+        \[\rho_{\mu,\beta}(x, y) = -y \cdot f_{\mu,\beta}(x) + \exp(f_{\mu,\beta}(x))\]
       </div>
       <p>Again convex, for the same reasons as logistic regression.</p>
 
       <h4>Multinomial / Contingency Tables</h4>
       <p>
-        For categorical $Y \in \{0, 1, \ldots, k-1\}$, the multinomial distribution uses the softmax inverse link $\pi_r = \exp(f_r) / \sum_s \exp(f_s)$. This extends to contingency tables (log-linear models) with factor variables. A key practical challenge: the design matrix can become enormous ($k = |I|$ rows), making computation expensive for many factors.
+        For categorical \(Y \in \{0, 1, \ldots, k-1\}\), the multinomial distribution uses the softmax inverse link \(\pi_r = \exp(f_r) / \sum_s \exp(f_s)\). This extends to contingency tables (log-linear models) with factor variables. A key practical challenge: the design matrix can become enormous (\(k = |I|\) rows), making computation expensive for many factors.
       </p>
 
       <div class="callout-note">
@@ -174,7 +174,7 @@
 
       <h3>3.1 Motivation: Why Groups?</h3>
       <p>
-        In many real problems, predictors come with a natural <strong>group structure</strong>. The standard Lasso treats each coefficient individually: it might set $\beta_3 = 0$ but $\beta_4 \neq 0$ even if both belong to the same categorical variable. This doesn't make practical sense — if a factor variable is irrelevant, <em>all</em> its dummy-coded columns should be zero simultaneously.
+        In many real problems, predictors come with a natural <strong>group structure</strong>. The standard Lasso treats each coefficient individually: it might set \(\beta_3 = 0\) but \(\beta_4 \neq 0\) even if both belong to the same categorical variable. This doesn't make practical sense — if a factor variable is irrelevant, <em>all</em> its dummy-coded columns should be zero simultaneously.
       </p>
 
       <div class="callout-example">
@@ -188,18 +188,18 @@
 
       <h3>3.2 Group Lasso: Definition</h3>
 
-      <p>Let the parameter vector be partitioned into $q$ disjoint groups: $\beta = (\beta_{G_1}, \ldots, \beta_{G_q})$ where $G_1, \ldots, G_q$ partition $\{1, \ldots, p\}$.</p>
+      <p>Let the parameter vector be partitioned into \(q\) disjoint groups: \(\beta = (\beta_{G_1}, \ldots, \beta_{G_q})\) where \(G_1, \ldots, G_q\) partition \(\{1, \ldots, p\}\).</p>
 
       <div class="callout-definition">
         <div class="callout-title">Definition — Group Lasso Estimator (Yuan &amp; Lin, 2006)</div>
         <div class="math-block">
-          $$\hat{\beta}(\lambda) = \arg\min_{\beta} \left( \frac{1}{n}\|Y - X\beta\|_2^2 + \lambda \sum_{j=1}^{q} m_j \|\beta_{G_j}\|_2 \right)$$
+          \[\hat{\beta}(\lambda) = \arg\min_{\beta} \left( \frac{1}{n}\|Y - X\beta\|_2^2 + \lambda \sum_{j=1}^{q} m_j \|\beta_{G_j}\|_2 \right)\]
         </div>
-        <p>where $\|\beta_{G_j}\|_2 = \sqrt{\sum_{r \in G_j} \beta_r^2}$ is the $\ell_2$-norm of the sub-vector, and $m_j = \sqrt{|G_j|}$ is a weighting factor that accounts for differing group sizes.</p>
+        <p>where \(\|\beta_{G_j}\|_2 = \sqrt{\sum_{r \in G_j} \beta_r^2}\) is the \(\ell_2\)-norm of the sub-vector, and \(m_j = \sqrt{|G_j|}\) is a weighting factor that accounts for differing group sizes.</p>
       </div>
 
       <p>
-        <strong>Intuition — Why $\ell_2$-norms per group?</strong> The standard Lasso uses $\|\beta\|_1 = \sum_j |\beta_j|$, which penalizes each coefficient individually and promotes element-wise sparsity. The Group Lasso replaces this with a sum of $\ell_2$-norms over groups: $\sum_j \|\beta_{G_j}\|_2$. The $\ell_2$-norm is <em>not</em> differentiable at the zero vector (it has a "kink" there, similar to how $|\cdot|$ has a kink at 0). This kink forces entire groups to be either all zero or all non-zero. Think of it as "$\ell_1$ across groups, $\ell_2$ within groups."
+        <strong>Intuition — Why \(\ell_2\)-norms per group?</strong> The standard Lasso uses \(\|\beta\|_1 = \sum_j |\beta_j|\), which penalizes each coefficient individually and promotes element-wise sparsity. The Group Lasso replaces this with a sum of \(\ell_2\)-norms over groups: \(\sum_j \|\beta_{G_j}\|_2\). The \(\ell_2\)-norm is <em>not</em> differentiable at the zero vector (it has a "kink" there, similar to how \(|\cdot|\) has a kink at 0). This kink forces entire groups to be either all zero or all non-zero. Think of it as "\(\ell_1\) across groups, \(\ell_2\) within groups."
       </p>
 
       <figure>
@@ -209,7 +209,7 @@
             <polygon points="0,-80 80,0 0,80 -80,0" fill="#eef6ff" stroke="#1a73e8" stroke-width="2"/>
             <line x1="-100" y1="0" x2="100" y2="0" stroke="#ccc" stroke-width="1"/>
             <line x1="0" y1="-100" x2="0" y2="100" stroke="#ccc" stroke-width="1"/>
-            <text x="0" y="115" text-anchor="middle" font-size="13" fill="#16213e" font-family="Inter,sans-serif">Lasso ($\ell_1$ ball)</text>
+            <text x="0" y="115" text-anchor="middle" font-size="13" fill="#16213e" font-family="Inter,sans-serif">Lasso (\(\ell_1\) ball)</text>
             <text x="0" y="132" text-anchor="middle" font-size="11" fill="#555" font-family="Inter,sans-serif">element-wise sparsity</text>
           </g>
           <!-- Group Lasso ball (cylinder-ish) -->
@@ -217,17 +217,17 @@
             <circle cx="0" cy="0" r="75" fill="#f1f8f1" stroke="#2e7d32" stroke-width="2"/>
             <line x1="-100" y1="0" x2="100" y2="0" stroke="#ccc" stroke-width="1"/>
             <line x1="0" y1="-100" x2="0" y2="100" stroke="#ccc" stroke-width="1"/>
-            <text x="0" y="115" text-anchor="middle" font-size="13" fill="#16213e" font-family="Inter,sans-serif">Ridge ($\ell_2$ ball)</text>
+            <text x="0" y="115" text-anchor="middle" font-size="13" fill="#16213e" font-family="Inter,sans-serif">Ridge (\(\ell_2\) ball)</text>
             <text x="0" y="132" text-anchor="middle" font-size="11" fill="#555" font-family="Inter,sans-serif">no sparsity</text>
           </g>
         </svg>
-        <figcaption>Figure 1: The Lasso's diamond-shaped $\ell_1$ ball has corners on the axes, which is why solutions hit exact zeros. The Group Lasso applies this "corner" logic at the group level while using smooth $\ell_2$ geometry within each group.</figcaption>
+        <figcaption>Figure 1: The Lasso's diamond-shaped \(\ell_1\) ball has corners on the axes, which is why solutions hit exact zeros. The Group Lasso applies this "corner" logic at the group level while using smooth \(\ell_2\) geometry within each group.</figcaption>
       </figure>
 
       <h3>3.3 Group Sparsity in Action</h3>
       <p>The Group Lasso produces <strong>group-sparse</strong> estimates:</p>
       <ul>
-        <li>For every group $G_j$: either $\hat{\beta}_{G_j} \equiv 0$ (the entire group is excluded), or all components $(\hat{\beta}_{G_j})_r \neq 0$ for $r \in G_j$ (the entire group is included).</li>
+        <li>For every group \(G_j\): either \(\hat{\beta}_{G_j} \equiv 0\) (the entire group is excluded), or all components \((\hat{\beta}_{G_j})_r \neq 0\) for \(r \in G_j\) (the entire group is included).</li>
         <li>This is the natural behavior when dealing with factor variables, interaction terms, or basis expansions.</li>
       </ul>
 
@@ -241,9 +241,9 @@
         <div class="callout-title">Groupwise Prediction Penalty</div>
         <p>A special but important variant uses:</p>
         <div class="math-block">
-          $$\text{pen}(\beta) = \lambda \sum_{j=1}^{q} m_j \|X_{G_j} \beta_{G_j}\|_2 = \lambda \sum_{j=1}^{q} m_j \sqrt{\beta_{G_j}^T X_{G_j}^T X_{G_j} \beta_{G_j}}$$
+          \[\text{pen}(\beta) = \lambda \sum_{j=1}^{q} m_j \|X_{G_j} \beta_{G_j}\|_2 = \lambda \sum_{j=1}^{q} m_j \sqrt{\beta_{G_j}^T X_{G_j}^T X_{G_j} \beta_{G_j}}\]
         </div>
-        <p>This penalty is <strong>invariant under reparameterization</strong> within each group $G_j$, because it penalizes the <em>predicted values</em> $X_{G_j}\beta_{G_j}$, not the raw coefficients. When using an orthogonal parameterization where $X_{G_j}^T X_{G_j} = I$, this reduces to the standard Group Lasso.</p>
+        <p>This penalty is <strong>invariant under reparameterization</strong> within each group \(G_j\), because it penalizes the <em>predicted values</em> \(X_{G_j}\beta_{G_j}\), not the raw coefficients. When using an orthogonal parameterization where \(X_{G_j}^T X_{G_j} = I\), this reduces to the standard Group Lasso.</p>
       </div>
 
       <p>In practice, with categorical variables you should either use a groupwise orthogonalized design or the groupwise prediction penalty directly.</p>
@@ -255,12 +255,12 @@
       </p>
 
       <ol>
-        <li>Initialize $\beta^{[0]}$ (e.g. to zero). Set $m = 0$.</li>
-        <li>Cycle through groups $j = 1, \ldots, q$:
+        <li>Initialize \(\beta^{[0]}\) (e.g. to zero). Set \(m = 0\).</li>
+        <li>Cycle through groups \(j = 1, \ldots, q\):
           <ul>
-            <li>Compute the negative gradient for group $j$, holding all other groups fixed.</li>
-            <li>If the gradient norm is below a threshold $\lambda m_j$: set $\hat{\beta}_{G_j} = 0$ (the entire group is zeroed out).</li>
-            <li>Otherwise: solve a smaller optimization for $\beta_{G_j}$ only.</li>
+            <li>Compute the negative gradient for group \(j\), holding all other groups fixed.</li>
+            <li>If the gradient norm is below a threshold \(\lambda m_j\): set \(\hat{\beta}_{G_j} = 0\) (the entire group is zeroed out).</li>
+            <li>Otherwise: solve a smaller optimization for \(\beta_{G_j}\) only.</li>
           </ul>
         </li>
         <li>Repeat until convergence.</li>
@@ -277,20 +277,20 @@
 
       <h3>3.6 Application: DNA Splice Site Prediction</h3>
       <p>
-        A real-world application from computational biology: predicting splice sites in DNA using 7 factor variables (each with 4 nucleotide levels: A, C, G, T). A logistic group Lasso model was fit with all 3-way and lower interactions, totaling 64 terms and $p = 1{,}156$ parameters. The Group Lasso achieved a maximal correlation $\rho_{\max} = 0.6593$ on the test set, competitive with specialized maximum entropy approaches, while also providing interpretable selection of main effects and interactions.
+        A real-world application from computational biology: predicting splice sites in DNA using 7 factor variables (each with 4 nucleotide levels: A, C, G, T). A logistic group Lasso model was fit with all 3-way and lower interactions, totaling 64 terms and \(p = 1{,}156\) parameters. The Group Lasso achieved a maximal correlation \(\rho_{\max} = 0.6593\) on the test set, competitive with specialized maximum entropy approaches, while also providing interpretable selection of main effects and interactions.
       </p>
 
       <h3>3.7 Theoretical Guarantees (Overview)</h3>
       <p>
-        The theoretical properties of the Group Lasso parallel those of the standard Lasso, but with "more complicated arguments." With a suitable choice of $\lambda$ and under a <strong>group compatibility condition</strong> (the group-level analogue of the compatibility/restricted eigenvalue condition), we get:
+        The theoretical properties of the Group Lasso parallel those of the standard Lasso, but with "more complicated arguments." With a suitable choice of \(\lambda\) and under a <strong>group compatibility condition</strong> (the group-level analogue of the compatibility/restricted eigenvalue condition), we get:
       </p>
       <ul>
         <li><strong>Prediction consistency</strong>: the estimated regression function converges to the true one.</li>
-        <li><strong>Group screening</strong>: the estimated active group set $\hat{S}_{\mathrm{group}}$ contains the true active groups $S^0_{\mathrm{group}}$ with high probability.</li>
+        <li><strong>Group screening</strong>: the estimated active group set \(\hat{S}_{\mathrm{group}}\) contains the true active groups \(S^0_{\mathrm{group}}\) with high probability.</li>
         <li><strong>Oracle inequalities</strong>: the estimator performs nearly as well as if we knew which groups were active.</li>
       </ul>
 
-      <p>When group sizes $T_j$ are large relative to $\log(q)$, there is a <strong>prediction gain</strong> over using the standard Lasso, by exploiting group structure.</p>
+      <p>When group sizes \(T_j\) are large relative to \(\log(q)\), there is a <strong>prediction gain</strong> over using the standard Lasso, by exploiting group structure.</p>
     </section>
 
     <!-- ============================================ -->
@@ -299,34 +299,34 @@
 
       <h3>4.1 From Linear to Additive Models</h3>
       <p>
-        A linear model assumes $\mathbb{E}[Y|X] = \sum_j \beta_j X^{(j)}$ — a weighted sum of the raw covariates. This is restrictive: the true relationship between $Y$ and $X^{(j)}$ might be nonlinear. An <strong>additive model</strong> replaces each linear term with a smooth function:
+        A linear model assumes \(\mathbb{E}[Y|X] = \sum_j \beta_j X^{(j)}\) — a weighted sum of the raw covariates. This is restrictive: the true relationship between \(Y\) and \(X^{(j)}\) might be nonlinear. An <strong>additive model</strong> replaces each linear term with a smooth function:
       </p>
 
       <div class="callout-definition">
         <div class="callout-title">Definition — High-Dimensional Additive Model</div>
         <div class="math-block">
-          $$Y_i = \mu + \sum_{j=1}^{p} f_j(X_i^{(j)}) + \varepsilon_i, \quad i = 1, \ldots, n$$
+          \[Y_i = \mu + \sum_{j=1}^{p} f_j(X_i^{(j)}) + \varepsilon_i, \quad i = 1, \ldots, n\]
         </div>
-        <p>where each $f_j$ is a <em>smooth univariate function</em> and we require centering $\sum_i f_j(X_i^{(j)}) = 0$ for identifiability. The goal is to estimate all $p$ functions, where $p$ can be much larger than $n$.</p>
+        <p>where each \(f_j\) is a <em>smooth univariate function</em> and we require centering \(\sum_i f_j(X_i^{(j)}) = 0\) for identifiability. The goal is to estimate all \(p\) functions, where \(p\) can be much larger than \(n\).</p>
       </div>
 
       <div class="callout-example">
         <div class="callout-title">Example — Linear vs. Additive</div>
-        <p>A linear model says the effect of "age" on blood pressure is $\beta \cdot \text{age}$ — a straight line. An additive model allows the effect to be <em>any</em> smooth curve $f(\text{age})$, capturing, say, a quadratic or exponential relationship. Crucially, in high dimensions, most of these functions should be zero (sparsity at the function level).</p>
+        <p>A linear model says the effect of "age" on blood pressure is \(\beta \cdot \text{age}\) — a straight line. An additive model allows the effect to be <em>any</em> smooth curve \(f(\text{age})\), capturing, say, a quadratic or exponential relationship. Crucially, in high dimensions, most of these functions should be zero (sparsity at the function level).</p>
       </div>
 
       <h3>4.2 Basis Expansion: Turning Functions into Vectors</h3>
       <p>
-        To make the problem computational, each function $f_j$ is expanded in a basis of $K$ functions (e.g. B-splines):
+        To make the problem computational, each function \(f_j\) is expanded in a basis of \(K\) functions (e.g. B-splines):
       </p>
       <div class="math-block">
-        $$f_j(x) = \sum_{k=1}^{K} \beta_{j,k} \, h_{j,k}(x)$$
+        \[f_j(x) = \sum_{k=1}^{K} \beta_{j,k} \, h_{j,k}(x)\]
       </div>
       <p>
-        This converts the infinite-dimensional problem (estimating functions) into a finite-dimensional one (estimating parameter vectors $\beta_j \in \mathbb{R}^K$). The design matrix becomes $H = [H_1 | H_2 | \cdots | H_p]$ where each $H_j$ is $n \times K$. The total number of parameters is $pK$, which can be very large.
+        This converts the infinite-dimensional problem (estimating functions) into a finite-dimensional one (estimating parameter vectors \(\beta_j \in \mathbb{R}^K\)). The design matrix becomes \(H = [H_1 | H_2 | \cdots | H_p]\) where each \(H_j\) is \(n \times K\). The total number of parameters is \(pK\), which can be very large.
       </p>
 
-      <p>Now, each function $f_j$ corresponds to a <em>group</em> $\beta_j$ of $K$ parameters — and the Group Lasso structure appears naturally!</p>
+      <p>Now, each function \(f_j\) corresponds to a <em>group</em> \(\beta_j\) of \(K\) parameters — and the Group Lasso structure appears naturally!</p>
 
       <h3>4.3 The Sparsity-Smoothness Penalty</h3>
       <p>
@@ -336,36 +336,36 @@
       <div class="callout-definition">
         <div class="callout-title">Definition — Sparsity-Smoothness Penalty (SSP)</div>
         <div class="math-block">
-          $$\text{pen}_{\lambda_1, \lambda_2}(\beta) = \lambda_1 \sum_{j=1}^{p} \|f_j\|_n + \lambda_2 \sum_{j=1}^{p} I(f_j)$$
+          \[\text{pen}_{\lambda_1, \lambda_2}(\beta) = \lambda_1 \sum_{j=1}^{p} \|f_j\|_n + \lambda_2 \sum_{j=1}^{p} I(f_j)\]
         </div>
-        <p>where $\|f_j\|_n = \|H_j \beta_j\|_2 / \sqrt{n}$ is the empirical norm (controlling <strong>sparsity</strong>) and $I(f_j) = \sqrt{\int |f_j''(x)|^2 dx} = \sqrt{\beta_j^T W_j \beta_j}$ is a Sobolev smoothness semi-norm (controlling <strong>smoothness</strong>). Two tuning parameters $\lambda_1$ and $\lambda_2$ are needed because sparsity and smoothness operate on very different scales.</p>
+        <p>where \(\|f_j\|_n = \|H_j \beta_j\|_2 / \sqrt{n}\) is the empirical norm (controlling <strong>sparsity</strong>) and \(I(f_j) = \sqrt{\int |f_j''(x)|^2 dx} = \sqrt{\beta_j^T W_j \beta_j}\) is a Sobolev smoothness semi-norm (controlling <strong>smoothness</strong>). Two tuning parameters \(\lambda_1\) and \(\lambda_2\) are needed because sparsity and smoothness operate on very different scales.</p>
       </div>
 
       <p><strong>Intuition:</strong></p>
       <ul>
-        <li>The <strong>sparsity term</strong> $\lambda_1 \sum_j \|f_j\|_n$ works like the Group Lasso: it can drive entire functions to zero.</li>
-        <li>The <strong>smoothness term</strong> $\lambda_2 \sum_j I(f_j)$ penalizes the second derivative of each function, preventing overfitting by discouraging rapid oscillations.</li>
-        <li>Together, they produce estimates where most $\hat{f}_j \equiv 0$ (sparse), and the active $\hat{f}_j$'s are smooth curves (not jagged).</li>
+        <li>The <strong>sparsity term</strong> \(\lambda_1 \sum_j \|f_j\|_n\) works like the Group Lasso: it can drive entire functions to zero.</li>
+        <li>The <strong>smoothness term</strong> \(\lambda_2 \sum_j I(f_j)\) penalizes the second derivative of each function, preventing overfitting by discouraging rapid oscillations.</li>
+        <li>Together, they produce estimates where most \(\hat{f}_j \equiv 0\) (sparse), and the active \(\hat{f}_j\)'s are smooth curves (not jagged).</li>
       </ul>
 
       <h4>SSP of Group Lasso Type (Computational Variant)</h4>
       <p>For more efficient computation, an alternative puts both terms under a single square root:</p>
       <div class="math-block">
-        $$\text{pen}_{\lambda_1, \lambda_2}(\beta) = \lambda_1 \sum_{j=1}^{p} \sqrt{\|f_j\|_n^2 + \lambda_2^2 \, I^2(f_j)}$$
+        \[\text{pen}_{\lambda_1, \lambda_2}(\beta) = \lambda_1 \sum_{j=1}^{p} \sqrt{\|f_j\|_n^2 + \lambda_2^2 \, I^2(f_j)}\]
       </div>
       <p>
-        In parameterized form this becomes $\lambda_1 \sum_j \sqrt{\beta_j^T (H_j^T H_j / n + \lambda_2^2 W_j) \beta_j}$, which is exactly a <strong>generalized Group Lasso penalty</strong> with matrix $A_j = H_j^T H_j/n + \lambda_2^2 W_j$. So we can reuse the Group Lasso algorithms!
+        In parameterized form this becomes \(\lambda_1 \sum_j \sqrt{\beta_j^T (H_j^T H_j / n + \lambda_2^2 W_j) \beta_j}\), which is exactly a <strong>generalized Group Lasso penalty</strong> with matrix \(A_j = H_j^T H_j/n + \lambda_2^2 W_j\). So we can reuse the Group Lasso algorithms!
       </p>
 
       <h3>4.4 Natural Cubic Splines: The Optimal Basis</h3>
       <p>
         A beautiful theoretical result: when optimizing over the Sobolev space of continuously differentiable functions, the solution is always a <strong>natural cubic spline</strong> with knots at the data points. This means we don't lose anything by restricting to finite-dimensional spline bases — the infinite-dimensional optimization automatically selects splines.
       </p>
-      <p>In practice, one uses B-spline bases with $K \approx \sqrt{n}$ interior knots placed at empirical quantiles.</p>
+      <p>In practice, one uses B-spline bases with \(K \approx \sqrt{n}\) interior knots placed at empirical quantiles.</p>
 
       <h3>4.5 Numerical Example</h3>
       <p>
-        In a simulated setting with $n = 150$, $p = 200$, and only $s_0 = 4$ active functions (including $\sin$, quadratic, linear, and exponential shapes), the sparsity-smoothness estimator correctly identifies the active functions and recovers their shapes, while setting the remaining 196 functions to zero.
+        In a simulated setting with \(n = 150\), \(p = 200\), and only \(s_0 = 4\) active functions (including \(\sin\), quadratic, linear, and exponential shapes), the sparsity-smoothness estimator correctly identifies the active functions and recovers their shapes, while setting the remaining 196 functions to zero.
       </p>
     </section>
 
@@ -378,13 +378,13 @@
         Everything from the Group Lasso section extends to generalized linear models. Replace the squared error loss with the negative log-likelihood:
       </p>
       <div class="math-block">
-        $$\hat{\beta}(\lambda) = \arg\min_{\beta} \left( -\ell(\beta; Y_1, \ldots, Y_n) + \lambda \sum_{j=1}^{q} \sqrt{T_j} \|\beta_{G_j}\|_2 \right)$$
+        \[\hat{\beta}(\lambda) = \arg\min_{\beta} \left( -\ell(\beta; Y_1, \ldots, Y_n) + \lambda \sum_{j=1}^{q} \sqrt{T_j} \|\beta_{G_j}\|_2 \right)\]
       </div>
       <p>The block coordinate gradient descent algorithm handles this. Applications include group-sparse logistic regression (e.g. the DNA splice site example) and group-sparse Poisson regression.</p>
 
       <h3>5.2 Generalized Additive Models</h3>
       <p>
-        Additive models also extend to GLMs. The model becomes $g(\mathbb{E}[Y_i | X_i]) = \mu + \sum_j f_j(X_i^{(j)})$ and estimation uses penalized negative log-likelihood with the sparsity-smoothness penalty. This allows, for instance, modelling a binary response with smooth nonlinear effects of high-dimensional covariates.
+        Additive models also extend to GLMs. The model becomes \(g(\mathbb{E}[Y_i | X_i]) = \mu + \sum_j f_j(X_i^{(j)})\) and estimation uses penalized negative log-likelihood with the sparsity-smoothness penalty. This allows, for instance, modelling a binary response with smooth nonlinear effects of high-dimensional covariates.
       </p>
 
       <h3>5.3 Varying Coefficient Models</h3>
@@ -392,18 +392,18 @@
         When data has a "time" component, coefficients may change smoothly over time:
       </p>
       <div class="math-block">
-        $$Y_i(t_r) = \mu + \sum_{j=1}^{p} \beta_j(t_r) X_i^{(j)}(t_r) + \varepsilon_i(t_r)$$
+        \[Y_i(t_r) = \mu + \sum_{j=1}^{p} \beta_j(t_r) X_i^{(j)}(t_r) + \varepsilon_i(t_r)\]
       </div>
       <p>
-        Each $\beta_j(\cdot)$ is a smooth function of time. The estimation again uses the sparsity-smoothness penalty, driving some $\hat{\beta}_j(\cdot) \equiv 0$ across all time points. This is closely related to the additive model framework.
+        Each \(\beta_j(\cdot)\) is a smooth function of time. The estimation again uses the sparsity-smoothness penalty, driving some \(\hat{\beta}_j(\cdot) \equiv 0\) across all time points. This is closely related to the additive model framework.
       </p>
 
       <h3>5.4 Multitask Learning</h3>
       <p>
-        When we have $T$ related regression problems (e.g. predicting gene expression at $T$ different time points), we can either run $T$ separate Lassos or use the Group Lasso simultaneously. The group structure groups coefficients for the same covariate across tasks: $\beta_{G_j} = (\beta_j(1), \ldots, \beta_j(T))^T$.
+        When we have \(T\) related regression problems (e.g. predicting gene expression at \(T\) different time points), we can either run \(T\) separate Lassos or use the Group Lasso simultaneously. The group structure groups coefficients for the same covariate across tasks: \(\beta_{G_j} = (\beta_j(1), \ldots, \beta_j(T))^T\).
       </p>
       <p>
-        The Group Lasso approach enforces <strong>shared sparsity</strong>: if covariate $j$ is irrelevant, it is set to zero across all $T$ tasks simultaneously. Theory shows a prediction gain by a factor of $\log(p)$ when $T$ is large, compared to running $T$ separate Lassos.
+        The Group Lasso approach enforces <strong>shared sparsity</strong>: if covariate \(j\) is irrelevant, it is set to zero across all \(T\) tasks simultaneously. Theory shows a prediction gain by a factor of \(\log(p)\) when \(T\) is large, compared to running \(T\) separate Lassos.
       </p>
 
       <h3>5.5 Further Extensions</h3>
@@ -424,25 +424,25 @@
           </tr>
           <tr>
             <td>Lasso</td>
-            <td>$\lambda \sum_j |\beta_j|$</td>
+            <td>\(\lambda \sum_j |\beta_j|\)</td>
             <td>Individual coefficients</td>
             <td>Continuous covariates, no group structure</td>
           </tr>
           <tr>
             <td>Group Lasso</td>
-            <td>$\lambda \sum_j m_j \|\beta_{G_j}\|_2$</td>
+            <td>\(\lambda \sum_j m_j \|\beta_{G_j}\|_2\)</td>
             <td>Entire groups</td>
             <td>Factor variables, interactions, basis expansions</td>
           </tr>
           <tr>
             <td>Additive Model (SSP)</td>
-            <td>$\lambda_1 \sum_j \|f_j\|_n + \lambda_2 \sum_j I(f_j)$</td>
+            <td>\(\lambda_1 \sum_j \|f_j\|_n + \lambda_2 \sum_j I(f_j)\)</td>
             <td>Entire functions + smoothness</td>
             <td>Nonlinear effects, high-dim nonparametric regression</td>
           </tr>
           <tr>
             <td>Sparse Group Lasso</td>
-            <td>$(1-\alpha)\lambda\sum_j m_j\|\beta_{G_j}\|_2 + \alpha\lambda\|\beta\|_1$</td>
+            <td>\((1-\alpha)\lambda\sum_j m_j\|\beta_{G_j}\|_2 + \alpha\lambda\|\beta\|_1\)</td>
             <td>Groups <em>and</em> within groups</td>
             <td>When you want both group and element sparsity</td>
           </tr>
@@ -454,7 +454,7 @@
     <section>
       <h2>Key Takeaways</h2>
       <ul>
-        <li><strong>GLMs unify</strong> logistic, Poisson, and multinomial regression under one framework. The Lasso extends naturally by penalizing the negative log-likelihood with $\|\beta\|_1$, preserving convexity and computational efficiency.</li>
+        <li><strong>GLMs unify</strong> logistic, Poisson, and multinomial regression under one framework. The Lasso extends naturally by penalizing the negative log-likelihood with \(\|\beta\|_1\), preserving convexity and computational efficiency.</li>
         <li><strong>The Group Lasso</strong> enforces <em>group sparsity</em> — entire groups of coefficients are zero or non-zero — making it the right tool for factor variables, interactions, and basis expansions. The groupwise prediction penalty ensures invariance under reparameterization.</li>
         <li><strong>Additive models</strong> extend linear models to allow smooth nonlinear effects. The <em>sparsity-smoothness penalty</em> (SSP) jointly controls which functions are active and how smooth they are, and can be formulated as a generalized Group Lasso problem.</li>
         <li><strong>Block coordinate descent</strong> (and its gradient variant) is the computational workhorse for all Group Lasso problems, including the additive model estimator.</li>

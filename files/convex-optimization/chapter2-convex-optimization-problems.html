@@ -16,13 +16,13 @@
   <script>
       MathJax = {
         tex: {
-          inlineMath: [['$', '$'], ['\(', '\)']],
-          displayMath: [['$$', '$$'], ['\[', '\]']]
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          displayMath: [['$$', '$$'], ['\\[', '\\]']]
         },
-        svg: { fontCache: 'global' }
+        chtml: {}
       };
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
 </head>
 <body>
 <div class="topbar">
@@ -67,20 +67,20 @@
 
   <h3>The General Mathematical Program</h3>
   <p>
-    Before we can define convex programs, we need the broadest template. A <em>mathematical optimization problem</em> is simply the task of finding an input $x \in \mathbb{R}^n$ that makes some objective function as small as possible while respecting constraints.
+    Before we can define convex programs, we need the broadest template. A <em>mathematical optimization problem</em> is simply the task of finding an input \(x \in \mathbb{R}^n\) that makes some objective function as small as possible while respecting constraints.
   </p>
 
   <div class="callout-definition">
     <div class="callout-title">Definition 2.1.1 — Mathematical Optimization Problem</div>
-    <p>Given functions $f : \mathbb{R}^n \to \mathbb{R}$ (the <strong>objective</strong>) and $g_i : \mathbb{R}^n \to \mathbb{R}$ for $i \in [m]$ (the <strong>constraints</strong>), a mathematical optimization problem is:</p>
+    <p>Given functions \(f : \mathbb{R}^n \to \mathbb{R}\) (the <strong>objective</strong>) and \(g_i : \mathbb{R}^n \to \mathbb{R}\) for \(i \in [m]\) (the <strong>constraints</strong>), a mathematical optimization problem is:</p>
     <div class="math-block">
-      $$\min\; f(x) \quad \text{subject to} \quad g_i(x) \le 0,\; i \in [m],\quad x \in \mathbb{R}^n.$$
+      \[\min\; f(x) \quad \text{subject to} \quad g_i(x) \le 0,\; i \in [m],\quad x \in \mathbb{R}^n.\]
     </div>
   </div>
 
   <div class="callout-example">
     <div class="callout-title">Intuition</div>
-    <p>Think of this as a recipe: you have a quantity you want to minimize (cost, error, risk) and a set of rules you cannot violate (budget limits, physics, capacity). Linear programming is a special case where both the objective and constraints are affine (i.e., $f(x) = c^\top x$ and $g_i(x) = a_i^\top x - b_i$).</p>
+    <p>Think of this as a recipe: you have a quantity you want to minimize (cost, error, risk) and a set of rules you cannot violate (budget limits, physics, capacity). Linear programming is a special case where both the objective and constraints are affine (i.e., \(f(x) = c^\top x\) and \(g_i(x) = a_i^\top x - b_i\)).</p>
   </div>
 
   <h3>The Convex Optimization Problem</h3>
@@ -90,11 +90,11 @@
 
   <div class="callout-definition">
     <div class="callout-title">Definition 2.1.2 — Convex Optimization Problem</div>
-    <p>Let $f, g_1, \dots, g_m : \mathbb{R}^n \to \mathbb{R}$ be <strong>convex functions</strong>. The convex optimization problem in general form is:</p>
+    <p>Let \(f, g_1, \dots, g_m : \mathbb{R}^n \to \mathbb{R}\) be <strong>convex functions</strong>. The convex optimization problem in general form is:</p>
     <div class="math-block">
-      $$\min\; f(x) \quad \text{subject to} \quad g_i(x) \le 0,\; i \in [m].$$
+      \[\min\; f(x) \quad \text{subject to} \quad g_i(x) \le 0,\; i \in [m].\]
     </div>
-    <p>The feasibility region is an intersection of convex sets — hence convex. Equality constraints of the form $h_j(x) = 0$ are allowed only if $h_j$ is <strong>affine</strong> (since an affine function is both convex and concave).</p>
+    <p>The feasibility region is an intersection of convex sets — hence convex. Equality constraints of the form \(h_j(x) = 0\) are allowed only if \(h_j\) is <strong>affine</strong> (since an affine function is both convex and concave).</p>
   </div>
 
   <div class="callout-note">
@@ -107,15 +107,15 @@
 
   <div class="callout-definition">
     <div class="callout-title">Theorem 2.1.3 — Local Minima are Global Minima</div>
-    <p>Let $f : S \to \mathbb{R}$ be convex over a convex set $S$. Every local minimum of $f$ over $S$ is also a global minimum.</p>
+    <p>Let \(f : S \to \mathbb{R}\) be convex over a convex set \(S\). Every local minimum of \(f\) over \(S\) is also a global minimum.</p>
   </div>
 
   <div class="callout-example">
     <div class="callout-title">Proof Idea</div>
-    <p>Suppose $x$ is a local minimum but not global — so there exists some $y \in S$ with $f(y) < f(x)$. By convexity, points on the line segment from $x$ toward $y$ satisfy $f(\lambda y + (1-\lambda)x) \le \lambda f(y) + (1-\lambda) f(x) < f(x)$. But some of these points are arbitrarily close to $x$, contradicting the fact that $x$ is a local minimum.</p>
+    <p>Suppose \(x\) is a local minimum but not global — so there exists some \(y \in S\) with \(f(y) < f(x)\). By convexity, points on the line segment from \(x\) toward \(y\) satisfy \(f(\lambda y + (1-\lambda)x) \le \lambda f(y) + (1-\lambda) f(x) < f(x)\). But some of these points are arbitrarily close to \(x\), contradicting the fact that \(x\) is a local minimum.</p>
   </div>
 
-  <p>A natural follow-up is that the <strong>set of optimal solutions</strong> itself is convex (Theorem 2.1.4). If both $x$ and $y$ are optimal, then any convex combination $\lambda x + (1-\lambda)y$ is also optimal — you never "jump out" of the optimal set.</p>
+  <p>A natural follow-up is that the <strong>set of optimal solutions</strong> itself is convex (Theorem 2.1.4). If both \(x\) and \(y\) are optimal, then any convex combination \(\lambda x + (1-\lambda)y\) is also optimal — you never "jump out" of the optimal set.</p>
 
   <h3>The Hierarchy of Special Cases</h3>
   <p>Convex programs encompass a rich hierarchy of problem classes, each more expressive than the last. Later chapters treat each in detail.</p>
@@ -133,13 +133,13 @@
         <tr><td><strong>LP</strong> (Linear Program)</td><td>affine</td><td>affine</td></tr>
         <tr><td><strong>QP</strong> (Quadratic Program)</td><td>convex quadratic</td><td>affine</td></tr>
         <tr><td><strong>QCQP</strong></td><td>convex quadratic</td><td>convex quadratic</td></tr>
-        <tr><td><strong>SOCP</strong> (Second-Order Cone)</td><td>affine</td><td>$\|A_i x + b_i\|_2 \le c_i^\top x + d_i$</td></tr>
+        <tr><td><strong>SOCP</strong> (Second-Order Cone)</td><td>affine</td><td>\(\|A_i x + b_i\|_2 \le c_i^\top x + d_i\)</td></tr>
         <tr><td><strong>SDP</strong> (Semidefinite Program)</td><td>affine</td><td>linear matrix inequalities</td></tr>
       </tbody>
     </table>
   </div>
 
-  <p>Each class strictly contains the previous one: LP $\subset$ QP $\subset$ QCQP $\subset$ SOCP $\subset$ SDP $\subset$ general convex programs. This nesting is one of the organizing themes of the entire course.</p>
+  <p>Each class strictly contains the previous one: LP \(\subset\) QP \(\subset\) QCQP \(\subset\) SOCP \(\subset\) SDP \(\subset\) general convex programs. This nesting is one of the organizing themes of the entire course.</p>
 
   <h3>Abstract Convex Optimization Problems</h3>
   <p>
@@ -148,7 +148,7 @@
 
   <div class="callout-example">
     <div class="callout-title">Example 2.1.5 — Rewriting Constraints</div>
-    <p>Consider minimizing $x_1^2 + x_2^2$ subject to $x_1/(1+x_2^2)^2 \le 0$ and $(x_1+x_2)^2 = 0$. The constraint $(x_1+x_2)^2 = 0$ is not affine, and the first constraint is not convex. But note that $(x_1+x_2)^2 = 0$ is the same as $x_1 + x_2 = 0$ (which is affine), and $x_1/(1+x_2^2)^2 \le 0$ simplifies to $x_1 \le 0$ on the feasible set. The rewritten problem is a true convex program.</p>
+    <p>Consider minimizing \(x_1^2 + x_2^2\) subject to \(x_1/(1+x_2^2)^2 \le 0\) and \((x_1+x_2)^2 = 0\). The constraint \((x_1+x_2)^2 = 0\) is not affine, and the first constraint is not convex. But note that \((x_1+x_2)^2 = 0\) is the same as \(x_1 + x_2 = 0\) (which is affine), and \(x_1/(1+x_2^2)^2 \le 0\) simplifies to \(x_1 \le 0\) on the feasible set. The rewritten problem is a true convex program.</p>
   </div>
 
   <h3>Hidden Convex Problems & the Trust Region Subproblem</h3>
@@ -158,24 +158,24 @@
 
   <div class="callout-definition">
     <div class="callout-title">Trust Region Subproblem</div>
-    <p>Given a symmetric matrix $A$ (not necessarily PSD), vector $b$, and scalar $c$:</p>
-    <div class="math-block">$$\min\; x^\top A x + 2b^\top x + c \quad \text{s.t.}\quad \|x\|_2 \le 1.$$</div>
-    <p>Even though $A$ may have negative eigenvalues (making the objective non-convex), a clever variable substitution using the eigendecomposition $A = UDU^\top$ transforms this into a convex program.</p>
+    <p>Given a symmetric matrix \(A\) (not necessarily PSD), vector \(b\), and scalar \(c\):</p>
+    <div class="math-block">\[\min\; x^\top A x + 2b^\top x + c \quad \text{s.t.}\quad \|x\|_2 \le 1.\]</div>
+    <p>Even though \(A\) may have negative eigenvalues (making the objective non-convex), a clever variable substitution using the eigendecomposition \(A = UDU^\top\) transforms this into a convex program.</p>
   </div>
 
   <div class="callout-example">
     <div class="callout-title">How the transformation works (intuition)</div>
-    <p>Diagonalize $A$ to decouple the variables. Then use Theorem 2.1.8 (which shows that at optimality $e_i y^*_i \le 0$) to deduce the sign pattern of the optimal solution. This allows a substitution $y_i = -\text{sgn}(e_i)\sqrt{z_i}$ that turns the non-convex quadratic into a convex function of $z \ge 0$.</p>
+    <p>Diagonalize \(A\) to decouple the variables. Then use Theorem 2.1.8 (which shows that at optimality \(e_i y^*_i \le 0\)) to deduce the sign pattern of the optimal solution. This allows a substitution \(y_i = -\text{sgn}(e_i)\sqrt{z_i}\) that turns the non-convex quadratic into a convex function of \(z \ge 0\).</p>
   </div>
 
   <h3>Equality Constraints with Convex Functions</h3>
   <p>
-    Normally, equality constraints must be affine for the problem to be convex. However, Proposition 2.1.9 shows a special case where you can replace a convex equality $h(x) = 0$ with the inequality $h(x) \le 0$, provided the optimal solution naturally satisfies $h(x^*) = 0$. The two programs then have the same optimal value.
+    Normally, equality constraints must be affine for the problem to be convex. However, Proposition 2.1.9 shows a special case where you can replace a convex equality \(h(x) = 0\) with the inequality \(h(x) \le 0\), provided the optimal solution naturally satisfies \(h(x^*) = 0\). The two programs then have the same optimal value.
   </p>
 
   <h3>Algorithms — A Brief Note</h3>
   <p>
-    Convex programs can be solved in <strong>polynomial time</strong> (in the encoding length and desired accuracy) using the <em>interior point method</em>, as long as the functions are twice continuously differentiable and the problem is <strong>strictly feasible</strong> (Slater's condition: there exists an $x$ with $g_i(x) < 0$ for all $i$). The idea is to encode the feasibility set using barrier functions and reduce the problem to a sequence of unconstrained quadratic problems via Newton's method.
+    Convex programs can be solved in <strong>polynomial time</strong> (in the encoding length and desired accuracy) using the <em>interior point method</em>, as long as the functions are twice continuously differentiable and the problem is <strong>strictly feasible</strong> (Slater's condition: there exists an \(x\) with \(g_i(x) < 0\) for all \(i\)). The idea is to encode the feasibility set using barrier functions and reduce the problem to a sequence of unconstrained quadratic problems via Newton's method.
   </p>
 </section>
 
@@ -184,37 +184,37 @@
   <h2>2.2 Conic Optimization Problems</h2>
 
   <p>
-    Conic programs are a particularly clean and general way to express convex optimization problems. The idea is elegant: instead of writing constraints as $g_i(x) \le 0$ with various convex functions, we require $x$ to belong to a <strong>proper cone</strong> $K$ (a cone that is convex, closed, solid, and pointed) and optimize a linear objective over the intersection of that cone with an affine subspace.
+    Conic programs are a particularly clean and general way to express convex optimization problems. The idea is elegant: instead of writing constraints as \(g_i(x) \le 0\) with various convex functions, we require \(x\) to belong to a <strong>proper cone</strong> \(K\) (a cone that is convex, closed, solid, and pointed) and optimize a linear objective over the intersection of that cone with an affine subspace.
   </p>
 
   <div class="callout-definition">
     <div class="callout-title">Definition 2.2.1 — Conic Program</div>
-    <p>Let $K \subseteq \mathbb{R}^n$ be a proper cone. A conic program has the following forms:</p>
+    <p>Let \(K \subseteq \mathbb{R}^n\) be a proper cone. A conic program has the following forms:</p>
     <div class="math-block">
-      $$\textbf{General: } \min\; c^\top x \;\;\text{s.t.}\;\; -Fx - g \in K \qquad\qquad \textbf{Standard: } \min\; c^\top x \;\;\text{s.t.}\;\; Ax = b,\; x \in K.$$
+      \[\textbf{General: } \min\; c^\top x \;\;\text{s.t.}\;\; -Fx - g \in K \qquad\qquad \textbf{Standard: } \min\; c^\top x \;\;\text{s.t.}\;\; Ax = b,\; x \in K.\]
     </div>
   </div>
 
   <div class="callout-example">
     <div class="callout-title">Geometric Picture (Standard Form)</div>
-    <p>The feasible set is the intersection of the cone $K$ with the affine subspace $\{x : Ax = b\}$. For an LP, $K$ is the nonnegative orthant $\mathbb{R}^n_+$. For an SOCP, $K$ is a product of second-order (Lorentz) cones. For an SDP, $K$ is the positive semidefinite cone $\mathcal{S}^n_+$. Same template, different cones — that's the power of conic programming.</p>
+    <p>The feasible set is the intersection of the cone \(K\) with the affine subspace \(\{x : Ax = b\}\). For an LP, \(K\) is the nonnegative orthant \(\mathbb{R}^n_+\). For an SOCP, \(K\) is a product of second-order (Lorentz) cones. For an SDP, \(K\) is the positive semidefinite cone \(\mathcal{S}^n_+\). Same template, different cones — that's the power of conic programming.</p>
   </div>
 
   <h3>Generalized Conic Programs on Abstract Vector Spaces</h3>
   <p>
-    The conic framework extends beyond $\mathbb{R}^n$. Given two real inner product vector spaces $S, T$, a linear map $\mathcal{A}: S \to T$, and a proper cone $K \subseteq S$, we can define a conic program and its dual in full generality. The dual uses the <em>dual cone</em> $K^*$ and the adjoint map $\mathcal{A}^*$.
+    The conic framework extends beyond \(\mathbb{R}^n\). Given two real inner product vector spaces \(S, T\), a linear map \(\mathcal{A}: S \to T\), and a proper cone \(K \subseteq S\), we can define a conic program and its dual in full generality. The dual uses the <em>dual cone</em> \(K^*\) and the adjoint map \(\mathcal{A}^*\).
   </p>
 
   <div class="callout-definition">
     <div class="callout-title">Definition 2.2.5 — Conic Program Duality (Standard Form)</div>
     <div class="math-block">
-      $$\textbf{Primal: } \min\; \langle c, x \rangle_S \;\;\text{s.t.}\;\; \mathcal{A}x = b,\; x \in K \qquad\qquad \textbf{Dual: } \max\; \langle y, b \rangle_T \;\;\text{s.t.}\;\; c - \mathcal{A}^* y \in K^*$$
+      \[\textbf{Primal: } \min\; \langle c, x \rangle_S \;\;\text{s.t.}\;\; \mathcal{A}x = b,\; x \in K \qquad\qquad \textbf{Dual: } \max\; \langle y, b \rangle_T \;\;\text{s.t.}\;\; c - \mathcal{A}^* y \in K^*\]
     </div>
   </div>
 
   <div class="callout-definition">
     <div class="callout-title">Theorem 2.2.6 — Weak Duality for Conic Programs</div>
-    <p>If $x$ is primal feasible and $y$ is dual feasible, then $\langle c, x \rangle_S \ge \langle y, b \rangle_T$. The proof is short and elegant: use primal feasibility ($\mathcal{A}x = b$), the definition of the adjoint, and the fact that $c - \mathcal{A}^* y \in K^*$ and $x \in K$ means their inner product is nonnegative (by definition of dual cone).</p>
+    <p>If \(x\) is primal feasible and \(y\) is dual feasible, then \(\langle c, x \rangle_S \ge \langle y, b \rangle_T\). The proof is short and elegant: use primal feasibility (\(\mathcal{A}x = b\)), the definition of the adjoint, and the fact that \(c - \mathcal{A}^* y \in K^*\) and \(x \in K\) means their inner product is nonnegative (by definition of dual cone).</p>
   </div>
 
   <div class="callout-note">
@@ -234,28 +234,28 @@
 
   <div class="callout-definition">
     <div class="callout-title">Definition 2.3.1 — Quasiconvex Function</div>
-    <p>A function $f : X \to \mathbb{R}$ on a convex set $X$ is quasiconvex if for all $x, y \in X$ and $\lambda \in [0,1]$:</p>
-    <div class="math-block">$$f(\lambda x + (1-\lambda)y) \le \max\{f(x), f(y)\}.$$</div>
-    <p>Equivalently: all <strong>sublevel sets</strong> $\{x : f(x) \le \alpha\}$ are convex.</p>
+    <p>A function \(f : X \to \mathbb{R}\) on a convex set \(X\) is quasiconvex if for all \(x, y \in X\) and \(\lambda \in [0,1]\):</p>
+    <div class="math-block">\[f(\lambda x + (1-\lambda)y) \le \max\{f(x), f(y)\}.\]</div>
+    <p>Equivalently: all <strong>sublevel sets</strong> \(\{x : f(x) \le \alpha\}\) are convex.</p>
   </div>
 
   <div class="callout-example">
     <div class="callout-title">Intuition</div>
-    <p>A convex function's graph "curves upward." A quasiconvex function doesn't need to curve upward — it can be flat or even curve downward — as long as it doesn't create multiple separated "valleys." For instance, the ratio $p(x)/q(x)$ of a convex function $p \ge 0$ and a concave function $q > 0$ is quasiconvex.</p>
+    <p>A convex function's graph "curves upward." A quasiconvex function doesn't need to curve upward — it can be flat or even curve downward — as long as it doesn't create multiple separated "valleys." For instance, the ratio \(p(x)/q(x)\) of a convex function \(p \ge 0\) and a concave function \(q > 0\) is quasiconvex.</p>
   </div>
 
   <p>
-    The key algorithmic tool for quasiconvex programs is the <strong>bisection method</strong>. The insight: to check whether the optimal value is $\le t$, we solve the convex feasibility problem $\phi_t(x) \le 0,\; g_i(x) \le 0$, where $\phi_t$ is a convex function whose 0-sublevel set equals the $t$-sublevel set of $f$. By binary searching on $t$, we reduce a quasiconvex program to $O(\log(1/\varepsilon))$ convex feasibility problems.
+    The key algorithmic tool for quasiconvex programs is the <strong>bisection method</strong>. The insight: to check whether the optimal value is \(\le t\), we solve the convex feasibility problem \(\phi_t(x) \le 0,\; g_i(x) \le 0\), where \(\phi_t\) is a convex function whose 0-sublevel set equals the \(t\)-sublevel set of \(f\). By binary searching on \(t\), we reduce a quasiconvex program to \(O(\log(1/\varepsilon))\) convex feasibility problems.
   </p>
 
   <h3>2.3.2 Maximizing a Convex Function</h3>
   <p>
-    While <em>minimizing</em> a convex function over a convex set is tractable, <em>maximizing</em> one is in general hard. A convex function achieves its maximum at an extreme point of the domain. If the domain is a polytope with a vertex representation $P = \text{conv}\{p_1, \dots, p_K\}$, you simply evaluate at all vertices. But if you only have a halfspace representation, the number of vertices can be exponential, making the problem intractable in general.
+    While <em>minimizing</em> a convex function over a convex set is tractable, <em>maximizing</em> one is in general hard. A convex function achieves its maximum at an extreme point of the domain. If the domain is a polytope with a vertex representation \(P = \text{conv}\{p_1, \dots, p_K\}\), you simply evaluate at all vertices. But if you only have a halfspace representation, the number of vertices can be exponential, making the problem intractable in general.
   </p>
 
   <h3>2.3.3 Equality Constraint Elimination</h3>
   <p>
-    Sometimes it is useful to remove equality constraints from a convex program. If we have $Ax = b$, we can parametrize the affine subspace as $x = x_0 + Nz$, where $x_0$ is a particular solution and $N$ spans the null space of $A$. Substituting into the objective and inequality constraints gives an equivalent problem with no equalities. In practice this isn't always efficient — it may destroy sparsity in $A$ — but it's a useful theoretical tool.
+    Sometimes it is useful to remove equality constraints from a convex program. If we have \(Ax = b\), we can parametrize the affine subspace as \(x = x_0 + Nz\), where \(x_0\) is a particular solution and \(N\) spans the null space of \(A\). Substituting into the objective and inequality constraints gives an equivalent problem with no equalities. In practice this isn't always efficient — it may destroy sparsity in \(A\) — but it's a useful theoretical tool.
   </p>
 </section>
 
@@ -269,10 +269,10 @@
 
   <h3>Stage 1: The Linear Classification Problem</h3>
   <p>
-    Given $m$ points $\{x_1, \dots, x_m\} \subset \mathbb{R}^n$ with labels $y_i \in \{-1, +1\}$, find a hyperplane $w^\top x + b = 0$ that separates the two classes. This is a <strong>linear feasibility problem</strong>:
+    Given \(m\) points \(\{x_1, \dots, x_m\} \subset \mathbb{R}^n\) with labels \(y_i \in \{-1, +1\}\), find a hyperplane \(w^\top x + b = 0\) that separates the two classes. This is a <strong>linear feasibility problem</strong>:
   </p>
   <div class="math-block">
-    $$\min\; 0 \qquad \text{s.t.}\quad w^\top x_i + b \ge 1 \;\;\text{if } y_i = 1, \qquad w^\top x_i + b \le -1 \;\;\text{if } y_i = -1.$$
+    \[\min\; 0 \qquad \text{s.t.}\quad w^\top x_i + b \ge 1 \;\;\text{if } y_i = 1, \qquad w^\top x_i + b \le -1 \;\;\text{if } y_i = -1.\]
   </div>
   <p>If the points are linearly separable, there are typically many feasible hyperplanes.</p>
 
@@ -283,29 +283,29 @@
 
   <div class="callout-definition">
     <div class="callout-title">Theorem 2.4.3 — SVM Margin</div>
-    <p>For the pair $(w, b)$ normalized so that the support vectors satisfy $w^\top x + b = \pm 1$, the margin width is $2/\|w\|$. Therefore, maximizing the margin is equivalent to minimizing $\|w\|^2$, giving us the <strong>quadratic program</strong>:</p>
+    <p>For the pair \((w, b)\) normalized so that the support vectors satisfy \(w^\top x + b = \pm 1\), the margin width is \(2/\|w\|\). Therefore, maximizing the margin is equivalent to minimizing \(\|w\|^2\), giving us the <strong>quadratic program</strong>:</p>
     <div class="math-block">
-      $$\min\; \|w\|^2 \qquad \text{s.t.}\quad y_i(w^\top x_i + b) \ge 1 \;\;\text{for all } i \in [m].$$
+      \[\min\; \|w\|^2 \qquad \text{s.t.}\quad y_i(w^\top x_i + b) \ge 1 \;\;\text{for all } i \in [m].\]
     </div>
   </div>
 
   <div class="callout-example">
-    <div class="callout-title">Why $2/\|w\|$?</div>
-    <p>The two supporting hyperplanes are $w^\top x + b = 1$ and $w^\top x + b = -1$. The distance between two parallel hyperplanes $w^\top x = c_1$ and $w^\top x = c_2$ is $|c_1 - c_2|/\|w\|$. Here $c_1 - c_2 = 2$, so the margin width is $2/\|w\|$.</p>
+    <div class="callout-title">Why \(2/\|w\|\)?</div>
+    <p>The two supporting hyperplanes are \(w^\top x + b = 1\) and \(w^\top x + b = -1\). The distance between two parallel hyperplanes \(w^\top x = c_1\) and \(w^\top x = c_2\) is \(|c_1 - c_2|/\|w\|\). Here \(c_1 - c_2 = 2\), so the margin width is \(2/\|w\|\).</p>
   </div>
 
   <h3>Stage 3: Non-linear Classification via Feature Maps</h3>
   <p>
-    Real data is often not linearly separable. The trick is to apply a <strong>feature map</strong> $\Phi : \mathbb{R}^n \to \mathbb{R}^{n'}$ that lifts the data into a higher-dimensional space where it <em>becomes</em> linearly separable, then run SVM there.
+    Real data is often not linearly separable. The trick is to apply a <strong>feature map</strong> \(\Phi : \mathbb{R}^n \to \mathbb{R}^{n'}\) that lifts the data into a higher-dimensional space where it <em>becomes</em> linearly separable, then run SVM there.
   </p>
 
   <div class="callout-example">
     <div class="callout-title">Example — 1D Non-linear Separation</div>
-    <p>Consider points on the real line: $\{-2, -1, 1, 2\}$ with labels $\{-1, +1, +1, -1\}$. No line separates them. But mapping $x \mapsto (x, x^2)$ lifts them into 2D, where they become linearly separable — points with small $|x|$ land lower, and points with large $|x|$ land higher.</p>
+    <p>Consider points on the real line: \(\{-2, -1, 1, 2\}\) with labels \(\{-1, +1, +1, -1\}\). No line separates them. But mapping \(x \mapsto (x, x^2)\) lifts them into 2D, where they become linearly separable — points with small \(|x|\) land lower, and points with large \(|x|\) land higher.</p>
   </div>
 
   <p>
-    The challenge is that $\Phi$ might map into a very high-dimensional (even infinite-dimensional) space. The <strong>kernel trick</strong>, developed in Chapter 3 via duality, addresses this: the dual SVM formulation depends only on inner products $\Phi(x_i)^\top \Phi(x_j)$, which can often be computed directly via a <em>kernel function</em> $k(x, y) = \Phi(x) \cdot \Phi(y)$ without ever computing $\Phi$ explicitly.
+    The challenge is that \(\Phi\) might map into a very high-dimensional (even infinite-dimensional) space. The <strong>kernel trick</strong>, developed in Chapter 3 via duality, addresses this: the dual SVM formulation depends only on inner products \(\Phi(x_i)^\top \Phi(x_j)\), which can often be computed directly via a <em>kernel function</em> \(k(x, y) = \Phi(x) \cdot \Phi(y)\) without ever computing \(\Phi\) explicitly.
   </p>
 </section>
 
@@ -319,12 +319,12 @@
 
   <div class="callout-definition">
     <div class="callout-title">Definition 2.6.1 — Basic Closed Semialgebraic Set</div>
-    <p>For a finite set of polynomials $\mathcal{G} \subseteq \mathbb{R}[x]$, the set $\mathcal{G}_+ = \{x \in \mathbb{R}^n : g(x) \ge 0,\; \forall g \in \mathcal{G}\}$ is a basic closed semialgebraic set. These sets are not necessarily convex, and their description is not unique — adding a globally nonnegative polynomial to $\mathcal{G}$ doesn't change $\mathcal{G}_+$.</p>
+    <p>For a finite set of polynomials \(\mathcal{G} \subseteq \mathbb{R}[x]\), the set \(\mathcal{G}_+ = \{x \in \mathbb{R}^n : g(x) \ge 0,\; \forall g \in \mathcal{G}\}\) is a basic closed semialgebraic set. These sets are not necessarily convex, and their description is not unique — adding a globally nonnegative polynomial to \(\mathcal{G}\) doesn't change \(\mathcal{G}_+\).</p>
   </div>
 
   <div class="callout-note">
     <div class="callout-title">NP-hardness</div>
-    <p>Polynomial optimization is <strong>NP-hard</strong> in general. This can be shown by encoding the NP-hard Maximum Independent Set problem: for each vertex introduce a variable $x_i \in \{0, 1\}$, enforce the binary constraint via $x_i^2 - x_i = 0$ (a polynomial equality), and maximize $\sum x_i$ subject to edge constraints. This is a polynomial program.</p>
+    <p>Polynomial optimization is <strong>NP-hard</strong> in general. This can be shown by encoding the NP-hard Maximum Independent Set problem: for each vertex introduce a variable \(x_i \in \{0, 1\}\), enforce the binary constraint via \(x_i^2 - x_i = 0\) (a polynomial equality), and maximize \(\sum x_i\) subject to edge constraints. This is a polynomial program.</p>
   </div>
 
   <p>
@@ -385,7 +385,7 @@
   <ul>
     <li><strong>Convex programs are the sweet spot</strong> — they are general enough to model a huge range of real-world problems, yet tractable enough to solve in polynomial time via interior point methods.</li>
     <li><strong>Local = Global:</strong> The foundational property of convex optimization. Any local minimum is global, and the set of all optimal solutions is itself convex.</li>
-    <li><strong>Conic programs unify everything:</strong> LP, SOCP, and SDP are all conic programs with different choices of cone. The standard form $\min\, c^\top x$ s.t. $Ax = b,\, x \in K$ gives a clean geometric picture: optimizing over the intersection of a cone and an affine subspace.</li>
+    <li><strong>Conic programs unify everything:</strong> LP, SOCP, and SDP are all conic programs with different choices of cone. The standard form \(\min\, c^\top x\) s.t. \(Ax = b,\, x \in K\) gives a clean geometric picture: optimizing over the intersection of a cone and an affine subspace.</li>
     <li><strong>Weak duality holds for all conic programs</strong>, but strong duality requires additional conditions (like Slater's condition) — unlike LP where strong duality is "free."</li>
     <li><strong>Recognizing hidden convexity</strong> is a powerful skill. Problems like the Trust Region Subproblem appear non-convex but can be reformulated as convex programs via clever transformations.</li>
     <li><strong>Quasiconvex programs</strong> extend the convex framework: they can be solved via bisection on a family of convex feasibility problems.</li>

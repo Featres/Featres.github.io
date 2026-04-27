@@ -16,13 +16,13 @@
   <script>
       MathJax = {
         tex: {
-          inlineMath: [['$', '$'], ['\(', '\)']],
-          displayMath: [['$$', '$$'], ['\[', '\]']]
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          displayMath: [['$$', '$$'], ['\\[', '\\]']]
         },
-        svg: { fontCache: 'global' }
+        chtml: {}
       };
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
 </head>
 <body>
 <div class="topbar">
@@ -67,17 +67,17 @@
 
   <h3>1.1 Images as Numerical Objects</h3>
   <p>
-    Neural networks used in computer vision take images as input. The first step is always to turn an image into numbers. A <strong>grayscale image</strong> of size $m \times n$ is represented as an $m \times n$ matrix, where each entry is the pixel's intensity (typically a value in $[0,1]$, from white to black). An <strong>RGB image</strong> has three colour channels (red, green, blue), so it becomes an $m \times n \times 3$ <strong>tensor</strong> — think of it as three matrices stacked behind each other, where each matrix records the intensity of one colour channel for every pixel.
+    Neural networks used in computer vision take images as input. The first step is always to turn an image into numbers. A <strong>grayscale image</strong> of size \(m \times n\) is represented as an \(m \times n\) matrix, where each entry is the pixel's intensity (typically a value in \([0,1]\), from white to black). An <strong>RGB image</strong> has three colour channels (red, green, blue), so it becomes an \(m \times n \times 3\) <strong>tensor</strong> — think of it as three matrices stacked behind each other, where each matrix records the intensity of one colour channel for every pixel.
   </p>
 
   <div class="callout-example">
     <div class="callout-title">Example — A Tiny Tensor</div>
-    <p>A $5 \times 5 \times 3$ tensor represents a $5 \times 5$ RGB image. The upper-left pixel has three intensity values — one from the red channel, one from blue, one from green. Together, these three numbers determine the pixel's colour.</p>
+    <p>A \(5 \times 5 \times 3\) tensor represents a \(5 \times 5\) RGB image. The upper-left pixel has three intensity values — one from the red channel, one from blue, one from green. Together, these three numbers determine the pixel's colour.</p>
   </div>
 
   <h3>1.2 The Parameter Explosion Problem</h3>
   <p>
-    One naive approach is to flatten the image into a vector and feed it into a standard fully connected network. But this quickly becomes impractical. A modest $100 \times 100$ grayscale image has 10,000 pixel values. A single fully connected layer mapping this to 1,000 hidden units requires $10{,}000 \times 1{,}000 = 10{,}000{,}000$ parameters — and that's just <em>one</em> layer. In practice, images are much larger (e.g. $224 \times 224 \times 3$), making the parameter count astronomically high. This is both computationally wasteful and highly prone to overfitting.
+    One naive approach is to flatten the image into a vector and feed it into a standard fully connected network. But this quickly becomes impractical. A modest \(100 \times 100\) grayscale image has 10,000 pixel values. A single fully connected layer mapping this to 1,000 hidden units requires \(10{,}000 \times 1{,}000 = 10{,}000{,}000\) parameters — and that's just <em>one</em> layer. In practice, images are much larger (e.g. \(224 \times 224 \times 3\)), making the parameter count astronomically high. This is both computationally wasteful and highly prone to overfitting.
   </p>
 
   <h3>1.3 The Key Observation</h3>
@@ -94,12 +94,12 @@
     CNNs address the problems above with two principles that are baked into the architecture itself:
   </p>
   <ul>
-    <li><strong>Local connectivity:</strong> Each output unit is connected only to a small local region (a "patch") of the input, not to every input unit. For example, output unit $z_2$ might depend only on inputs $x_1$ and $x_2$, not on all of $x_1, x_2, \ldots, x_n$.</li>
+    <li><strong>Local connectivity:</strong> Each output unit is connected only to a small local region (a "patch") of the input, not to every input unit. For example, output unit \(z_2\) might depend only on inputs \(x_1\) and \(x_2\), not on all of \(x_1, x_2, \ldots, x_n\).</li>
     <li><strong>Weight sharing:</strong> The same small set of weights is reused at every position. Instead of learning separate weights for each connection, we learn a single small <strong>filter</strong> (also called a <strong>kernel</strong>) and slide it across the entire input.</li>
   </ul>
 
   <p>
-    These two properties have profound consequences. Weight sharing means the number of learnable parameters in a convolutional layer depends only on the filter size — not on the image size. A layer with a $3 \times 3$ filter has only 9 weights (plus a bias), regardless of whether the image is $32 \times 32$ or $1024 \times 1024$. Compare this to the millions of parameters in a fully connected layer doing the same job.
+    These two properties have profound consequences. Weight sharing means the number of learnable parameters in a convolutional layer depends only on the filter size — not on the image size. A layer with a \(3 \times 3\) filter has only 9 weights (plus a bias), regardless of whether the image is \(32 \times 32\) or \(1024 \times 1024\). Compare this to the millions of parameters in a fully connected layer doing the same job.
   </p>
 
   <div class="callout-warning">
@@ -116,40 +116,40 @@
     Before tackling images (which are 2D or 3D), it's helpful to understand convolution in the simplest case: one-dimensional input. Recall that in a fully connected network, each hidden layer is related to the previous one via:
   </p>
   <div class="math-block">
-    $$\mathbf{v}^{(l)} = \varphi\!\left(W^{(l)}\,\mathbf{v}^{(l-1)}\right)$$
+    \[\mathbf{v}^{(l)} = \varphi\!\left(W^{(l)}\,\mathbf{v}^{(l-1)}\right)\]
   </div>
   <p>
-    where $W^{(l)}$ is a full weight matrix and $\varphi$ is a nonlinear activation function applied element-wise. In the CNN architecture, this full matrix is replaced by a structured matrix that encodes local connectivity and weight sharing. Consider a small example with input $\mathbf{x} = (x_1, x_2, x_3)^T$ and filter $\mathbf{w} = (w_1, w_2)^T$. The output is:
+    where \(W^{(l)}\) is a full weight matrix and \(\varphi\) is a nonlinear activation function applied element-wise. In the CNN architecture, this full matrix is replaced by a structured matrix that encodes local connectivity and weight sharing. Consider a small example with input \(\mathbf{x} = (x_1, x_2, x_3)^T\) and filter \(\mathbf{w} = (w_1, w_2)^T\). The output is:
   </p>
   <div class="math-block">
-    $$\begin{pmatrix} z_1 \\ z_2 \\ z_3 \\ z_4 \end{pmatrix} = \begin{pmatrix} w_1 & 0 & 0 \\ w_2 & w_1 & 0 \\ 0 & w_2 & w_1 \\ 0 & 0 & w_2 \end{pmatrix} \cdot \begin{pmatrix} x_1 \\ x_2 \\ x_3 \end{pmatrix}$$
+    \[\begin{pmatrix} z_1 \\ z_2 \\ z_3 \\ z_4 \end{pmatrix} = \begin{pmatrix} w_1 & 0 & 0 \\ w_2 & w_1 & 0 \\ 0 & w_2 & w_1 \\ 0 & 0 & w_2 \end{pmatrix} \cdot \begin{pmatrix} x_1 \\ x_2 \\ x_3 \end{pmatrix}\]
   </div>
   <p>
-    Notice the special structure: the weight matrix is a <strong>Toeplitz matrix</strong> — it has the same entries along each diagonal. Each output $z_i$ depends on at most two consecutive inputs, and the same weights $w_1, w_2$ are reused everywhere. This is exactly the convolution operation.
+    Notice the special structure: the weight matrix is a <strong>Toeplitz matrix</strong> — it has the same entries along each diagonal. Each output \(z_i\) depends on at most two consecutive inputs, and the same weights \(w_1, w_2\) are reused everywhere. This is exactly the convolution operation.
   </p>
 
   <div class="callout-definition">
     <div class="callout-title">Definition — 1D Convolution</div>
-    <p>Given two vectors $\mathbf{w} \in \mathbb{R}^k$ and $\mathbf{x} \in \mathbb{R}^d$, their <strong>convolution</strong> is the vector $\mathbf{z} = \mathbf{w} * \mathbf{x} \in \mathbb{R}^{k+d-1}$ with entries:</p>
+    <p>Given two vectors \(\mathbf{w} \in \mathbb{R}^k\) and \(\mathbf{x} \in \mathbb{R}^d\), their <strong>convolution</strong> is the vector \(\mathbf{z} = \mathbf{w} * \mathbf{x} \in \mathbb{R}^{k+d-1}\) with entries:</p>
     <div class="math-block">
-      $$z_i := \sum_{j=\max\{1,\, i-d+1\}}^{\min\{i,\, k\}} w_j \, x_{i-j+1}$$
+      \[z_i := \sum_{j=\max\{1,\, i-d+1\}}^{\min\{i,\, k\}} w_j \, x_{i-j+1}\]
     </div>
   </div>
 
   <div class="callout-example">
     <div class="callout-title">Example — Computing a 1D Convolution</div>
-    <p>Let $\mathbf{w} = (w_1, w_2)^T$ and $\mathbf{x} = (x_1, x_2, x_3)^T$. Then:</p>
+    <p>Let \(\mathbf{w} = (w_1, w_2)^T\) and \(\mathbf{x} = (x_1, x_2, x_3)^T\). Then:</p>
     <div class="math-block">
-      $$\mathbf{w} * \mathbf{x} = \begin{pmatrix} w_1 \cdot x_1 \\ w_1 \cdot x_2 + w_2 \cdot x_1 \\ w_1 \cdot x_3 + w_2 \cdot x_2 \\ w_2 \cdot x_3 \end{pmatrix}$$
+      \[\mathbf{w} * \mathbf{x} = \begin{pmatrix} w_1 \cdot x_1 \\ w_1 \cdot x_2 + w_2 \cdot x_1 \\ w_1 \cdot x_3 + w_2 \cdot x_2 \\ w_2 \cdot x_3 \end{pmatrix}\]
     </div>
-    <p>Each entry is a weighted sum of a small local window of the input, with the same weights $w_1, w_2$ applied everywhere.</p>
+    <p>Each entry is a weighted sum of a small local window of the input, with the same weights \(w_1, w_2\) applied everywhere.</p>
   </div>
 
   <p>
     Using this notation, the relationship between consecutive layers in a convolutional network is written compactly as:
   </p>
   <div class="math-block">
-    $$\mathbf{v}^{(l)} = \varphi\!\left(\mathbf{w}^{(l)} * \mathbf{v}^{(l-1)}\right)$$
+    \[\mathbf{v}^{(l)} = \varphi\!\left(\mathbf{w}^{(l)} * \mathbf{v}^{(l-1)}\right)\]
   </div>
   <p>
     This is the defining equation of a <strong>convolutional neural network</strong> — hence the name.
@@ -179,19 +179,19 @@
 
   <div class="callout-example">
     <div class="callout-title">Example — 2D Convolution Step by Step</div>
-    <p>Consider a $7 \times 7$ grayscale image $\mathbf{x}$ and a $3 \times 3$ filter $W$:</p>
+    <p>Consider a \(7 \times 7\) grayscale image \(\mathbf{x}\) and a \(3 \times 3\) filter \(W\):</p>
     <div class="math-block">
-      $$W = \begin{pmatrix} 1 & 0 & 1 \\ 0 & 1 & 0 \\ 1 & 0 & 1 \end{pmatrix}$$
+      \[W = \begin{pmatrix} 1 & 0 & 1 \\ 0 & 1 & 0 \\ 1 & 0 & 1 \end{pmatrix}\]
     </div>
-    <p>To compute the $(1,1)$ entry of the output, place $W$ on top of the upper-left $3 \times 3$ submatrix of $\mathbf{x}$, treat both as 9-dimensional vectors, and compute their dot product. Then slide $W$ one step to the right and repeat to get the $(1,2)$ entry. Continue sliding through all valid positions. Since a $3 \times 3$ filter can be placed in $5 \times 5 = 25$ positions on a $7 \times 7$ image, the result is a $5 \times 5$ feature map.</p>
+    <p>To compute the \((1,1)\) entry of the output, place \(W\) on top of the upper-left \(3 \times 3\) submatrix of \(\mathbf{x}\), treat both as 9-dimensional vectors, and compute their dot product. Then slide \(W\) one step to the right and repeat to get the \((1,2)\) entry. Continue sliding through all valid positions. Since a \(3 \times 3\) filter can be placed in \(5 \times 5 = 25\) positions on a \(7 \times 7\) image, the result is a \(5 \times 5\) feature map.</p>
   </div>
 
   <h3>5.2 3D Convolution (RGB Images)</h3>
   <p>
-    For RGB images (tensors of shape $n \times n \times 3$), the filter is also three-dimensional — for example $3 \times 3 \times 3$. The operation works the same way: slide the filter across the two spatial dimensions, and at each position, flatten both the overlapping $3 \times 3 \times 3$ patch and the filter into 27-dimensional vectors and compute their dot product. The result of applying one 3D filter is still a <strong>single 2D feature map</strong> (a matrix), because the depth dimension is summed over.
+    For RGB images (tensors of shape \(n \times n \times 3\)), the filter is also three-dimensional — for example \(3 \times 3 \times 3\). The operation works the same way: slide the filter across the two spatial dimensions, and at each position, flatten both the overlapping \(3 \times 3 \times 3\) patch and the filter into 27-dimensional vectors and compute their dot product. The result of applying one 3D filter is still a <strong>single 2D feature map</strong> (a matrix), because the depth dimension is summed over.
   </p>
   <p>
-    In practice, we apply <strong>multiple filters</strong> $w_1, w_2, \ldots, w_m$ to the same input. Each filter produces its own feature map, and we stack these maps together to form an output tensor of depth $m$. This means a convolutional layer takes a tensor as input and outputs a tensor — possibly with different spatial dimensions and a different depth.
+    In practice, we apply <strong>multiple filters</strong> \(w_1, w_2, \ldots, w_m\) to the same input. Each filter produces its own feature map, and we stack these maps together to form an output tensor of depth \(m\). This means a convolutional layer takes a tensor as input and outputs a tensor — possibly with different spatial dimensions and a different depth.
   </p>
 </section>
 
@@ -203,40 +203,40 @@
     Two hyperparameters control the details of how the filter slides over the input:
   </p>
 
-  <h3>6.1 Padding ($p$)</h3>
+  <h3>6.1 Padding (\(p\))</h3>
   <p>
     Without any special treatment, pixels at the <strong>border</strong> of the image participate in far fewer dot products than pixels in the centre. For instance, the top-left corner pixel is only covered when the filter is placed at the very first position, while a central pixel is covered by many filter positions. This means border information is underrepresented in the output.
   </p>
   <p>
-    <strong>Padding</strong> addresses this by adding a frame of zeros (rows and columns of zeros) around the image before applying the convolution. If the padding has depth $p$, the effective image size becomes $(n + 2p) \times (n + 2p)$. A common choice is to set $p$ so that the output has the same spatial dimensions as the input (called "same" padding).
+    <strong>Padding</strong> addresses this by adding a frame of zeros (rows and columns of zeros) around the image before applying the convolution. If the padding has depth \(p\), the effective image size becomes \((n + 2p) \times (n + 2p)\). A common choice is to set \(p\) so that the output has the same spatial dimensions as the input (called "same" padding).
   </p>
 
-  <h3>6.2 Stride ($s$)</h3>
+  <h3>6.2 Stride (\(s\))</h3>
   <p>
-    So far, we've assumed the filter moves one pixel at a time (stride $s = 1$). But we can choose a larger step size: with stride $s = 2$, the filter jumps two pixels at each step, producing a smaller output. Larger strides reduce the output dimensions and can be used as an alternative to pooling for downsampling.
+    So far, we've assumed the filter moves one pixel at a time (stride \(s = 1\)). But we can choose a larger step size: with stride \(s = 2\), the filter jumps two pixels at each step, producing a smaller output. Larger strides reduce the output dimensions and can be used as an alternative to pooling for downsampling.
   </p>
 
   <div class="callout-definition">
     <div class="callout-title">Output Dimension Formula</div>
-    <p>For an $n \times n$ image, $m$ filters of size $f \times f$, padding $p$, and stride $s$, the output tensor has dimensions:</p>
+    <p>For an \(n \times n\) image, \(m\) filters of size \(f \times f\), padding \(p\), and stride \(s\), the output tensor has dimensions:</p>
     <div class="math-block">
-      $$\left\lfloor\frac{n + 2p - f}{s} + 1\right\rfloor \times \left\lfloor\frac{n + 2p - f}{s} + 1\right\rfloor \times m$$
+      \[\left\lfloor\frac{n + 2p - f}{s} + 1\right\rfloor \times \left\lfloor\frac{n + 2p - f}{s} + 1\right\rfloor \times m\]
     </div>
-    <p>If we want $s$ to divide $(n + 2p - f)$ exactly (so the filter covers the image completely without leftover), the condition is that $s \mid (n + 2p - f)$.</p>
+    <p>If we want \(s\) to divide \((n + 2p - f)\) exactly (so the filter covers the image completely without leftover), the condition is that \(s \mid (n + 2p - f)\).</p>
   </div>
 
   <div class="callout-example">
     <div class="callout-title">Example — Applying the Formula</div>
-    <p>Consider a $32 \times 32$ RGB image. We apply 16 filters of size $5 \times 5$ with padding $p = 2$ and stride $s = 1$. The output dimensions are:</p>
+    <p>Consider a \(32 \times 32\) RGB image. We apply 16 filters of size \(5 \times 5\) with padding \(p = 2\) and stride \(s = 1\). The output dimensions are:</p>
     <div class="math-block">
-      $$\frac{32 + 2(2) - 5}{1} + 1 = 32 \quad \Longrightarrow \quad 32 \times 32 \times 16$$
+      \[\frac{32 + 2(2) - 5}{1} + 1 = 32 \quad \Longrightarrow \quad 32 \times 32 \times 16\]
     </div>
     <p>The spatial dimensions are preserved (thanks to the padding), while the depth has changed from 3 to 16 — one feature map per filter.</p>
   </div>
 
   <div class="callout-warning">
     <div class="callout-title">Counting Parameters in a Convolutional Layer</div>
-    <p>Each filter has size $f \times f \times c$ (where $c$ is the input depth / number of channels), plus one bias term. With $m$ filters, the total number of parameters is $m \times (f^2 \times c + 1)$. Notice this does <strong>not</strong> depend on the image size $n$ — a huge advantage over fully connected layers.</p>
+    <p>Each filter has size \(f \times f \times c\) (where \(c\) is the input depth / number of channels), plus one bias term. With \(m\) filters, the total number of parameters is \(m \times (f^2 \times c + 1)\). Notice this does <strong>not</strong> depend on the image size \(n\) — a huge advantage over fully connected layers.</p>
   </div>
 </section>
 
@@ -249,7 +249,7 @@
   </p>
   <ol>
     <li><strong>Convolutional layer:</strong> Applies a set of learned filters to produce feature maps. Each convolutional layer is followed by a nonlinear activation (typically ReLU).</li>
-    <li><strong>Pooling layer (optional):</strong> Downsamples the feature maps spatially. A common choice is <strong>max pooling</strong>, which takes the maximum value in each small patch (e.g. $2 \times 2$). This reduces spatial dimensions, provides a degree of translation invariance, and further reduces computation.</li>
+    <li><strong>Pooling layer (optional):</strong> Downsamples the feature maps spatially. A common choice is <strong>max pooling</strong>, which takes the maximum value in each small patch (e.g. \(2 \times 2\)). This reduces spatial dimensions, provides a degree of translation invariance, and further reduces computation.</li>
     <li><strong>Fully connected layers:</strong> After several rounds of convolution and pooling, the resulting feature maps are flattened into a vector and fed through one or more fully connected layers to produce the final output (e.g. class probabilities for classification via softmax).</li>
   </ol>
 
@@ -289,8 +289,8 @@
         </tr>
         <tr>
           <td>Parameters (1 layer)</td>
-          <td>$n_{\text{in}} \times n_{\text{out}}$ — depends on input size</td>
-          <td>$m \times (f^2 \times c + 1)$ — independent of image size</td>
+          <td>\(n_{\text{in}} \times n_{\text{out}}\) — depends on input size</td>
+          <td>\(m \times (f^2 \times c + 1)\) — independent of image size</td>
         </tr>
         <tr>
           <td>Spatial structure</td>
@@ -311,10 +311,10 @@
 <section>
   <h2>Key Takeaways</h2>
   <ul>
-    <li><strong>Images are tensors.</strong> Grayscale images are matrices; RGB images are $m \times n \times 3$ tensors. This spatial structure contains vital information that fully connected networks ignore.</li>
+    <li><strong>Images are tensors.</strong> Grayscale images are matrices; RGB images are \(m \times n \times 3\) tensors. This spatial structure contains vital information that fully connected networks ignore.</li>
     <li><strong>Local connectivity + weight sharing</strong> are the two defining ideas of CNNs. They slash the parameter count from millions to thousands and encode the inductive bias that nearby pixels matter more than distant ones.</li>
     <li><strong>Convolution is a sliding dot product.</strong> In 1D, the filter slides along a vector; in 2D, it slides across a matrix; in 3D (RGB), the filter matches the input depth and the dot product sums over all channels. The 1D case can be written as a matrix multiplication with a Toeplitz matrix.</li>
-    <li><strong>Padding and stride</strong> control the spatial dimensions of the output. Padding preserves border information; stride controls downsampling. The output size is $\left(\frac{n+2p-f}{s}+1\right) \times \left(\frac{n+2p-f}{s}+1\right) \times m$.</li>
+    <li><strong>Padding and stride</strong> control the spatial dimensions of the output. Padding preserves border information; stride controls downsampling. The output size is \(\left(\frac{n+2p-f}{s}+1\right) \times \left(\frac{n+2p-f}{s}+1\right) \times m\).</li>
     <li><strong>CNNs are hierarchical feature learners:</strong> early layers detect low-level patterns (edges, textures); deeper layers combine them into high-level concepts (object parts, objects). This is followed by fully connected layers for the final prediction.</li>
     <li><strong>Translation equivariance</strong> is a built-in property of convolution: shifting the input shifts the feature map by the same amount, meaning the network naturally detects patterns regardless of their spatial position.</li>
   </ul>

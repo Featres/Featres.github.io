@@ -16,13 +16,13 @@
   <script>
       MathJax = {
         tex: {
-          inlineMath: [['$', '$'], ['\(', '\)']],
-          displayMath: [['$$', '$$'], ['\[', '\]']]
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          displayMath: [['$$', '$$'], ['\\[', '\\]']]
         },
-        svg: { fontCache: 'global' }
+        chtml: {}
       };
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
 </head>
 <body>
 <div class="topbar">
@@ -79,14 +79,14 @@
       <div class="callout-definition">
         <div class="callout-title">Definition — Supervised Learning</div>
         <p>
-          In supervised learning, the training data consists of input–output pairs $\{(\mathbf{x}_1, y_1), \dots, (\mathbf{x}_n, y_n)\}$. The goal is to learn a function $\hat{f}$ that maps inputs $\mathbf{x}$ to outputs $y$, so that the learned function generalises well to new, unseen inputs.
+          In supervised learning, the training data consists of input–output pairs \(\{(\mathbf{x}_1, y_1), \dots, (\mathbf{x}_n, y_n)\}\). The goal is to learn a function \(\hat{f}\) that maps inputs \(\mathbf{x}\) to outputs \(y\), so that the learned function generalises well to new, unseen inputs.
         </p>
       </div>
 
       <div class="callout-definition">
         <div class="callout-title">Definition — Unsupervised Learning</div>
         <p>
-          In unsupervised learning, the training data has <strong>no labels</strong>: it is simply a collection $\{\mathbf{x}_1, \dots, \mathbf{x}_n\}$. The goal is to discover hidden structure in the data — for example, groupings, compact representations, or generative rules — without being told what the "right answer" is.
+          In unsupervised learning, the training data has <strong>no labels</strong>: it is simply a collection \(\{\mathbf{x}_1, \dots, \mathbf{x}_n\}\). The goal is to discover hidden structure in the data — for example, groupings, compact representations, or generative rules — without being told what the "right answer" is.
         </p>
       </div>
     </section>
@@ -99,9 +99,9 @@
         The general supervised learning workflow has three steps:
       </p>
       <ol>
-        <li><strong>Step I — Collect:</strong> Gather training data as input–output pairs $(\mathbf{x}_i, y_i)$. For instance, houses with their attributes and known sale prices.</li>
-        <li><strong>Step II — Learn:</strong> Use an ML method to efficiently find a model $\hat{f} \in \mathcal{F}$ from some function class $\mathcal{F}$ that fits the training data well.</li>
-        <li><strong>Step III — Predict:</strong> Given a new test input $\mathbf{x}$, use the learned model to output a prediction $\hat{f}(\mathbf{x})$.</li>
+        <li><strong>Step I — Collect:</strong> Gather training data as input–output pairs \((\mathbf{x}_i, y_i)\). For instance, houses with their attributes and known sale prices.</li>
+        <li><strong>Step II — Learn:</strong> Use an ML method to efficiently find a model \(\hat{f} \in \mathcal{F}\) from some function class \(\mathcal{F}\) that fits the training data well.</li>
+        <li><strong>Step III — Predict:</strong> Given a new test input \(\mathbf{x}\), use the learned model to output a prediction \(\hat{f}(\mathbf{x})\).</li>
       </ol>
 
       <figure>
@@ -134,7 +134,7 @@
 
       <h3>3.2 Types of Supervised Learning Tasks</h3>
       <p>
-        Supervised learning problems are further categorised by what kind of output $y$ you're trying to predict:
+        Supervised learning problems are further categorised by what kind of output \(y\) you're trying to predict:
       </p>
 
       <div class="table-wrapper">
@@ -142,19 +142,19 @@
           <thead>
             <tr>
               <th>Task</th>
-              <th>Output $y$</th>
+              <th>Output \(y\)</th>
               <th>Examples</th>
             </tr>
           </thead>
           <tbody>
             <tr>
               <td><strong>Regression</strong></td>
-              <td>Continuous value ($y \in \mathbb{R}$)</td>
+              <td>Continuous value (\(y \in \mathbb{R}\))</td>
               <td>House price prediction, crop yield forecasting, vital-sign trajectory forecasting</td>
             </tr>
             <tr>
               <td><strong>Classification</strong></td>
-              <td>Discrete class label ($y \in \{1, \dots, K\}$)</td>
+              <td>Discrete class label (\(y \in \{1, \dots, K\}\))</td>
               <td>Spam detection, image recognition (CIFAR-10), medical risk assessment</td>
             </tr>
             <tr>
@@ -169,21 +169,21 @@
       <div class="callout-example">
         <div class="callout-title">Example — Regression: House Price Prediction</div>
         <p>
-          Suppose you want to sell your house. You collect data on previously sold houses: each house $i$ has attributes $\mathbf{x}_i$ (size in m², number of rooms, distance to public transport, age) and a known sale price $y_i$. You then train a regression model $\hat{f}$ on this data. Given your house's attributes $\mathbf{x}$, the model predicts the average market price $\hat{f}(\mathbf{x})$ in CHF.
+          Suppose you want to sell your house. You collect data on previously sold houses: each house \(i\) has attributes \(\mathbf{x}_i\) (size in m², number of rooms, distance to public transport, age) and a known sale price \(y_i\). You then train a regression model \(\hat{f}\) on this data. Given your house's attributes \(\mathbf{x}\), the model predicts the average market price \(\hat{f}(\mathbf{x})\) in CHF.
         </p>
       </div>
 
       <div class="callout-example">
         <div class="callout-title">Example — Classification: Spam Detection</div>
         <p>
-          Each training example is an email $\mathbf{x}_i$ paired with a label $y_i \in \{\text{spam}, \text{not spam}\}$. The ML method learns a model that, given a new incoming email $\mathbf{x}$, predicts whether it is spam or not. This is an instance of <em>binary classification</em> since there are only two classes.
+          Each training example is an email \(\mathbf{x}_i\) paired with a label \(y_i \in \{\text{spam}, \text{not spam}\}\). The ML method learns a model that, given a new incoming email \(\mathbf{x}\), predicts whether it is spam or not. This is an instance of <em>binary classification</em> since there are only two classes.
         </p>
       </div>
 
       <div class="callout-example">
         <div class="callout-title">Example — Structured Prediction: Machine Translation</div>
         <p>
-          The input $\mathbf{x}$ is a sentence in one language and the output $y$ is the translated sentence in another language. The output is not a single number or class but a structured sequence of words, which makes this a structured prediction problem.
+          The input \(\mathbf{x}\) is a sentence in one language and the output \(y\) is the translated sentence in another language. The output is not a single number or class but a structured sequence of words, which makes this a structured prediction problem.
         </p>
       </div>
     </section>
@@ -191,7 +191,7 @@
     <section>
       <h2>4. Unsupervised Learning in Detail</h2>
       <p>
-        In unsupervised learning, we only have inputs $\{\mathbf{x}_1, \dots, \mathbf{x}_n\}$ with no associated labels. The goal is to discover interesting structure in the data itself. The lecture highlights several common goals and corresponding methods:
+        In unsupervised learning, we only have inputs \(\{\mathbf{x}_1, \dots, \mathbf{x}_n\}\) with no associated labels. The goal is to discover interesting structure in the data itself. The lecture highlights several common goals and corresponding methods:
       </p>
 
       <div class="table-wrapper">
@@ -235,12 +235,12 @@
 
       <h3>4.2 Dimensionality Reduction</h3>
       <p>
-        High-dimensional data (e.g. a 28×28 pixel handwritten digit image lives in a 784-dimensional space) often has much lower intrinsic complexity. Dimensionality reduction techniques like PCA find a low-dimensional representation $\mathbf{z}_i \in \mathbb{R}^k$ (with $k \ll d$) that preserves the important structure. For example, projecting MNIST digits down to 2D using PCA + t-SNE reveals clusters corresponding to different digits — without ever looking at the labels.
+        High-dimensional data (e.g. a 28×28 pixel handwritten digit image lives in a 784-dimensional space) often has much lower intrinsic complexity. Dimensionality reduction techniques like PCA find a low-dimensional representation \(\mathbf{z}_i \in \mathbb{R}^k\) (with \(k \ll d\)) that preserves the important structure. For example, projecting MNIST digits down to 2D using PCA + t-SNE reveals clusters corresponding to different digits — without ever looking at the labels.
       </p>
 
       <h3>4.3 Generative Modelling</h3>
       <p>
-        Generative models learn to produce <em>new</em> data that looks like the training data. Unlike supervised learning, there is no single "best/correct" answer — the model aims to capture the overall distribution of the data. Examples include generating new celebrity face images or new songs in a certain style. A key idea is learning a compact latent representation $\mathbf{z} = (z_1, \dots, z_k)$ where each dimension captures a meaningful factor of variation (e.g. "baldness" or "gender" in faces).
+        Generative models learn to produce <em>new</em> data that looks like the training data. Unlike supervised learning, there is no single "best/correct" answer — the model aims to capture the overall distribution of the data. Examples include generating new celebrity face images or new songs in a certain style. A key idea is learning a compact latent representation \(\mathbf{z} = (z_1, \dots, z_k)\) where each dimension captures a meaningful factor of variation (e.g. "baldness" or "gender" in faces).
       </p>
 
       <div class="callout-note">
@@ -299,10 +299,10 @@
       <h2>Key Takeaways</h2>
       <ul>
         <li><strong>ML learns from data, not explicit rules.</strong> Instead of hand-coding decision logic, machine learning methods automatically extract patterns from training examples.</li>
-        <li><strong>Supervised vs. unsupervised is the first fork.</strong> The presence or absence of labels $y_i$ in the training data determines which branch of ML you're working in, and this choice shapes the entire pipeline.</li>
+        <li><strong>Supervised vs. unsupervised is the first fork.</strong> The presence or absence of labels \(y_i\) in the training data determines which branch of ML you're working in, and this choice shapes the entire pipeline.</li>
         <li><strong>Supervised learning splits into regression, classification, and structured prediction.</strong> Regression predicts continuous values, classification predicts discrete labels, and structured prediction handles complex outputs like text or 3D structures.</li>
         <li><strong>Unsupervised learning discovers hidden structure.</strong> Without labels, methods like clustering, dimensionality reduction, and generative modelling find groupings, compact representations, and data distributions.</li>
-        <li><strong>The supervised pipeline is Collect → Learn → Predict.</strong> You gather labelled training data, fit a model $\hat{f} \in \mathcal{F}$, and use it to make predictions on new inputs — this three-step framework recurs throughout the course.</li>
+        <li><strong>The supervised pipeline is Collect → Learn → Predict.</strong> You gather labelled training data, fit a model \(\hat{f} \in \mathcal{F}\), and use it to make predictions on new inputs — this three-step framework recurs throughout the course.</li>
         <li><strong>The course balances intuition with mathematical rigour.</strong> You should not only be able to apply ML methods, but also explain <em>why</em> and <em>when</em> they work, backed by mathematical justification.</li>
       </ul>
     </section>

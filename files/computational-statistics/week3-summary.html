@@ -16,13 +16,13 @@
   <script>
       MathJax = {
         tex: {
-          inlineMath: [['$', '$'], ['\(', '\)']],
-          displayMath: [['$$', '$$'], ['\[', '\]']]
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          displayMath: [['$$', '$$'], ['\\[', '\\]']]
         },
-        svg: { fontCache: 'global' }
+        chtml: {}
       };
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
 </head>
 <body>
 <div class="topbar">
@@ -67,12 +67,12 @@
   <h2>1. Recap of Previous Weeks</h2>
 
   <p>
-    Week 3 begins by reviewing key results established so far. From the group game in Week 2, important takeaways included: the estimator $\hat{\boldsymbol{\beta}}$ is <em>random</em> (it changes with each dataset), and that model selection, hypothesis testing, and the distinction between simple and multiple regression all matter in practice.
+    Week 3 begins by reviewing key results established so far. From the group game in Week 2, important takeaways included: the estimator \(\hat{\boldsymbol{\beta}}\) is <em>random</em> (it changes with each dataset), and that model selection, hypothesis testing, and the distinction between simple and multiple regression all matter in practice.
   </p>
 
   <h3>1.1 Properties of the Least Squares Estimator</h3>
   <p>
-    Under the Gauss–Markov (GM) assumptions — the linear model $\boldsymbol{Y} = \boldsymbol{X}\boldsymbol{\beta} + \boldsymbol{\varepsilon}$ with $\mathrm{E}(\boldsymbol{\varepsilon}) = \boldsymbol{0}$, $\mathrm{Var}(\boldsymbol{\varepsilon}) = \sigma^2 \boldsymbol{I}$, and uncorrelated errors — the OLS estimator $\hat{\boldsymbol{\beta}} = (\boldsymbol{X}^\top \boldsymbol{X})^{-1}\boldsymbol{X}^\top \boldsymbol{Y}$ is the <strong>Best Linear Unbiased Estimator (BLUE)</strong>. If we additionally assume Gaussian errors, then $\hat{\boldsymbol{\beta}}$ is also the maximum likelihood estimator and is <strong>Uniformly Minimum Variance Unbiased (UMVU)</strong>.
+    Under the Gauss–Markov (GM) assumptions — the linear model \(\boldsymbol{Y} = \boldsymbol{X}\boldsymbol{\beta} + \boldsymbol{\varepsilon}\) with \(\mathrm{E}(\boldsymbol{\varepsilon}) = \boldsymbol{0}\), \(\mathrm{Var}(\boldsymbol{\varepsilon}) = \sigma^2 \boldsymbol{I}\), and uncorrelated errors — the OLS estimator \(\hat{\boldsymbol{\beta}} = (\boldsymbol{X}^\top \boldsymbol{X})^{-1}\boldsymbol{X}^\top \boldsymbol{Y}\) is the <strong>Best Linear Unbiased Estimator (BLUE)</strong>. If we additionally assume Gaussian errors, then \(\hat{\boldsymbol{\beta}}\) is also the maximum likelihood estimator and is <strong>Uniformly Minimum Variance Unbiased (UMVU)</strong>.
   </p>
 
   <h3>1.2 Inference in the Gaussian Linear Model</h3>
@@ -80,27 +80,27 @@
     Under Gaussian errors, the distributional results that enable classical inference are:
   </p>
   <div class="math-block">
-    $$\hat{\boldsymbol{\beta}} \sim N_p\!\left(\boldsymbol{\beta},\; (\boldsymbol{X}^\top\boldsymbol{X})^{-1}\sigma^2\right), \qquad \hat{\sigma}^2 \sim \frac{\sigma^2}{n-p}\,\chi^2_{n-p}.$$
+    \[\hat{\boldsymbol{\beta}} \sim N_p\!\left(\boldsymbol{\beta},\; (\boldsymbol{X}^\top\boldsymbol{X})^{-1}\sigma^2\right), \qquad \hat{\sigma}^2 \sim \frac{\sigma^2}{n-p}\,\chi^2_{n-p}.\]
   </div>
   <p>
-    These are used for $t$-tests of individual coefficients ($H_{0,j}: \beta_j = 0$), for ANOVA (global null test), and for constructing confidence and prediction intervals. When Gaussianity doesn't hold, the Central Limit Theorem justifies using these results approximately for large $n$.
+    These are used for \(t\)-tests of individual coefficients (\(H_{0,j}: \beta_j = 0\)), for ANOVA (global null test), and for constructing confidence and prediction intervals. When Gaussianity doesn't hold, the Central Limit Theorem justifies using these results approximately for large \(n\).
   </p>
 
   <div class="callout-definition">
-    <div class="callout-title">Confidence Interval for $\beta_j$</div>
+    <div class="callout-title">Confidence Interval for \(\beta_j\)</div>
     <p>
-      A two-sided $(1-\alpha)$ confidence interval for $\beta_j$ is:
+      A two-sided \((1-\alpha)\) confidence interval for \(\beta_j\) is:
     </p>
     <div class="math-block">
-      $$\hat{\beta}_j \;\pm\; \sqrt{\hat{\sigma}^2 (\boldsymbol{X}^\top\boldsymbol{X})^{-1}_{jj}} \;\cdot\; t_{n-p;\,1-\alpha/2}$$
+      \[\hat{\beta}_j \;\pm\; \sqrt{\hat{\sigma}^2 (\boldsymbol{X}^\top\boldsymbol{X})^{-1}_{jj}} \;\cdot\; t_{n-p;\,1-\alpha/2}\]
     </div>
-    <p>where $t_{n-p;\,1-\alpha/2}$ is the $(1-\alpha/2)$-quantile of the $t$-distribution with $n-p$ degrees of freedom.</p>
+    <p>where \(t_{n-p;\,1-\alpha/2}\) is the \((1-\alpha/2)\)-quantile of the \(t\)-distribution with \(n-p\) degrees of freedom.</p>
   </div>
 
   <div class="callout-note">
     <div class="callout-title">Caveat: Individual vs. Joint Tests</div>
     <p>
-      An individual $t$-test for $\beta_j$ quantifies the effect of the $j$-th predictor <em>after having subtracted the linear effect of all other predictors</em>. It is possible for all individual tests to fail to reject while the global $F$-test does reject — this can happen when predictors are correlated.
+      An individual \(t\)-test for \(\beta_j\) quantifies the effect of the \(j\)-th predictor <em>after having subtracted the linear effect of all other predictors</em>. It is possible for all individual tests to fail to reject while the global \(F\)-test does reject — this can happen when predictors are correlated.
     </p>
   </div>
 </section>
@@ -110,27 +110,27 @@
   <h2>2. Evaluating Model Assumptions Graphically</h2>
 
   <p>
-    The residuals $r_i = y_i - \hat{y}_i$ approximate the unobservable errors $\varepsilon_i$ and are the primary tool for checking whether the linear model is appropriate. Three key diagnostic plots were covered:
+    The residuals \(r_i = y_i - \hat{y}_i\) approximate the unobservable errors \(\varepsilon_i\) and are the primary tool for checking whether the linear model is appropriate. Three key diagnostic plots were covered:
   </p>
 
   <h3>2.1 The Tukey–Anscombe Plot</h3>
   <p>
-    This plots residuals $r_i$ (y-axis) against fitted values $\hat{y}_i$ (x-axis). A useful property is that the sample correlation between $r_i$ and $\hat{y}_i$ is always zero by construction. In an ideal scenario, the points fluctuate randomly around the horizontal line at zero — no patterns, no "funnels."
+    This plots residuals \(r_i\) (y-axis) against fitted values \(\hat{y}_i\) (x-axis). A useful property is that the sample correlation between \(r_i\) and \(\hat{y}_i\) is always zero by construction. In an ideal scenario, the points fluctuate randomly around the horizontal line at zero — no patterns, no "funnels."
   </p>
   <p>
-    Common violations you can spot include: a fan-shaped spread (heteroscedasticity — the variance of $\varepsilon_i$ depends on $\hat{y}_i$), a curved trend (suggesting a missing nonlinear term, e.g., a quadratic), or distinct clusters with different spreads (group-specific variances).
+    Common violations you can spot include: a fan-shaped spread (heteroscedasticity — the variance of \(\varepsilon_i\) depends on \(\hat{y}_i\)), a curved trend (suggesting a missing nonlinear term, e.g., a quadratic), or distinct clusters with different spreads (group-specific variances).
   </p>
 
   <div class="callout-example">
     <div class="callout-title">Practical Remedies</div>
     <p>
-      If the standard deviation of the residuals grows linearly with fitted values, a log-transform $y \mapsto \log(y)$ can stabilize the variance. If it grows as the square root, then $y \mapsto \sqrt{y}$ may help. Alternatively, one can use weighted least squares (see §1.6.4 in the lecture notes).
+      If the standard deviation of the residuals grows linearly with fitted values, a log-transform \(y \mapsto \log(y)\) can stabilize the variance. If it grows as the square root, then \(y \mapsto \sqrt{y}\) may help. Alternatively, one can use weighted least squares (see §1.6.4 in the lecture notes).
     </p>
   </div>
 
   <h3>2.2 The Normal QQ Plot</h3>
   <p>
-    The QQ (quantile–quantile) plot checks whether the residuals come from a normal distribution. You plot the empirical quantiles of the residuals (y-axis) against the theoretical quantiles of a $N(0,1)$ (x-axis). If the residuals are truly normal with mean $\mu$ and variance $\sigma^2$, the points should fall along a straight line with intercept $\mu$ and slope $\sigma$.
+    The QQ (quantile–quantile) plot checks whether the residuals come from a normal distribution. You plot the empirical quantiles of the residuals (y-axis) against the theoretical quantiles of a \(N(0,1)\) (x-axis). If the residuals are truly normal with mean \(\mu\) and variance \(\sigma^2\), the points should fall along a straight line with intercept \(\mu\) and slope \(\sigma\).
   </p>
   <p>
     Deviations to watch for: "S-shaped" curves indicate heavy tails (more extreme values than a Gaussian), a bend to one side signals skewness, and isolated points far from the line are potential outliers.
@@ -138,7 +138,7 @@
 
   <h3>2.3 Residual Correlation Plot</h3>
   <p>
-    To check for independence of errors, plot the residuals $r_i$ against the observation index $i$ (or the time $t_i$ if data are collected sequentially). If neighbouring residuals look similar — i.e., you see smooth "waves" — the independence assumption for the errors is likely violated (serial correlation).
+    To check for independence of errors, plot the residuals \(r_i\) against the observation index \(i\) (or the time \(t_i\) if data are collected sequentially). If neighbouring residuals look similar — i.e., you see smooth "waves" — the independence assumption for the errors is likely violated (serial correlation).
   </p>
 </section>
 
@@ -147,66 +147,66 @@
   <h2>3. Model Selection in Linear Models</h2>
 
   <p>
-    Suppose we have $p$ predictor variables, but only a subset may actually be relevant for prediction. Including unnecessary predictors increases model flexibility but also increases estimation variability. The goal is not to identify the "true" model, but to find a model with good <strong>predictive performance</strong>.
+    Suppose we have \(p\) predictor variables, but only a subset may actually be relevant for prediction. Including unnecessary predictors increases model flexibility but also increases estimation variability. The goal is not to identify the "true" model, but to find a model with good <strong>predictive performance</strong>.
   </p>
 
   <h3>3.1 The Bias–Variance Tradeoff in Submodel Selection</h3>
   <p>
-    Let $S = \{j_1, \ldots, j_q\} \subseteq \{1, \ldots, p\}$ be an index set of $q$ selected predictors, and $\hat{f}_S(x) = x_S^\top \hat{\boldsymbol{\beta}}_S$ the fitted values from the submodel. The average mean squared prediction error at the design points decomposes as:
+    Let \(S = \{j_1, \ldots, j_q\} \subseteq \{1, \ldots, p\}\) be an index set of \(q\) selected predictors, and \(\hat{f}_S(x) = x_S^\top \hat{\boldsymbol{\beta}}_S\) the fitted values from the submodel. The average mean squared prediction error at the design points decomposes as:
   </p>
 
   <div class="callout-definition">
     <div class="callout-title">Prediction Risk Decomposition</div>
     <div class="math-block">
-      $$R(S) = \underbrace{\frac{1}{n}\sum_{i=1}^{n}\Bigl(\mathrm{E}[\hat{f}_S(X_i)] - f^*(X_i)\Bigr)^2}_{\text{squared bias}} + \underbrace{\frac{1}{n}\sum_{i=1}^{n}\mathrm{Var}\!\bigl(\hat{f}_S(X_i)\bigr)}_{\text{variance}}$$
+      \[R(S) = \underbrace{\frac{1}{n}\sum_{i=1}^{n}\Bigl(\mathrm{E}[\hat{f}_S(X_i)] - f^*(X_i)\Bigr)^2}_{\text{squared bias}} + \underbrace{\frac{1}{n}\sum_{i=1}^{n}\mathrm{Var}\!\bigl(\hat{f}_S(X_i)\bigr)}_{\text{variance}}\]
     </div>
     <p>
-      Under the fixed-design linear model with homoscedastic errors, the variance term equals $\frac{q}{n}\sigma^2$ — it grows linearly with $q$. Meanwhile, the bias tends to decrease as $q$ increases (the model becomes more flexible). This is the fundamental <strong>bias–variance tradeoff</strong>.
+      Under the fixed-design linear model with homoscedastic errors, the variance term equals \(\frac{q}{n}\sigma^2\) — it grows linearly with \(q\). Meanwhile, the bias tends to decrease as \(q\) increases (the model becomes more flexible). This is the fundamental <strong>bias–variance tradeoff</strong>.
     </p>
   </div>
 
   <h3>3.2 Why Not Just Use RSS?</h3>
   <p>
-    The training error (RSS) always decreases as you add more predictors — for nested models, $\mathrm{RSS}(M_k) \geq \mathrm{RSS}(M_{k+1})$. So RSS alone is a poor criterion for model selection because it will always favour the most complex model. We need criteria that <strong>penalize model complexity</strong>.
+    The training error (RSS) always decreases as you add more predictors — for nested models, \(\mathrm{RSS}(M_k) \geq \mathrm{RSS}(M_{k+1})\). So RSS alone is a poor criterion for model selection because it will always favour the most complex model. We need criteria that <strong>penalize model complexity</strong>.
   </p>
 
   <h3>3.3 Penalized Regression</h3>
   <p>
-    Instead of minimizing $\|\boldsymbol{y} - \boldsymbol{X}\boldsymbol{\beta}\|^2$ alone, we add a penalty for the number of nonzero coefficients:
+    Instead of minimizing \(\|\boldsymbol{y} - \boldsymbol{X}\boldsymbol{\beta}\|^2\) alone, we add a penalty for the number of nonzero coefficients:
   </p>
   <div class="math-block">
-    $$\hat{\boldsymbol{\beta}}(\lambda) = \arg\min_{\boldsymbol{\beta}} \|\boldsymbol{y} - \boldsymbol{X}\boldsymbol{\beta}\|^2 + \lambda \|\boldsymbol{\beta}\|_0,$$
+    \[\hat{\boldsymbol{\beta}}(\lambda) = \arg\min_{\boldsymbol{\beta}} \|\boldsymbol{y} - \boldsymbol{X}\boldsymbol{\beta}\|^2 + \lambda \|\boldsymbol{\beta}\|_0,\]
   </div>
   <p>
-    where $\|\boldsymbol{\beta}\|_0 = |\{k : \beta_k \neq 0\}|$ counts the number of active predictors. The regularization parameter $\lambda$ controls the tradeoff: larger $\lambda$ means fewer variables; $\lambda = 0$ gives ordinary least squares.
+    where \(\|\boldsymbol{\beta}\|_0 = |\{k : \beta_k \neq 0\}|\) counts the number of active predictors. The regularization parameter \(\lambda\) controls the tradeoff: larger \(\lambda\) means fewer variables; \(\lambda = 0\) gives ordinary least squares.
   </p>
   <p>
-    Two popular choices for $\lambda$ yield well-known information criteria:
+    Two popular choices for \(\lambda\) yield well-known information criteria:
   </p>
   <div class="table-wrapper">
     <table>
       <thead>
-        <tr><th>Criterion</th><th>Choice of $\lambda$</th><th>Tendency</th></tr>
+        <tr><th>Criterion</th><th>Choice of \(\lambda\)</th><th>Tendency</th></tr>
       </thead>
       <tbody>
-        <tr><td><strong>AIC</strong> (Akaike) / Mallows $C_p$</td><td>$\lambda = 2\hat{\sigma}^2$</td><td>May select slightly too-complex models</td></tr>
-        <tr><td><strong>BIC</strong> (Bayesian)</td><td>$\lambda = \log(n)\,\hat{\sigma}^2$</td><td>Tends towards simpler models</td></tr>
+        <tr><td><strong>AIC</strong> (Akaike) / Mallows \(C_p\)</td><td>\(\lambda = 2\hat{\sigma}^2\)</td><td>May select slightly too-complex models</td></tr>
+        <tr><td><strong>BIC</strong> (Bayesian)</td><td>\(\lambda = \log(n)\,\hat{\sigma}^2\)</td><td>Tends towards simpler models</td></tr>
       </tbody>
     </table>
   </div>
   <p>
-    In practice, $\lambda$ is often chosen via cross-validation (covered later in the course).
+    In practice, \(\lambda\) is often chosen via cross-validation (covered later in the course).
   </p>
 
   <h3>3.4 Best Subset Selection</h3>
   <p>
-    For each model size $k = 1, \ldots, p$, fit <em>all</em> $\binom{p}{k}$ models with exactly $k$ predictors (plus the intercept), and identify the one with the smallest RSS — call it $M_k$. The RSS will always decrease over the sequence $M_1, M_2, \ldots, M_p$, so you then need to apply a criterion (AIC, BIC, cross-validation) to pick the best $k$.
+    For each model size \(k = 1, \ldots, p\), fit <em>all</em> \(\binom{p}{k}\) models with exactly \(k\) predictors (plus the intercept), and identify the one with the smallest RSS — call it \(M_k\). The RSS will always decrease over the sequence \(M_1, M_2, \ldots, M_p\), so you then need to apply a criterion (AIC, BIC, cross-validation) to pick the best \(k\).
   </p>
 
   <div class="callout-note">
     <div class="callout-title">Computational Limitation</div>
     <p>
-      Best subset selection requires fitting $2^p$ models, which is only feasible for small $p$ (roughly $p \leq 15$ or so, since $2^{16} = 65{,}536$). For larger $p$, we need greedy alternatives.
+      Best subset selection requires fitting \(2^p\) models, which is only feasible for small \(p\) (roughly \(p \leq 15\) or so, since \(2^{16} = 65{,}536\)). For larger \(p\), we need greedy alternatives.
     </p>
   </div>
 
@@ -217,25 +217,25 @@
 
   <h4>Forward Selection</h4>
   <p>
-    Start with the null model $M_0$ (intercept only). At each step, add the predictor that reduces RSS the most. Continue until all $p$ predictors are included. This produces a nested sequence $M_0 \subseteq M_1 \subseteq \cdots \subseteq M_p$, from which you pick the best model using a penalized criterion.
+    Start with the null model \(M_0\) (intercept only). At each step, add the predictor that reduces RSS the most. Continue until all \(p\) predictors are included. This produces a nested sequence \(M_0 \subseteq M_1 \subseteq \cdots \subseteq M_p\), from which you pick the best model using a penalized criterion.
   </p>
 
   <h4>Backward Selection</h4>
   <p>
-    Start with the full model $M_p$ (all predictors). At each step, remove the predictor whose removal increases RSS the least. Continue until only the intercept remains. Backward selection is often slightly better than forward, but requires $p < n$ (can't fit the full model otherwise).
+    Start with the full model \(M_p\) (all predictors). At each step, remove the predictor whose removal increases RSS the least. Continue until only the intercept remains. Backward selection is often slightly better than forward, but requires \(p < n\) (can't fit the full model otherwise).
   </p>
 
   <div class="callout-note">
     <div class="callout-title">Important: Post-Selection Inference</div>
     <p>
-      After performing any model selection procedure (best subset, forward, backward), the usual inference tools ($t$-tests, confidence intervals) are <strong>no longer valid</strong>. The data has been heavily used for choosing the model, so p-values and standard errors from the selected model are overly optimistic. This is the problem of <em>post-selection inference</em>.
+      After performing any model selection procedure (best subset, forward, backward), the usual inference tools (\(t\)-tests, confidence intervals) are <strong>no longer valid</strong>. The data has been heavily used for choosing the model, so p-values and standard errors from the selected model are overly optimistic. This is the problem of <em>post-selection inference</em>.
     </p>
   </div>
 
   <div class="callout-example">
     <div class="callout-title">Example: Body Fat Data</div>
     <p>
-      Using the body fat dataset ($n = 247$, $p = 13$ quantitative predictors), best subset selection was applied. The centred $R^2$ increases from about 0.66 (1 predictor) to 0.74 (all 13), but most of the gain is captured by the first 3–4 predictors. Forward and backward selection produce slightly different orderings — for instance, forward selection adds <code>abdomen</code> first, while backward removes <code>knee</code> first — but the final selected models are often similar.
+      Using the body fat dataset (\(n = 247\), \(p = 13\) quantitative predictors), best subset selection was applied. The centred \(R^2\) increases from about 0.66 (1 predictor) to 0.74 (all 13), but most of the gain is captured by the first 3–4 predictors. Forward and backward selection produce slightly different orderings — for instance, forward selection adds <code>abdomen</code> first, while backward removes <code>knee</code> first — but the final selected models are often similar.
     </p>
   </div>
 </section>
@@ -251,48 +251,48 @@
   <div class="callout-definition">
     <div class="callout-title">Setting</div>
     <p>
-      We observe $X_1, \ldots, X_n \stackrel{\text{i.i.d.}}{\sim} F$, where $F$ is an unknown CDF. Goal: estimate the density $f = F'$ (assuming it exists), without assuming a parametric model (e.g., Gaussian with unknown mean and variance). A density $f$ is an <em>infinite-dimensional</em> object.
+      We observe \(X_1, \ldots, X_n \stackrel{\text{i.i.d.}}{\sim} F\), where \(F\) is an unknown CDF. Goal: estimate the density \(f = F'\) (assuming it exists), without assuming a parametric model (e.g., Gaussian with unknown mean and variance). A density \(f\) is an <em>infinite-dimensional</em> object.
     </p>
   </div>
 
   <h3>4.1 The Histogram</h3>
   <p>
-    The histogram is the oldest and most widely used density estimator. It requires two choices: an <strong>origin</strong> $x_0$ and a <strong>class width</strong> (bin width) $h > 0$. These define the bins:
+    The histogram is the oldest and most widely used density estimator. It requires two choices: an <strong>origin</strong> \(x_0\) and a <strong>class width</strong> (bin width) \(h > 0\). These define the bins:
   </p>
   <div class="math-block">
-    $$I_j = (x_0 + jh,\; x_0 + (j+1)h], \qquad j \in \mathbb{Z}.$$
+    \[I_j = (x_0 + jh,\; x_0 + (j+1)h], \qquad j \in \mathbb{Z}.\]
   </div>
   <p>
-    The histogram counts observations in each bin and scales the bar heights so that the total area equals 1 (making it a proper density estimate). Two important points about the tuning parameters: the origin $x_0$ is highly arbitrary and can change the appearance significantly, while the bin width $h$ controls the smoothness — small $h$ gives a wiggly, noisy estimate; large $h$ gives a smooth but potentially over-smoothed estimate.
+    The histogram counts observations in each bin and scales the bar heights so that the total area equals 1 (making it a proper density estimate). Two important points about the tuning parameters: the origin \(x_0\) is highly arbitrary and can change the appearance significantly, while the bin width \(h\) controls the smoothness — small \(h\) gives a wiggly, noisy estimate; large \(h\) gives a smooth but potentially over-smoothed estimate.
   </p>
 
   <h3>4.2 The Kernel Density Estimator (KDE)</h3>
   <p>
-    The kernel density estimator improves on the histogram by placing a smooth "bump" centered at each observation, then averaging. It avoids the need for an origin $x_0$ and produces a smooth estimate.
+    The kernel density estimator improves on the histogram by placing a smooth "bump" centered at each observation, then averaging. It avoids the need for an origin \(x_0\) and produces a smooth estimate.
   </p>
 
   <div class="callout-definition">
     <div class="callout-title">Definition — Kernel Density Estimator</div>
     <div class="math-block">
-      $$\hat{f}_h(x) = \frac{1}{nh}\sum_{i=1}^{n} K\!\left(\frac{x - X_i}{h}\right)$$
+      \[\hat{f}_h(x) = \frac{1}{nh}\sum_{i=1}^{n} K\!\left(\frac{x - X_i}{h}\right)\]
     </div>
-    <p>where $h > 0$ is the <strong>bandwidth</strong> (smoothing parameter) and $K$ is a <strong>kernel function</strong> satisfying:</p>
+    <p>where \(h > 0\) is the <strong>bandwidth</strong> (smoothing parameter) and \(K\) is a <strong>kernel function</strong> satisfying:</p>
     <div class="math-block">
-      $$K(x) \geq 0, \qquad \int K(x)\,dx = 1, \qquad K(x) = K(-x).$$
+      \[K(x) \geq 0, \qquad \int K(x)\,dx = 1, \qquad K(x) = K(-x).\]
     </div>
     <p>
-      <strong>Intuition:</strong> Each observation $X_i$ contributes a "bump" of width $h$ shaped like $K$. Summing and normalizing these bumps produces a smooth density estimate. Common choices for $K$ include the Gaussian, Epanechnikov, and uniform (box) kernels.
+      <strong>Intuition:</strong> Each observation \(X_i\) contributes a "bump" of width \(h\) shaped like \(K\). Summing and normalizing these bumps produces a smooth density estimate. Common choices for \(K\) include the Gaussian, Epanechnikov, and uniform (box) kernels.
     </p>
   </div>
 
   <p>
-    The KDE can be understood starting from the naive density estimator. The density at a point $x$ can be written as $f(x) = \lim_{h \to 0} \frac{1}{2h} P(x - h < X \leq x + h)$. Replacing probabilities with relative frequencies and <em>not</em> taking the limit gives the naive estimator — which is piecewise constant. The KDE simply replaces the box indicator with a smooth kernel $K$, yielding a continuous estimate.
+    The KDE can be understood starting from the naive density estimator. The density at a point \(x\) can be written as \(f(x) = \lim_{h \to 0} \frac{1}{2h} P(x - h < X \leq x + h)\). Replacing probabilities with relative frequencies and <em>not</em> taking the limit gives the naive estimator — which is piecewise constant. The KDE simply replaces the box indicator with a smooth kernel \(K\), yielding a continuous estimate.
   </p>
 
   <div class="callout-note">
-    <div class="callout-title">The Role of Bandwidth $h$</div>
+    <div class="callout-title">The Role of Bandwidth \(h\)</div>
     <p>
-      The bandwidth $h$ plays the same role as the bin width in a histogram — it controls the bias–variance tradeoff. A small $h$ gives low bias but high variance (wiggly, noisy curve). A large $h$ gives low variance but high bias (oversmoothed, missing features). Choosing $h$ optimally is a central problem in nonparametric statistics, covered in more detail in Week 4.
+      The bandwidth \(h\) plays the same role as the bin width in a histogram — it controls the bias–variance tradeoff. A small \(h\) gives low bias but high variance (wiggly, noisy curve). A large \(h\) gives low variance but high bias (oversmoothed, missing features). Choosing \(h\) optimally is a central problem in nonparametric statistics, covered in more detail in Week 4.
     </p>
   </div>
 </section>
@@ -302,10 +302,10 @@
   <h2>Key Takeaways</h2>
   <ul>
     <li><strong>Diagnostic plots are essential.</strong> The Tukey–Anscombe plot checks for non-constant variance and missing nonlinear terms; the QQ plot checks normality; the residual index plot checks for serial correlation. Always inspect these before trusting inference results.</li>
-    <li><strong>RSS alone cannot guide model selection</strong> because it always decreases with model size. You must penalize complexity — via AIC/BIC, Mallows $C_p$, or cross-validation — to balance the bias–variance tradeoff.</li>
-    <li><strong>Penalized regression</strong> adds a term $\lambda\|\boldsymbol{\beta}\|_0$ to the objective, effectively performing variable selection. The choice of $\lambda$ determines the tradeoff between fit and parsimony.</li>
+    <li><strong>RSS alone cannot guide model selection</strong> because it always decreases with model size. You must penalize complexity — via AIC/BIC, Mallows \(C_p\), or cross-validation — to balance the bias–variance tradeoff.</li>
+    <li><strong>Penalized regression</strong> adds a term \(\lambda\|\boldsymbol{\beta}\|_0\) to the objective, effectively performing variable selection. The choice of \(\lambda\) determines the tradeoff between fit and parsimony.</li>
     <li><strong>Post-selection inference is invalid:</strong> after using the data to select a model, standard p-values and confidence intervals are no longer trustworthy.</li>
-    <li><strong>Nonparametric density estimation</strong> (histogram, KDE) is a first step into infinite-dimensional estimation. The bandwidth $h$ controls the bias–variance tradeoff, mirroring the role of model complexity in regression.</li>
+    <li><strong>Nonparametric density estimation</strong> (histogram, KDE) is a first step into infinite-dimensional estimation. The bandwidth \(h\) controls the bias–variance tradeoff, mirroring the role of model complexity in regression.</li>
   </ul>
 </section>
 

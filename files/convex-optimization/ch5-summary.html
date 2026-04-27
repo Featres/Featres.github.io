@@ -16,13 +16,13 @@
   <script>
       MathJax = {
         tex: {
-          inlineMath: [['$', '$'], ['\(', '\)']],
-          displayMath: [['$$', '$$'], ['\[', '\]']]
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          displayMath: [['$$', '$$'], ['\\[', '\\]']]
         },
-        svg: { fontCache: 'global' }
+        chtml: {}
       };
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
 </head>
 <body>
 <div class="topbar">
@@ -77,20 +77,20 @@
 
     <div class="callout-definition">
       <div class="callout-title">Standard Form — Constrained Convex Program (5.1)</div>
-      <div class="math-block">$$
+      <div class="math-block">\[
         \min \; f(x) \qquad \text{s.t.} \quad g_i(x) \le 0 \;\; \forall\, i \in [m], \quad Ax = b
-      $$</div>
+      \]</div>
       <p>
-        where $f : \mathbb{R}^n \to \mathbb{R}$ and each $g_i : \mathbb{R}^n \to \mathbb{R}$ are <strong>twice differentiable convex</strong> functions, $A \in \mathbb{R}^{\ell \times n}$ with $\operatorname{rank}(A) = \ell < n$, and $b \in \mathbb{R}^\ell$.
+        where \(f : \mathbb{R}^n \to \mathbb{R}\) and each \(g_i : \mathbb{R}^n \to \mathbb{R}\) are <strong>twice differentiable convex</strong> functions, \(A \in \mathbb{R}^{\ell \times n}\) with \(\operatorname{rank}(A) = \ell < n\), and \(b \in \mathbb{R}^\ell\).
       </p>
     </div>
 
     <p>
-      <strong>Intuition:</strong> Think of $f$ as a cost you want to minimize. The inequalities $g_i(x) \le 0$ carve out a feasible region (like walls of a room), and the equalities $Ax = b$ pin you to a particular affine subspace (like being restricted to a specific floor of a building). The goal is to find the cheapest point that lies inside the room and on the correct floor.
+      <strong>Intuition:</strong> Think of \(f\) as a cost you want to minimize. The inequalities \(g_i(x) \le 0\) carve out a feasible region (like walls of a room), and the equalities \(Ax = b\) pin you to a particular affine subspace (like being restricted to a specific floor of a building). The goal is to find the cheapest point that lies inside the room and on the correct floor.
     </p>
 
     <p>
-      When $m = \ell = 0$ (no constraints at all), this reduces to the unconstrained case handled in Chapter 4. The chapter tackles increasing generality: first $m = 0$ (equality constraints only), then the full problem.
+      When \(m = \ell = 0\) (no constraints at all), this reduces to the unconstrained case handled in Chapter 4. The chapter tackles increasing generality: first \(m = 0\) (equality constraints only), then the full problem.
     </p>
   </section>
 
@@ -100,32 +100,32 @@
 
     <p>We first consider the simpler sub-problem with equality constraints only:</p>
 
-    <div class="math-block">$$
+    <div class="math-block">\[
       \min \; f(x) \qquad \text{s.t.} \quad Ax = b
-    $$</div>
+    \]</div>
 
     <p>
-      The assumption $\operatorname{rank}(A) = \ell < n$ means there are fewer independent constraints than variables, so the feasible set is a non-trivial affine subspace. Four approaches are discussed.
+      The assumption \(\operatorname{rank}(A) = \ell < n\) means there are fewer independent constraints than variables, so the feasible set is a non-trivial affine subspace. Four approaches are discussed.
     </p>
 
     <!-- Analytic method -->
     <h3>Method 1: The Analytic Method</h3>
 
     <p>
-      When $f$ is a <strong>convex quadratic</strong>, the problem can be solved exactly by writing down the KKT optimality conditions and solving a system of linear equations.
+      When \(f\) is a <strong>convex quadratic</strong>, the problem can be solved exactly by writing down the KKT optimality conditions and solving a system of linear equations.
     </p>
 
     <div class="callout-example">
       <div class="callout-title">Example 5.1.1 — Quadratic Objective</div>
-      <p>For $f(x) = \tfrac{1}{2}x^\top P x + q^\top x + r$ with $P \succeq 0$, the KKT conditions give the linear system:</p>
-      <div class="math-block">$$
+      <p>For \(f(x) = \tfrac{1}{2}x^\top P x + q^\top x + r\) with \(P \succeq 0\), the KKT conditions give the linear system:</p>
+      <div class="math-block">\[
         \begin{bmatrix} P & A^\top \\ A & 0 \end{bmatrix}
         \begin{bmatrix} x^* \\ v^* \end{bmatrix}
         =
         \begin{bmatrix} -q \\ b \end{bmatrix}
-      $$</div>
+      \]</div>
       <p>
-        <strong>Intuition:</strong> This is a block matrix system of $n + \ell$ equations in $n + \ell$ unknowns. The top block enforces the optimality condition (gradient of the Lagrangian is zero) and the bottom block enforces feasibility ($Ax = b$). If $P$ is positive definite, there is a unique solution. If $P$ is only positive semidefinite (has zero eigenvalues), any solution to the system is optimal. If no solution exists, the problem is unbounded below.
+        <strong>Intuition:</strong> This is a block matrix system of \(n + \ell\) equations in \(n + \ell\) unknowns. The top block enforces the optimality condition (gradient of the Lagrangian is zero) and the bottom block enforces feasibility (\(Ax = b\)). If \(P\) is positive definite, there is a unique solution. If \(P\) is only positive semidefinite (has zero eigenvalues), any solution to the system is optimal. If no solution exists, the problem is unbounded below.
       </p>
     </div>
 
@@ -133,14 +133,14 @@
     <h3>Method 2: Eliminating Equality Constraints</h3>
 
     <p>
-      The idea is to "substitute away" the equality constraints and reduce to an unconstrained problem. We find a matrix $F \in \mathbb{R}^{n \times (n-\ell)}$ whose columns span the null space of $A$, and any particular solution $\hat{x}$ satisfying $A\hat{x} = b$. Then every feasible point can be written as $x = Fz + \hat{x}$ for some $z \in \mathbb{R}^{n-\ell}$.
+      The idea is to "substitute away" the equality constraints and reduce to an unconstrained problem. We find a matrix \(F \in \mathbb{R}^{n \times (n-\ell)}\) whose columns span the null space of \(A\), and any particular solution \(\hat{x}\) satisfying \(A\hat{x} = b\). Then every feasible point can be written as \(x = Fz + \hat{x}\) for some \(z \in \mathbb{R}^{n-\ell}\).
     </p>
 
-    <div class="math-block">$$
+    <div class="math-block">\[
       \{x \mid Ax = b\} = \{Fz + \hat{x} \mid z \in \mathbb{R}^{n-\ell}\}
-    $$</div>
+    \]</div>
 
-    <p>We then solve the unconstrained problem $\min_z f(Fz + \hat{x})$ using Newton's method and recover $x^* = Fz^* + \hat{x}$.</p>
+    <p>We then solve the unconstrained problem \(\min_z f(Fz + \hat{x})\) using Newton's method and recover \(x^* = Fz^* + \hat{x}\).</p>
 
     <div class="callout-note">
       <div class="callout-title">Intuition</div>
@@ -156,56 +156,56 @@
       If strong duality holds (e.g., Slater's condition is satisfied), we can solve the <strong>dual problem</strong> instead. The dual function for the equality constrained problem is:
     </p>
 
-    <div class="math-block">$$
+    <div class="math-block">\[
       L_b(\nu) = -b^\top \nu - f^*(-A^\top \nu)
-    $$</div>
+    \]</div>
 
     <p>
-      where $f^*$ is the <strong>conjugate</strong> (Legendre transform) of $f$. If $L_b$ is twice differentiable, we can maximize it using unconstrained methods to get an optimal dual variable $\nu^*$. Then we recover the primal optimum by minimizing the Lagrangian $L(x, \nu^*)$ over $x$. If that minimizer is primal feasible, it's also primal optimal by strong duality.
+      where \(f^*\) is the <strong>conjugate</strong> (Legendre transform) of \(f\). If \(L_b\) is twice differentiable, we can maximize it using unconstrained methods to get an optimal dual variable \(\nu^*\). Then we recover the primal optimum by minimizing the Lagrangian \(L(x, \nu^*)\) over \(x\). If that minimizer is primal feasible, it's also primal optimal by strong duality.
     </p>
 
     <!-- Feasible Start Newton -->
     <h3>Method 4: Feasible Start Newton's Method</h3>
 
     <p>
-      This is often the <strong>preferred method</strong> in practice. The idea is to adapt Newton's method to stay on the feasible set $\{x \mid Ax = b\}$ at every iteration.
+      This is often the <strong>preferred method</strong> in practice. The idea is to adapt Newton's method to stay on the feasible set \(\{x \mid Ax = b\}\) at every iteration.
     </p>
 
     <p>
       Recall that in unconstrained Newton's method, the Newton step is obtained by minimizing a second-order Taylor approximation. In the equality-constrained case, we minimize the same Taylor approximation <em>subject to the constraint that the step keeps us feasible</em>:
     </p>
 
-    <div class="math-block">$$
+    <div class="math-block">\[
       \min_v \; \tilde{f}(x^{(k)} + v) = f(x^{(k)}) + \nabla f(x^{(k)})^\top v + \tfrac{1}{2} v^\top \nabla^2 f(x^{(k)}) v
       \qquad \text{s.t.} \;\; A(x^{(k)} + v) = b
-    $$</div>
+    \]</div>
 
-    <p>Since $x^{(k)}$ is already feasible ($Ax^{(k)} = b$), the constraint simplifies to $Av = 0$. The Newton step $\Delta x_N$ is characterized by the KKT system:</p>
+    <p>Since \(x^{(k)}\) is already feasible (\(Ax^{(k)} = b\)), the constraint simplifies to \(Av = 0\). The Newton step \(\Delta x_N\) is characterized by the KKT system:</p>
 
     <div class="callout-definition">
       <div class="callout-title">Newton Step for Equality-Constrained Problems</div>
-      <div class="math-block">$$
+      <div class="math-block">\[
         \begin{bmatrix} \nabla^2 f(x) & A^\top \\ A & 0 \end{bmatrix}
         \begin{bmatrix} \Delta x_N \\ w \end{bmatrix}
         =
         \begin{bmatrix} -\nabla f(x) \\ 0 \end{bmatrix}
-      $$</div>
-      <p>where $w$ is the dual variable associated with the equality constraint.</p>
+      \]</div>
+      <p>where \(w\) is the dual variable associated with the equality constraint.</p>
     </div>
 
     <p>
-      <strong>Intuition:</strong> At each step we ask: "Given where I am, what's the best direction to move <em>while staying on the feasible plane $Ax = b$</em>?" The top row gives the optimality condition and the bottom row ($A \Delta x_N = 0$) ensures the step doesn't leave the feasible set.
+      <strong>Intuition:</strong> At each step we ask: "Given where I am, what's the best direction to move <em>while staying on the feasible plane \(Ax = b\)</em>?" The top row gives the optimality condition and the bottom row (\(A \Delta x_N = 0\)) ensures the step doesn't leave the feasible set.
     </p>
 
-    <p>The Newton decrement $\lambda(x)^2 = -\nabla f(x)^\top \Delta x_N$ serves as the stopping criterion, just as in the unconstrained case. If $f$ is quadratic, the method solves the problem in a single iteration.</p>
+    <p>The Newton decrement \(\lambda(x)^2 = -\nabla f(x)^\top \Delta x_N\) serves as the stopping criterion, just as in the unconstrained case. If \(f\) is quadratic, the method solves the problem in a single iteration.</p>
 
     <div class="callout-definition">
       <div class="callout-title">Theorem 5.1.2 — Convergence of Feasible Start Newton's Method</div>
-      <p>If $f$ is strongly convex and self-concordant, the feasible start Newton's method with backtracking line search achieves $f(x^{(k)}) - f^* \le \varepsilon$ in at most</p>
-      <div class="math-block">$$
+      <p>If \(f\) is strongly convex and self-concordant, the feasible start Newton's method with backtracking line search achieves \(f(x^{(k)}) - f^* \le \varepsilon\) in at most</p>
+      <div class="math-block">\[
         k \ge \frac{f(x^{(0)}) - f^*}{\gamma} + \log \log \frac{1}{\varepsilon}
-      $$</div>
-      <p>steps, where $\gamma$ is a constant from the self-concordance theory (Theorem 4.7.10). This is the <em>same</em> convergence rate as unconstrained Newton's method.</p>
+      \]</div>
+      <p>steps, where \(\gamma\) is a constant from the self-concordance theory (Theorem 4.7.10). This is the <em>same</em> convergence rate as unconstrained Newton's method.</p>
     </div>
 
     <!-- Infeasible Start Newton -->
@@ -215,15 +215,15 @@
       What if we don't have a feasible starting point? The <strong>infeasible start</strong> variant modifies the Newton step so that it simultaneously tries to reduce the objective <em>and</em> reduce infeasibility. The KKT system becomes:
     </p>
 
-    <div class="math-block">$$
+    <div class="math-block">\[
       \begin{bmatrix} \nabla^2 f(x) & A^\top \\ A & 0 \end{bmatrix}
       \begin{bmatrix} \Delta x_N \\ w \end{bmatrix}
       =
       \begin{bmatrix} -\nabla f(x) \\ b - Ax \end{bmatrix}
-    $$</div>
+    \]</div>
 
     <p>
-      Notice the right-hand side: the bottom block is now $b - Ax$ (the "residual" of infeasibility) instead of $0$. When $x$ is feasible, this reduces exactly to the feasible-start version.
+      Notice the right-hand side: the bottom block is now \(b - Ax\) (the "residual" of infeasibility) instead of \(0\). When \(x\) is feasible, this reduces exactly to the feasible-start version.
     </p>
   </section>
 
@@ -232,7 +232,7 @@
     <h2>5.2 — Inequality Constrained Minimization</h2>
 
     <p>
-      Now we tackle the full problem (5.1) with both equality <em>and</em> inequality constraints. We assume the problem is <strong>strictly feasible</strong> (Slater's condition holds), meaning there exists a point $x$ with $Ax = b$ and $g_i(x) < 0$ for all $i$. This guarantees zero duality gap and that KKT conditions are necessary and sufficient.
+      Now we tackle the full problem (5.1) with both equality <em>and</em> inequality constraints. We assume the problem is <strong>strictly feasible</strong> (Slater's condition holds), meaning there exists a point \(x\) with \(Ax = b\) and \(g_i(x) < 0\) for all \(i\). This guarantees zero duality gap and that KKT conditions are necessary and sufficient.
     </p>
 
     <h3>The Core Idea: From Constraints to Penalties</h3>
@@ -242,34 +242,34 @@
     </p>
 
     <p>
-      The natural first attempt uses <strong>indicator functions</strong>. Define $I_-(u) = 0$ if $u \le 0$ and $I_-(u) = +\infty$ if $u > 0$. Then problem (5.1) is equivalent to:
+      The natural first attempt uses <strong>indicator functions</strong>. Define \(I_-(u) = 0\) if \(u \le 0\) and \(I_-(u) = +\infty\) if \(u > 0\). Then problem (5.1) is equivalent to:
     </p>
 
-    <div class="math-block">$$
+    <div class="math-block">\[
       \min \; f(x) + \sum_{i=1}^{m} I_-(g_i(x)) \qquad \text{s.t.} \;\; Ax = b
-    $$</div>
+    \]</div>
 
     <p>
-      This is now an equality-constrained problem — great! But the indicator function is not differentiable (it jumps from $0$ to $\infty$), so we can't use Newton's method.
+      This is now an equality-constrained problem — great! But the indicator function is not differentiable (it jumps from \(0\) to \(\infty\)), so we can't use Newton's method.
     </p>
 
     <p>
-      <strong>The fix:</strong> replace the sharp indicator $I_-$ with a smooth approximation — the <em>logarithmic barrier function</em>.
+      <strong>The fix:</strong> replace the sharp indicator \(I_-\) with a smooth approximation — the <em>logarithmic barrier function</em>.
     </p>
 
     <h3>The Logarithmic Barrier Function</h3>
 
     <div class="callout-definition">
       <div class="callout-title">Definition 5.2.1 — Logarithmic Barrier (single constraint)</div>
-      <p>For $t > 0$, define:</p>
-      <div class="math-block">$$
+      <p>For \(t > 0\), define:</p>
+      <div class="math-block">\[
         \tilde{I}_-(x) := -\frac{1}{t} \log(-x), \qquad x < 0
-      $$</div>
-      <p>This is a smooth, convex approximation to the indicator function $I_-(x)$.</p>
+      \]</div>
+      <p>This is a smooth, convex approximation to the indicator function \(I_-(x)\).</p>
     </div>
 
     <p>
-      <strong>Intuition:</strong> The $-\log(-x)$ function is zero-ish when $x$ is very negative (deep inside the feasible region) and blows up to $+\infty$ as $x \to 0^-$ (approaching the boundary). The parameter $t$ controls how sharply it approximates the true indicator — larger $t$ means a tighter approximation that looks more like the step function.
+      <strong>Intuition:</strong> The \(-\log(-x)\) function is zero-ish when \(x\) is very negative (deep inside the feasible region) and blows up to \(+\infty\) as \(x \to 0^-\) (approaching the boundary). The parameter \(t\) controls how sharply it approximates the true indicator — larger \(t\) means a tighter approximation that looks more like the step function.
     </p>
 
     <figure>
@@ -296,40 +296,40 @@
         <!-- 0 label -->
         <text x="303" y="248" font-size="13" fill="#1a1a2e" font-family="Inter">0</text>
       </svg>
-      <figcaption>Figure 1: As $t$ increases, the logarithmic barrier $-\frac{1}{t}\log(-x)$ more closely approximates the indicator $I_-(x)$.</figcaption>
+      <figcaption>Figure 1: As \(t\) increases, the logarithmic barrier \(-\frac{1}{t}\log(-x)\) more closely approximates the indicator \(I_-(x)\).</figcaption>
     </figure>
 
     <div class="callout-definition">
       <div class="callout-title">Proposition 5.2.2 — Properties</div>
-      <p>For every $t > 0$, the logarithmic barrier $\tilde{I}_-(x)$ is <strong>convex</strong> and <strong>twice continuously differentiable</strong> on $(-\infty, 0)$, with first derivative $-1/(tx)$ and second derivative $1/(tx^2)$.</p>
+      <p>For every \(t > 0\), the logarithmic barrier \(\tilde{I}_-(x)\) is <strong>convex</strong> and <strong>twice continuously differentiable</strong> on \((-\infty, 0)\), with first derivative \(-1/(tx)\) and second derivative \(1/(tx^2)\).</p>
     </div>
 
-    <p>For the full problem with $m$ inequality constraints, the barrier function aggregates all constraints:</p>
+    <p>For the full problem with \(m\) inequality constraints, the barrier function aggregates all constraints:</p>
 
     <div class="callout-definition">
       <div class="callout-title">Definition 5.2.3 — Logarithmic Barrier Function (multiple constraints)</div>
-      <div class="math-block">$$
+      <div class="math-block">\[
         \phi(x) := -\sum_{i=1}^{m} \log(-g_i(x))
-      $$</div>
-      <p>Domain: the set of strictly feasible points $\{x \mid g_i(x) < 0 \;\forall i\}$.</p>
+      \]</div>
+      <p>Domain: the set of strictly feasible points \(\{x \mid g_i(x) < 0 \;\forall i\}\).</p>
     </div>
 
-    <p>The approximated problem, parameterized by $t > 0$, becomes:</p>
+    <p>The approximated problem, parameterized by \(t > 0\), becomes:</p>
 
-    <div class="math-block">$$
+    <div class="math-block">\[
       \min \; f(x) + \frac{1}{t}\, \phi(x) \qquad \text{s.t.} \;\; Ax = b \tag{5.5}
-    $$</div>
+    \]</div>
 
     <p>This is a convex program with only equality constraints — solvable by the methods of Section 5.1!</p>
 
     <div class="callout-note">
       <div class="callout-title">Key Observations</div>
       <ul>
-        <li>Larger $t$ → better approximation to the original problem (the barrier becomes a steeper wall).</li>
-        <li>Larger $t$ → the Hessian of $\phi$ varies more wildly near the constraint boundaries, which can slow down Newton's method.</li>
-        <li>The gradient and Hessian of $\phi$ are:
-          $\nabla \phi(x) = \sum_{i=1}^m \frac{1}{-g_i(x)} \nabla g_i(x)$ and
-          $\nabla^2 \phi(x) = \sum_{i=1}^m \frac{1}{g_i(x)^2} \nabla g_i(x) \nabla g_i(x)^\top + \sum_{i=1}^m \frac{1}{-g_i(x)} \nabla^2 g_i(x)$.
+        <li>Larger \(t\) → better approximation to the original problem (the barrier becomes a steeper wall).</li>
+        <li>Larger \(t\) → the Hessian of \(\phi\) varies more wildly near the constraint boundaries, which can slow down Newton's method.</li>
+        <li>The gradient and Hessian of \(\phi\) are:
+          \(\nabla \phi(x) = \sum_{i=1}^m \frac{1}{-g_i(x)} \nabla g_i(x)\) and
+          \(\nabla^2 \phi(x) = \sum_{i=1}^m \frac{1}{g_i(x)^2} \nabla g_i(x) \nabla g_i(x)^\top + \sum_{i=1}^m \frac{1}{-g_i(x)} \nabla^2 g_i(x)\).
         </li>
       </ul>
     </div>
@@ -338,24 +338,24 @@
     <h3>The Central Path</h3>
 
     <p>
-      As we vary $t$ from small to large, the minimizer of the approximate problem (5.5) traces a curve through the interior of the feasible region. This curve is called the <strong>central path</strong>.
+      As we vary \(t\) from small to large, the minimizer of the approximate problem (5.5) traces a curve through the interior of the feasible region. This curve is called the <strong>central path</strong>.
     </p>
 
     <div class="callout-definition">
       <div class="callout-title">Definition 5.2.4 — Central Path</div>
-      <p>For the equivalent formulation $\min\; t\,f(x) + \phi(x)$ subject to $Ax = b$, the set of minimizers $\{x^*_t \mid t > 0\}$ is called the <strong>central path</strong>.</p>
-      <p>(Multiplying $f$ by $t$ does not change the minimizers, only the objective value.)</p>
+      <p>For the equivalent formulation \(\min\; t\,f(x) + \phi(x)\) subject to \(Ax = b\), the set of minimizers \(\{x^*_t \mid t > 0\}\) is called the <strong>central path</strong>.</p>
+      <p>(Multiplying \(f\) by \(t\) does not change the minimizers, only the objective value.)</p>
     </div>
 
     <div class="callout-example">
       <div class="callout-title">Example 5.2.5 — Central Path in 1D</div>
-      <p>Consider $\min\, -x$ subject to $x \le 0$. The optimal solution is $x^* = 0$ with value $0$.</p>
-      <p>The approximate problem is $\min\; -x - \tfrac{1}{t}\log(-x)$. Setting the derivative to zero:</p>
-      <div class="math-block">$$
+      <p>Consider \(\min\, -x\) subject to \(x \le 0\). The optimal solution is \(x^* = 0\) with value \(0\).</p>
+      <p>The approximate problem is \(\min\; -x - \tfrac{1}{t}\log(-x)\). Setting the derivative to zero:</p>
+      <div class="math-block">\[
         -1 - \frac{1}{tx} \cdot (-1) = 0 \quad\Longrightarrow\quad x^*_t = -\frac{1}{t}
-      $$</div>
+      \]</div>
       <p>
-        As $t \to \infty$, the central path $x^*_t = -1/t \to 0$, converging to the true optimum. Each point on the central path sits <em>strictly inside</em> the feasible region (here $x < 0$), getting closer and closer to the boundary.
+        As \(t \to \infty\), the central path \(x^*_t = -1/t \to 0\), converging to the true optimum. Each point on the central path sits <em>strictly inside</em> the feasible region (here \(x < 0\)), getting closer and closer to the boundary.
       </p>
     </div>
 
@@ -363,20 +363,20 @@
 
     <div class="callout-definition">
       <div class="callout-title">Proposition 5.2.6 — Necessary Conditions for Central Path</div>
-      <p>Every point $x^*_t$ on the central path satisfies: $Ax^*_t = b$ and $g_i(x^*_t) < 0$ for all $i$.</p>
-      <p><strong>Why?</strong> The equality constraints hold because $x^*_t$ is a minimizer of a problem with those constraints. The inequality constraints are <em>strictly</em> satisfied because hitting the boundary ($g_i = 0$) would send $\log(-g_i) \to -\infty$, making $\phi \to +\infty$ — impossible for a minimizer.</p>
+      <p>Every point \(x^*_t\) on the central path satisfies: \(Ax^*_t = b\) and \(g_i(x^*_t) < 0\) for all \(i\).</p>
+      <p><strong>Why?</strong> The equality constraints hold because \(x^*_t\) is a minimizer of a problem with those constraints. The inequality constraints are <em>strictly</em> satisfied because hitting the boundary (\(g_i = 0\)) would send \(\log(-g_i) \to -\infty\), making \(\phi \to +\infty\) — impossible for a minimizer.</p>
     </div>
 
     <!-- Central path conditions and KKT link -->
     <h3>Connection to KKT Conditions</h3>
 
     <p>
-      A point $x_t$ lies on the central path if and only if there exist dual variables $\lambda, \nu$ satisfying conditions that look <em>almost</em> like the KKT conditions:
+      A point \(x_t\) lies on the central path if and only if there exist dual variables \(\lambda, \nu\) satisfying conditions that look <em>almost</em> like the KKT conditions:
     </p>
 
     <div class="callout-definition">
       <div class="callout-title">Modified KKT Conditions for the Central Path (5.7)</div>
-      <div class="math-block">$$
+      <div class="math-block">\[
       \begin{aligned}
         g_i(x) &\le 0 \quad \forall\, i &\text{(primal feasibility)} \\
         Ax - b &= 0 &\text{(equality feasibility)} \\
@@ -384,33 +384,33 @@
         -\lambda_i \, g_i(x) &= \tfrac{1}{t} \quad \forall\, i &\text{(approximate complementarity)} \\
         \nabla f(x) + \textstyle\sum_i \lambda_i \nabla g_i(x) + A^\top \nu &= 0 &\text{(stationarity)}
       \end{aligned}
-      $$</div>
+      \]</div>
     </div>
 
     <p>
-      <strong>Intuition:</strong> These are exactly the standard KKT conditions except for the fourth line. In true KKT, complementary slackness requires $\lambda_i g_i(x) = 0$ (either the constraint is inactive or the multiplier is zero). Here, the product equals $-1/t$ instead of $0$. As $t \to \infty$, we recover exact KKT conditions. So the central path is a smooth family of "approximately KKT" points converging to the true optimum.
+      <strong>Intuition:</strong> These are exactly the standard KKT conditions except for the fourth line. In true KKT, complementary slackness requires \(\lambda_i g_i(x) = 0\) (either the constraint is inactive or the multiplier is zero). Here, the product equals \(-1/t\) instead of \(0\). As \(t \to \infty\), we recover exact KKT conditions. So the central path is a smooth family of "approximately KKT" points converging to the true optimum.
     </p>
 
     <!-- Dual feasible point and suboptimality bound -->
     <h3>Suboptimality Bound via Duality</h3>
 
-    <p>From each central path point $x^*_t$, we can construct a dual feasible point:</p>
+    <p>From each central path point \(x^*_t\), we can construct a dual feasible point:</p>
 
     <div class="callout-definition">
       <div class="callout-title">Proposition 5.2.9 — Dual Certificate</div>
-      <p>For each $x^*_t$ on the central path, define:</p>
-      <div class="math-block">$$
+      <p>For each \(x^*_t\) on the central path, define:</p>
+      <div class="math-block">\[
         (\lambda^*_t)_i = \frac{-1}{t \cdot g_i(x^*_t)}, \qquad \nu^*_t = \frac{\nu}{t}
-      $$</div>
-      <p>Then $(\lambda^*_t, \nu^*_t)$ is a feasible dual point, and the duality gap satisfies:</p>
-      <div class="math-block">$$
+      \]</div>
+      <p>Then \((\lambda^*_t, \nu^*_t)\) is a feasible dual point, and the duality gap satisfies:</p>
+      <div class="math-block">\[
         f(x^*_t) - f^* \;\le\; \frac{m}{t}
-      $$</div>
-      <p>where $m$ is the number of inequality constraints.</p>
+      \]</div>
+      <p>where \(m\) is the number of inequality constraints.</p>
     </div>
 
     <p>
-      <strong>Intuition:</strong> This is a remarkably clean bound. It says the suboptimality is at most $m/t$. Want an $\varepsilon$-optimal solution? Just make $t \ge m/\varepsilon$. The more constraints you have, the larger $t$ needs to be. This motivates the algorithm below.
+      <strong>Intuition:</strong> This is a remarkably clean bound. It says the suboptimality is at most \(m/t\). Want an \(\varepsilon\)-optimal solution? Just make \(t \ge m/\varepsilon\). The more constraints you have, the larger \(t\) needs to be. This motivates the algorithm below.
     </p>
   </section>
 
@@ -419,22 +419,22 @@
     <h2>The Barrier Method</h2>
 
     <p>
-      A naive approach would be to simply set $t = m/\varepsilon$ and solve one approximate problem. This works in theory but can be very slow: for large $t$, the Hessian is ill-conditioned and Newton's method converges poorly. 
+      A naive approach would be to simply set \(t = m/\varepsilon\) and solve one approximate problem. This works in theory but can be very slow: for large \(t\), the Hessian is ill-conditioned and Newton's method converges poorly. 
     </p>
 
     <p>
-      The <strong>barrier method</strong> is smarter: it solves a <em>sequence</em> of approximate problems for progressively increasing values of $t$, using each solution as the starting point for the next. This "warm start" strategy makes each subproblem much easier.
+      The <strong>barrier method</strong> is smarter: it solves a <em>sequence</em> of approximate problems for progressively increasing values of \(t\), using each solution as the starting point for the next. This "warm start" strategy makes each subproblem much easier.
     </p>
 
     <div class="callout-definition">
       <div class="callout-title">Algorithm 7 — The Barrier Method</div>
-      <p><strong>Input:</strong> Strictly feasible point $x^*$, initial $t = t^{(0)} > 0$, growth factor $\mu > 1$, tolerance $\varepsilon > 0$.</p>
-      <p><strong>Output:</strong> A point $x$ with $f(x) - f^* \le \varepsilon$.</p>
+      <p><strong>Input:</strong> Strictly feasible point \(x^*\), initial \(t = t^{(0)} > 0\), growth factor \(\mu > 1\), tolerance \(\varepsilon > 0\).</p>
+      <p><strong>Output:</strong> A point \(x\) with \(f(x) - f^* \le \varepsilon\).</p>
       <ol>
-        <li><strong>Centering step:</strong> Starting from current $x^*$, solve $\min\; t\,f(x) + \phi(x)$ s.t. $Ax = b$ (using Newton's method) to get the central path point $x^*_t$.</li>
-        <li><strong>Update:</strong> Set $x^* \leftarrow x^*_t$.</li>
-        <li><strong>Check:</strong> If $m/t \le \varepsilon$, stop and return $x^*$.</li>
-        <li><strong>Increase $t$:</strong> Set $t \leftarrow \mu \cdot t$.</li>
+        <li><strong>Centering step:</strong> Starting from current \(x^*\), solve \(\min\; t\,f(x) + \phi(x)\) s.t. \(Ax = b\) (using Newton's method) to get the central path point \(x^*_t\).</li>
+        <li><strong>Update:</strong> Set \(x^* \leftarrow x^*_t\).</li>
+        <li><strong>Check:</strong> If \(m/t \le \varepsilon\), stop and return \(x^*\).</li>
+        <li><strong>Increase \(t\):</strong> Set \(t \leftarrow \mu \cdot t\).</li>
         <li>Go to Step 1.</li>
       </ol>
     </div>
@@ -446,24 +446,24 @@
     <div class="callout-note">
       <div class="callout-title">Trade-offs in Parameter Choices</div>
       <ul>
-        <li><strong>Growth factor $\mu$:</strong> Large $\mu$ → fewer outer iterations, but each centering step (inner iteration) requires more Newton steps because the starting point is farther from the new optimum. Small $\mu$ → each centering step is cheap, but you need many outer iterations.</li>
-        <li><strong>Initial $t^{(0)}$:</strong> Large $t^{(0)}$ → the first centering step is expensive. Small $t^{(0)}$ → more outer iterations needed.</li>
+        <li><strong>Growth factor \(\mu\):</strong> Large \(\mu\) → fewer outer iterations, but each centering step (inner iteration) requires more Newton steps because the starting point is farther from the new optimum. Small \(\mu\) → each centering step is cheap, but you need many outer iterations.</li>
+        <li><strong>Initial \(t^{(0)}\):</strong> Large \(t^{(0)}\) → the first centering step is expensive. Small \(t^{(0)}\) → more outer iterations needed.</li>
       </ul>
     </div>
 
     <div class="callout-definition">
       <div class="callout-title">Proposition 5.2.10 — Convergence of the Barrier Method</div>
-      <p>For every $\varepsilon > 0$, the barrier method achieves $f(x^*) - f^* \le \varepsilon$ after at most $k$ outer iterations, where:</p>
-      <div class="math-block">$$
+      <p>For every \(\varepsilon > 0\), the barrier method achieves \(f(x^*) - f^* \le \varepsilon\) after at most \(k\) outer iterations, where:</p>
+      <div class="math-block">\[
         k \ge \frac{\log\!\bigl(\frac{m}{\varepsilon\, t^{(0)}}\bigr)}{\log \mu} + 1
-      $$</div>
-      <p><strong>Intuition:</strong> The number of outer iterations grows <em>logarithmically</em> in the desired accuracy $1/\varepsilon$ and the number of constraints $m$. This is very efficient! Combined with the fast (quadratic/superlinear) convergence of Newton's method for each inner iteration, the barrier method is a powerful interior-point algorithm.</p>
+      \]</div>
+      <p><strong>Intuition:</strong> The number of outer iterations grows <em>logarithmically</em> in the desired accuracy \(1/\varepsilon\) and the number of constraints \(m\). This is very efficient! Combined with the fast (quadratic/superlinear) convergence of Newton's method for each inner iteration, the barrier method is a powerful interior-point algorithm.</p>
     </div>
 
     <div class="callout-example">
       <div class="callout-title">Worked Example — Putting it Together</div>
-      <p>Suppose you have $m = 100$ constraints, initial $t^{(0)} = 1$, growth factor $\mu = 10$, and want $\varepsilon = 0.01$ accuracy.</p>
-      <p>Number of outer iterations: $k \ge \frac{\log(100 / 0.01)}{\log 10} + 1 = \frac{\log(10{,}000)}{\log 10} + 1 = 4 + 1 = 5$.</p>
+      <p>Suppose you have \(m = 100\) constraints, initial \(t^{(0)} = 1\), growth factor \(\mu = 10\), and want \(\varepsilon = 0.01\) accuracy.</p>
+      <p>Number of outer iterations: \(k \ge \frac{\log(100 / 0.01)}{\log 10} + 1 = \frac{\log(10{,}000)}{\log 10} + 1 = 4 + 1 = 5\).</p>
       <p>So only about 5 outer iterations (each involving a Newton solve) suffice. This is the power of the barrier method.</p>
     </div>
   </section>
@@ -478,29 +478,29 @@
 
     <h3>Basic Phase I Method</h3>
 
-    <p>Introduce a slack variable $s$ and solve:</p>
+    <p>Introduce a slack variable \(s\) and solve:</p>
 
-    <div class="math-block">$$
+    <div class="math-block">\[
       \min \; s \qquad \text{s.t.} \;\; g_i(x) \le s \;\;\forall\, i, \quad Ax = b
-    $$</div>
+    \]</div>
 
     <p>
-      This is easy to initialize: pick any $x$ in the domain and set $s > \max_i g_i(x)$. Then apply the barrier method to this auxiliary problem.
+      This is easy to initialize: pick any \(x\) in the domain and set \(s > \max_i g_i(x)\). Then apply the barrier method to this auxiliary problem.
     </p>
 
     <div class="callout-note">
       <div class="callout-title">Interpreting the Result</div>
       <ul>
-        <li><strong>$s^* < 0$:</strong> The original problem is strictly feasible — any $x$ with $s < 0$ gives a valid starting point. (No need to solve to optimality; stop as soon as $s$ becomes negative.)</li>
-        <li><strong>$s^* > 0$:</strong> The original problem is <strong>infeasible</strong> — no point satisfies all constraints.</li>
-        <li><strong>$s^* = 0$:</strong> The problem is feasible but not strictly feasible — a delicate edge case that can be difficult to handle numerically.</li>
+        <li><strong>\(s^* < 0\):</strong> The original problem is strictly feasible — any \(x\) with \(s < 0\) gives a valid starting point. (No need to solve to optimality; stop as soon as \(s\) becomes negative.)</li>
+        <li><strong>\(s^* > 0\):</strong> The original problem is <strong>infeasible</strong> — no point satisfies all constraints.</li>
+        <li><strong>\(s^* = 0\):</strong> The problem is feasible but not strictly feasible — a delicate edge case that can be difficult to handle numerically.</li>
       </ul>
     </div>
 
     <h3>Phase I via Infeasible Start Newton's Method</h3>
 
     <p>
-      An alternative is to rewrite the original problem with an extra variable $s$ and enforce $s = 0$ as an equality constraint. The infeasible start Newton's method can then be initialized with any $x$ in the domain and $s > \max_i g_i(x)$, and it will simultaneously drive toward feasibility ($s \to 0$) and optimality.
+      An alternative is to rewrite the original problem with an extra variable \(s\) and enforce \(s = 0\) as an equality constraint. The infeasible start Newton's method can then be initialized with any \(x\) in the domain and \(s > \max_i g_i(x)\), and it will simultaneously drive toward feasibility (\(s \to 0\)) and optimality.
     </p>
   </section>
 
@@ -509,9 +509,9 @@
     <h2>Key Takeaways</h2>
     <ul>
       <li><strong>Reduction strategy:</strong> The whole chapter is about reducing harder problems to easier ones — inequality constraints are converted to equality-constrained problems via the log barrier, and equality-constrained problems can be reduced to unconstrained ones via null-space elimination or handled directly with adapted Newton's method.</li>
-      <li><strong>The logarithmic barrier function</strong> $\phi(x) = -\sum_i \log(-g_i(x))$ is a smooth, convex approximation to the hard indicator function, parameterized by $t$. Larger $t$ means a better approximation.</li>
-      <li><strong>The central path</strong> is the trajectory of minimizers $x^*_t$ as $t$ increases. It satisfies "approximate KKT" conditions with complementarity gap $1/t$, yielding the suboptimality bound $f(x^*_t) - f^* \le m/t$.</li>
-      <li><strong>The barrier method</strong> follows the central path by solving a sequence of centering problems with increasing $t$. It needs only $O\!\bigl(\frac{\log(m/\varepsilon)}{\log \mu}\bigr)$ outer iterations — logarithmic in both $m$ and $1/\varepsilon$.</li>
+      <li><strong>The logarithmic barrier function</strong> \(\phi(x) = -\sum_i \log(-g_i(x))\) is a smooth, convex approximation to the hard indicator function, parameterized by \(t\). Larger \(t\) means a better approximation.</li>
+      <li><strong>The central path</strong> is the trajectory of minimizers \(x^*_t\) as \(t\) increases. It satisfies "approximate KKT" conditions with complementarity gap \(1/t\), yielding the suboptimality bound \(f(x^*_t) - f^* \le m/t\).</li>
+      <li><strong>The barrier method</strong> follows the central path by solving a sequence of centering problems with increasing \(t\). It needs only \(O\!\bigl(\frac{\log(m/\varepsilon)}{\log \mu}\bigr)\) outer iterations — logarithmic in both \(m\) and \(1/\varepsilon\).</li>
       <li><strong>Phase I</strong> methods handle the practical issue of finding a strictly feasible starting point, either by introducing a slack variable or using the infeasible-start Newton variant.</li>
     </ul>
   </section>

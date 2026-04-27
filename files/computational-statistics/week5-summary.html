@@ -16,13 +16,13 @@
   <script>
       MathJax = {
         tex: {
-          inlineMath: [['$', '$'], ['\(', '\)']],
-          displayMath: [['$$', '$$'], ['\[', '\]']]
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          displayMath: [['$$', '$$'], ['\\[', '\\]']]
         },
-        svg: { fontCache: 'global' }
+        chtml: {}
       };
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
 </head>
 <body>
 <div class="topbar">
@@ -65,30 +65,30 @@
 
       <h3>1.1 Prediction and the Squared Error Risk</h3>
       <p>
-        Suppose we have i.i.d. training data $\mathcal{D}_n = \{(X_i, Y_i)\}_{i=1}^n$ drawn from some unknown joint distribution $\text{Pr}(X,Y)$. From this data we build a predictive model $\hat{f}: \mathbb{R}^p \to \mathbb{R}$. To measure how good our predictions are, we use the <em>expected squared prediction error</em> (also called the risk):
+        Suppose we have i.i.d. training data \(\mathcal{D}_n = \{(X_i, Y_i)\}_{i=1}^n\) drawn from some unknown joint distribution \(\text{Pr}(X,Y)\). From this data we build a predictive model \(\hat{f}: \mathbb{R}^p \to \mathbb{R}\). To measure how good our predictions are, we use the <em>expected squared prediction error</em> (also called the risk):
       </p>
 
       <div class="callout-definition">
         <div class="callout-title">Definition — Expected Squared Prediction Error</div>
         <div class="math-block">
-          $$\text{Err}_f = \mathbb{E}\!\big[\big(Y - f(X)\big)^2\big],$$
+          \[\text{Err}_f = \mathbb{E}\!\big[\big(Y - f(X)\big)^2\big],\]
         </div>
-        <p>where the expectation is over a new draw $(X,Y) \sim \text{Pr}(X,Y)$. The ideal predictor is $f^* = \arg\min_f \text{Err}_f$.</p>
+        <p>where the expectation is over a new draw \((X,Y) \sim \text{Pr}(X,Y)\). The ideal predictor is \(f^* = \arg\min_f \text{Err}_f\).</p>
       </div>
 
       <p>
-        Notice that we are optimizing over <em>functions</em>, not just a finite-dimensional parameter vector like $\beta$. This is the key conceptual shift when moving beyond parametric models.
+        Notice that we are optimizing over <em>functions</em>, not just a finite-dimensional parameter vector like \(\beta\). This is the key conceptual shift when moving beyond parametric models.
       </p>
 
       <h3>1.2 The Regression Function as Risk Minimizer</h3>
       <p>
-        The function that minimizes $\text{Err}_f$ turns out to be the <em>conditional mean</em>, commonly called the regression function:
+        The function that minimizes \(\text{Err}_f\) turns out to be the <em>conditional mean</em>, commonly called the regression function:
       </p>
 
       <div class="callout-definition">
         <div class="callout-title">Theorem — Optimal Predictor Under Squared Loss</div>
         <div class="math-block">
-          $$f^*(x) = \mathbb{E}(Y \mid X = x).$$
+          \[f^*(x) = \mathbb{E}(Y \mid X = x).\]
         </div>
       </div>
 
@@ -96,32 +96,32 @@
         The proof idea is elegant and worth understanding. Using the tower property (law of iterated expectations), we can write:
       </p>
       <div class="math-block">
-        $$\mathbb{E}\!\big[(Y - f(X))^2\big] = \mathbb{E}\!\Big[\mathbb{E}\!\big[(Y - f(X))^2 \mid X\big]\Big].$$
+        \[\mathbb{E}\!\big[(Y - f(X))^2\big] = \mathbb{E}\!\Big[\mathbb{E}\!\big[(Y - f(X))^2 \mid X\big]\Big].\]
       </div>
       <p>
-        Since the inner expectation is non-negative for every $x$, it suffices to minimize it pointwise. For a fixed $x$, the problem reduces to finding the constant $c$ that minimizes $\mathbb{E}[(Y - c)^2 \mid X = x]$. Expanding and taking the derivative with respect to $c$ gives $c = \mathbb{E}(Y \mid X = x)$.
+        Since the inner expectation is non-negative for every \(x\), it suffices to minimize it pointwise. For a fixed \(x\), the problem reduces to finding the constant \(c\) that minimizes \(\mathbb{E}[(Y - c)^2 \mid X = x]\). Expanding and taking the derivative with respect to \(c\) gives \(c = \mathbb{E}(Y \mid X = x)\).
       </p>
       <p>
         Furthermore, we get a useful decomposition of the total prediction error:
       </p>
       <div class="math-block">
-        $$\mathbb{E}\!\big[(Y - f(X))^2\big] = \underbrace{\mathbb{E}\!\big[(f(X) - f^*(X))^2\big]}_{\text{reducible error}} + \underbrace{\mathbb{E}\!\big[(Y - f^*(X))^2\big]}_{\text{irreducible error}}.$$
+        \[\mathbb{E}\!\big[(Y - f(X))^2\big] = \underbrace{\mathbb{E}\!\big[(f(X) - f^*(X))^2\big]}_{\text{reducible error}} + \underbrace{\mathbb{E}\!\big[(Y - f^*(X))^2\big]}_{\text{irreducible error}}.\]
       </div>
       <p>
-        The first term measures how far our model $f$ is from the true regression function $f^*$, and this is what we try to shrink. The second term is noise in the data — we can never eliminate it.
+        The first term measures how far our model \(f\) is from the true regression function \(f^*\), and this is what we try to shrink. The second term is noise in the data — we can never eliminate it.
       </p>
 
       <div class="callout-example">
         <div class="callout-title">Example — Bivariate Normal</div>
         <p>
-          Let $(X,Y)$ be bivariate normal with zero means, unit variances, and correlation $\rho$. Then $Y \mid X = x \sim N(\rho x, 1-\rho^2)$, so $f^*(x) = \rho x$ and the irreducible error is $1 - \rho^2$. In this setting, the regression function happens to be linear — so linear regression is the correct model!
+          Let \((X,Y)\) be bivariate normal with zero means, unit variances, and correlation \(\rho\). Then \(Y \mid X = x \sim N(\rho x, 1-\rho^2)\), so \(f^*(x) = \rho x\) and the irreducible error is \(1 - \rho^2\). In this setting, the regression function happens to be linear — so linear regression is the correct model!
         </p>
       </div>
 
       <div class="callout-example">
         <div class="callout-title">Example — Bernoulli (Exercise)</div>
         <p>
-          Let $X \in \{0, 1\}$ with $\Pr(X=1)=p$, and $Y \mid X=x \sim \text{Bernoulli}(\theta_x)$. The optimal predictor is simply $f^*(x) = \theta_x$. This works for discrete $X$ too — the theory is completely general.
+          Let \(X \in \{0, 1\}\) with \(\Pr(X=1)=p\), and \(Y \mid X=x \sim \text{Bernoulli}(\theta_x)\). The optimal predictor is simply \(f^*(x) = \theta_x\). This works for discrete \(X\) too — the theory is completely general.
         </p>
       </div>
     </section>
@@ -132,14 +132,14 @@
 
       <h3>2.1 When Is an Estimator "Good Enough"?</h3>
       <p>
-        Given the decomposition above, $\hat{f}$ is nearly optimal if its $L^2(P_X)$ distance to $f^*$ is small. In practice we hope that as we collect more data, our estimator gets closer to the truth. This motivates the notion of <em>weak consistency</em>:
+        Given the decomposition above, \(\hat{f}\) is nearly optimal if its \(L^2(P_X)\) distance to \(f^*\) is small. In practice we hope that as we collect more data, our estimator gets closer to the truth. This motivates the notion of <em>weak consistency</em>:
       </p>
 
       <div class="callout-definition">
         <div class="callout-title">Definition — Weak Consistency</div>
-        <p>A sequence of estimators $\{\hat{f}_n\}$ is <em>weakly consistent</em> for a distribution $\text{Pr}(X,Y)$ if</p>
+        <p>A sequence of estimators \(\{\hat{f}_n\}\) is <em>weakly consistent</em> for a distribution \(\text{Pr}(X,Y)\) if</p>
         <div class="math-block">
-          $$\lim_{n \to \infty} \mathbb{E}\!\left[\int_{\mathbb{R}^p} \big(\hat{f}_n(x) - f^*(x)\big)^2 \, P_X(dx)\right] = 0.$$
+          \[\lim_{n \to \infty} \mathbb{E}\!\left[\int_{\mathbb{R}^p} \big(\hat{f}_n(x) - f^*(x)\big)^2 \, P_X(dx)\right] = 0.\]
         </div>
       </div>
 
@@ -155,7 +155,7 @@
         </p>
       </div>
       <p>
-        To obtain meaningful convergence rates, we need structural assumptions — most commonly, smoothness of $f^*$. This is a recurring theme: more assumptions = faster rates, but wrong assumptions = large bias.
+        To obtain meaningful convergence rates, we need structural assumptions — most commonly, smoothness of \(f^*\). This is a recurring theme: more assumptions = faster rates, but wrong assumptions = large bias.
       </p>
     </section>
 
@@ -164,29 +164,29 @@
       <h2>3. Bias–Variance Tradeoff (Revisited)</h2>
 
       <p>
-        We already encountered bias–variance in the linear model context (§1.7). Here it appears in a more general form. For any random estimator $\hat{f}$ (depending on $\mathcal{D}_n$) and any fixed point $x_0$:
+        We already encountered bias–variance in the linear model context (§1.7). Here it appears in a more general form. For any random estimator \(\hat{f}\) (depending on \(\mathcal{D}_n\)) and any fixed point \(x_0\):
       </p>
 
       <div class="callout-definition">
         <div class="callout-title">Bias–Variance Decomposition</div>
         <div class="math-block">
-          $$\mathbb{E}\!\big[(\hat{f}(x_0) - f^*(x_0))^2\big] = \underbrace{\big[\mathbb{E}[\hat{f}(x_0)] - f^*(x_0)\big]^2}_{\text{Bias}^2} + \underbrace{\mathbb{E}\!\big[(\hat{f}(x_0) - \mathbb{E}[\hat{f}(x_0)])^2\big]}_{\text{Variance}}.$$
+          \[\mathbb{E}\!\big[(\hat{f}(x_0) - f^*(x_0))^2\big] = \underbrace{\big[\mathbb{E}[\hat{f}(x_0)] - f^*(x_0)\big]^2}_{\text{Bias}^2} + \underbrace{\mathbb{E}\!\big[(\hat{f}(x_0) - \mathbb{E}[\hat{f}(x_0)])^2\big]}_{\text{Variance}}.\]
         </div>
       </div>
 
       <p>
-        A similar decomposition holds for the integrated $L^2$ error. The practical upshot: for good predictions, we need to find a sweet spot between bias and variance. This tradeoff is controlled by tuning parameters in our models — $k$ in kNN, bandwidth $h$ in kernel regression, $\lambda$ in smoothing splines, and so on. The classic picture shows that as the tuning parameter increases flexibility (e.g., smaller $h$), bias decreases but variance increases, and there is an optimal point where their sum (the prediction error) is minimized.
+        A similar decomposition holds for the integrated \(L^2\) error. The practical upshot: for good predictions, we need to find a sweet spot between bias and variance. This tradeoff is controlled by tuning parameters in our models — \(k\) in kNN, bandwidth \(h\) in kernel regression, \(\lambda\) in smoothing splines, and so on. The classic picture shows that as the tuning parameter increases flexibility (e.g., smaller \(h\)), bias decreases but variance increases, and there is an optimal point where their sum (the prediction error) is minimized.
       </p>
 
       <h3>3.1 Model Bias vs. Estimation Bias in Linear Regression</h3>
       <p>
-        For linear regression $\hat{f}(x) = x^\top \hat{\beta}$, the total squared bias can be decomposed further. Let $\beta^* = \arg\min_\beta \mathbb{E}[(X^\top\beta - f^*(X))^2]$ be the "best linear approximation." Then:
+        For linear regression \(\hat{f}(x) = x^\top \hat{\beta}\), the total squared bias can be decomposed further. Let \(\beta^* = \arg\min_\beta \mathbb{E}[(X^\top\beta - f^*(X))^2]\) be the "best linear approximation." Then:
       </p>
       <div class="math-block">
-        $$\underbrace{\mathbb{E}_X\!\big[\big(X^\top\beta^* - f^*(X)\big)^2\big]}_{\text{model bias}} + \underbrace{\mathbb{E}_X\!\big[\big(X^\top(\beta^* - \mathbb{E}[\hat{\beta}])\big)^2\big]}_{\text{estimation bias}}.$$
+        \[\underbrace{\mathbb{E}_X\!\big[\big(X^\top\beta^* - f^*(X)\big)^2\big]}_{\text{model bias}} + \underbrace{\mathbb{E}_X\!\big[\big(X^\top(\beta^* - \mathbb{E}[\hat{\beta}])\big)^2\big]}_{\text{estimation bias}}.\]
       </div>
       <p>
-        <strong>Model bias</strong> is the error from restricting $f$ to be linear — it's large when the true relationship is nonlinear. <strong>Estimation bias</strong> arises when your estimator's expected value doesn't hit $\beta^*$. For OLS, estimation bias is zero (OLS is unbiased). Methods like ridge and lasso intentionally introduce some estimation bias in exchange for lower variance.
+        <strong>Model bias</strong> is the error from restricting \(f\) to be linear — it's large when the true relationship is nonlinear. <strong>Estimation bias</strong> arises when your estimator's expected value doesn't hit \(\beta^*\). For OLS, estimation bias is zero (OLS is unbiased). Methods like ridge and lasso intentionally introduce some estimation bias in exchange for lower variance.
       </p>
       <p>
         This motivates the move to nonparametric methods: if the true regression function is highly nonlinear, the model bias of linear regression can be overwhelming, and no amount of data will fix it.
@@ -199,7 +199,7 @@
 
       <h3>4.1 Motivation: Why Go Nonparametric?</h3>
       <p>
-        Nonparametric regression aims to estimate $f^*(x) = \mathbb{E}(Y \mid X = x)$ <em>without</em> assuming a specific parametric form. Instead of saying "$f^*$ is linear" or "$f^*$ is quadratic," we only assume $f^*$ is "smooth" in some sense. The advantage is much lower model bias; the price is higher estimation variance and the need for more data.
+        Nonparametric regression aims to estimate \(f^*(x) = \mathbb{E}(Y \mid X = x)\) <em>without</em> assuming a specific parametric form. Instead of saying "\(f^*\) is linear" or "\(f^*\) is quadratic," we only assume \(f^*\) is "smooth" in some sense. The advantage is much lower model bias; the price is higher estimation variance and the need for more data.
       </p>
       <p>
         The lecture organizes nonparametric regression methods around four paradigms:
@@ -211,7 +211,7 @@
         <li><strong>Penalized modeling:</strong> smoothing splines (covered in Week 6)</li>
       </ul>
       <p>
-        In this lecture we focus on one predictor variable ($p = 1$) and cover the first three items from the list.
+        In this lecture we focus on one predictor variable (\(p = 1\)) and cover the first three items from the list.
       </p>
     </section>
 
@@ -222,37 +222,37 @@
       <h3>5.1 The Estimator</h3>
       <div class="callout-definition">
         <div class="callout-title">Definition — kNN Regression Estimator</div>
-        <p>Given training data $\mathcal{D}_n$ and a new input $x_+$, let $N_k(x_+)$ be the set of indices of the $k$ closest training points to $x_+$ (typically by Euclidean distance). The kNN estimator is:</p>
+        <p>Given training data \(\mathcal{D}_n\) and a new input \(x_+\), let \(N_k(x_+)\) be the set of indices of the \(k\) closest training points to \(x_+\) (typically by Euclidean distance). The kNN estimator is:</p>
         <div class="math-block">
-          $$\hat{f}_k(x_+) = \frac{1}{k}\sum_{i \in N_k(x_+)} Y_i.$$
+          \[\hat{f}_k(x_+) = \frac{1}{k}\sum_{i \in N_k(x_+)} Y_i.\]
         </div>
       </div>
       <p>
-        In plain terms: to predict at a new point, find the $k$ training points closest to it and average their responses. The core assumption is that nearby inputs have similar responses, so $f^*$ is well-approximated by a <em>locally constant</em> function.
+        In plain terms: to predict at a new point, find the \(k\) training points closest to it and average their responses. The core assumption is that nearby inputs have similar responses, so \(f^*\) is well-approximated by a <em>locally constant</em> function.
       </p>
 
-      <h3>5.2 The Role of $k$</h3>
+      <h3>5.2 The Role of \(k\)</h3>
       <p>
-        The parameter $k$ controls the bias–variance tradeoff:
+        The parameter \(k\) controls the bias–variance tradeoff:
       </p>
       <ul>
-        <li><strong>Small $k$:</strong> The neighborhood is small, the estimate is very flexible (low bias), but it's sensitive to noise (high variance).</li>
-        <li><strong>Large $k$:</strong> The neighborhood is large, the estimate averages over many points (low variance), but distant points may have very different $f^*$ values (high bias / over-smoothing).</li>
+        <li><strong>Small \(k\):</strong> The neighborhood is small, the estimate is very flexible (low bias), but it's sensitive to noise (high variance).</li>
+        <li><strong>Large \(k\):</strong> The neighborhood is large, the estimate averages over many points (low variance), but distant points may have very different \(f^*\) values (high bias / over-smoothing).</li>
       </ul>
-      <p>So $k$ acts as a <em>smoothing parameter</em>, just like bandwidth $h$ in kernel density estimation.</p>
+      <p>So \(k\) acts as a <em>smoothing parameter</em>, just like bandwidth \(h\) in kernel density estimation.</p>
 
       <h3>5.3 Parametric vs. Nonparametric</h3>
       <p>
-        Linear regression is <em>parametric</em>: it assumes $f^*$ is globally linear, giving low variance but potentially large model bias. kNN is <em>nonparametric</em>: it assumes $f^*$ is locally constant, providing great flexibility but requiring enough data and a well-chosen $k$. kNN will outperform linear regression when the true relationship is very nonlinear — but it suffers badly from the curse of dimensionality when $p$ is large.
+        Linear regression is <em>parametric</em>: it assumes \(f^*\) is globally linear, giving low variance but potentially large model bias. kNN is <em>nonparametric</em>: it assumes \(f^*\) is locally constant, providing great flexibility but requiring enough data and a well-chosen \(k\). kNN will outperform linear regression when the true relationship is very nonlinear — but it suffers badly from the curse of dimensionality when \(p\) is large.
       </p>
 
       <h3>5.4 Consistency of kNN</h3>
       <div class="callout-definition">
         <div class="callout-title">Theorem — Weak Consistency of kNN</div>
-        <p>If $k_n \to \infty$ and $k_n / n \to 0$ as $n \to \infty$, then the kNN estimator is weakly consistent for all distributions with $\mathbb{E}(Y^2) < \infty$ and where ties occur with probability zero.</p>
+        <p>If \(k_n \to \infty\) and \(k_n / n \to 0\) as \(n \to \infty\), then the kNN estimator is weakly consistent for all distributions with \(\mathbb{E}(Y^2) < \infty\) and where ties occur with probability zero.</p>
       </div>
       <p>
-        The two conditions have a clear intuition: $k_n \to \infty$ ensures we average over more and more observations (variance shrinks), while $k_n/n \to 0$ ensures the neighborhood radius shrinks to zero (bias shrinks). Under additional smoothness, kNN achieves a rate of $O(n^{-2/(2+p)})$, which degrades with dimension $p$ — the curse of dimensionality again.
+        The two conditions have a clear intuition: \(k_n \to \infty\) ensures we average over more and more observations (variance shrinks), while \(k_n/n \to 0\) ensures the neighborhood radius shrinks to zero (bias shrinks). Under additional smoothness, kNN achieves a rate of \(O(n^{-2/(2+p)})\), which degrades with dimension \(p\) — the curse of dimensionality again.
       </p>
     </section>
 
@@ -262,19 +262,19 @@
 
       <h3>6.1 Deriving the Nadaraya–Watson Estimator</h3>
       <p>
-        The regression function can be written as $f^*(x) = \int y \, f_{Y|X}(y|x)\,dy$. Using the identity $f_{Y|X}(y|x) = f_{X,Y}(x,y)/f_X(x)$ and plugging in kernel density estimates for both the numerator and denominator, we arrive at:
+        The regression function can be written as \(f^*(x) = \int y \, f_{Y|X}(y|x)\,dy\). Using the identity \(f_{Y|X}(y|x) = f_{X,Y}(x,y)/f_X(x)\) and plugging in kernel density estimates for both the numerator and denominator, we arrive at:
       </p>
 
       <div class="callout-definition">
         <div class="callout-title">Definition — Nadaraya–Watson Kernel Regression Estimator</div>
         <div class="math-block">
-          $$\hat{f}(x) = \frac{\sum_{i=1}^n K\!\left(\frac{x - x_i}{h}\right) Y_i}{\sum_{i=1}^n K\!\left(\frac{x - x_i}{h}\right)} = \sum_{i=1}^n w_i(x)\,Y_i,$$
+          \[\hat{f}(x) = \frac{\sum_{i=1}^n K\!\left(\frac{x - x_i}{h}\right) Y_i}{\sum_{i=1}^n K\!\left(\frac{x - x_i}{h}\right)} = \sum_{i=1}^n w_i(x)\,Y_i,\]
         </div>
-        <p>where $w_i(x) = K((x-x_i)/h)\big/\sum_j K((x-x_j)/h)$ are normalized weights that sum to 1.</p>
+        <p>where \(w_i(x) = K((x-x_i)/h)\big/\sum_j K((x-x_j)/h)\) are normalized weights that sum to 1.</p>
       </div>
 
       <p>
-        So $\hat{f}(x)$ is a <em>weighted average</em> of the $Y_i$'s, where observations with $x_i$ closer to $x$ get larger weights (as determined by the kernel function $K$). This is why it falls under "local averaging."
+        So \(\hat{f}(x)\) is a <em>weighted average</em> of the \(Y_i\)'s, where observations with \(x_i\) closer to \(x\) get larger weights (as determined by the kernel function \(K\)). This is why it falls under "local averaging."
       </p>
 
       <h3>6.2 Local Constant Interpretation</h3>
@@ -282,26 +282,26 @@
         An equivalent and very instructive way to view the Nadaraya–Watson estimator is as a locally weighted least squares problem:
       </p>
       <div class="math-block">
-        $$\hat{f}(x) = \arg\min_{m_x \in \mathbb{R}} \sum_{i=1}^n K\!\left(\frac{x - x_i}{h}\right)(Y_i - m_x)^2.$$
+        \[\hat{f}(x) = \arg\min_{m_x \in \mathbb{R}} \sum_{i=1}^n K\!\left(\frac{x - x_i}{h}\right)(Y_i - m_x)^2.\]
       </div>
       <p>
-        For each query point $x$, we find the best constant $m_x$ that minimizes the kernel-weighted sum of squares. The kernel determines what "local" means — observations near $x$ matter most. This is why the Nadaraya–Watson estimator is called a <em>locally constant</em> estimator.
+        For each query point \(x\), we find the best constant \(m_x\) that minimizes the kernel-weighted sum of squares. The kernel determines what "local" means — observations near \(x\) matter most. This is why the Nadaraya–Watson estimator is called a <em>locally constant</em> estimator.
       </p>
 
-      <h3>6.3 The Role of the Bandwidth $h$</h3>
+      <h3>6.3 The Role of the Bandwidth \(h\)</h3>
       <p>
-        Just like $k$ in kNN, the bandwidth $h$ controls the bias–variance tradeoff: a large $h$ gives a smooth curve with high bias and low variance; a small $h$ gives a wiggly curve with low bias and high variance. An important difference from density estimation is that in regression, the bias and variance also depend on the <em>design density</em> $f_X(x)$, not just on derivatives of $f^*$. In particular, where $f_X(x)$ is small (data are sparse), the pointwise bias tends to be large.
+        Just like \(k\) in kNN, the bandwidth \(h\) controls the bias–variance tradeoff: a large \(h\) gives a smooth curve with high bias and low variance; a small \(h\) gives a wiggly curve with low bias and high variance. An important difference from density estimation is that in regression, the bias and variance also depend on the <em>design density</em> \(f_X(x)\), not just on derivatives of \(f^*\). In particular, where \(f_X(x)\) is small (data are sparse), the pointwise bias tends to be large.
       </p>
 
       <h3>6.4 kNN as a Special Case of Kernel Regression</h3>
       <p>
-        kNN can be rewritten as kernel regression with a uniform (box) kernel and an <em>adaptive</em> bandwidth. Letting $r_k(x_0)$ denote the distance to the $k$-th nearest neighbor:
+        kNN can be rewritten as kernel regression with a uniform (box) kernel and an <em>adaptive</em> bandwidth. Letting \(r_k(x_0)\) denote the distance to the \(k\)-th nearest neighbor:
       </p>
       <div class="math-block">
-        $$\hat{f}(x_0) = \frac{\sum_{i=1}^n K\!\left(\frac{|x_i - x_0|}{r_k(x_0)}\right) Y_i}{\sum_{i=1}^n K\!\left(\frac{|x_i - x_0|}{r_k(x_0)}\right)}, \quad K(u) = \begin{cases} 1 & u \le 1 \\ 0 & u > 1\end{cases}.$$
+        \[\hat{f}(x_0) = \frac{\sum_{i=1}^n K\!\left(\frac{|x_i - x_0|}{r_k(x_0)}\right) Y_i}{\sum_{i=1}^n K\!\left(\frac{|x_i - x_0|}{r_k(x_0)}\right)}, \quad K(u) = \begin{cases} 1 & u \le 1 \\ 0 & u > 1\end{cases}.\]
       </div>
       <p>
-        The key insight: kNN uses a box kernel where the bandwidth $h = r_k(x_0)$ varies with the location — wider where data is sparse, narrower where data is dense. This adaptive bandwidth is a conceptual advantage over fixed-bandwidth kernel regression.
+        The key insight: kNN uses a box kernel where the bandwidth \(h = r_k(x_0)\) varies with the location — wider where data is sparse, narrower where data is dense. This adaptive bandwidth is a conceptual advantage over fixed-bandwidth kernel regression.
       </p>
     </section>
 
@@ -311,33 +311,33 @@
 
       <h3>7.1 Kernel Regression as a Linear Smoother</h3>
       <p>
-        When we evaluate the kernel regression estimator at all the observed design points, we get the vector of fitted values $\hat{\mathbf{Y}} = (\hat{f}(x_1), \ldots, \hat{f}(x_n))^\top$. Since each $\hat{f}(x_r) = \sum_s w_s(x_r) Y_s$, we can write this as a matrix multiplication:
+        When we evaluate the kernel regression estimator at all the observed design points, we get the vector of fitted values \(\hat{\mathbf{Y}} = (\hat{f}(x_1), \ldots, \hat{f}(x_n))^\top\). Since each \(\hat{f}(x_r) = \sum_s w_s(x_r) Y_s\), we can write this as a matrix multiplication:
       </p>
       <div class="math-block">
-        $$\hat{\mathbf{Y}} = S\mathbf{Y},$$
+        \[\hat{\mathbf{Y}} = S\mathbf{Y},\]
       </div>
       <p>
-        where the <em>smoother matrix</em> (or hat matrix) $S$ has entries $S_{rs} = w_s(x_r)$. Any estimator that can be written this way — as a linear function of the response vector — is called a <strong>linear smoother</strong>. This is a powerful unifying framework: OLS, kernel regression, smoothing splines, and many other methods are all linear smoothers.
+        where the <em>smoother matrix</em> (or hat matrix) \(S\) has entries \(S_{rs} = w_s(x_r)\). Any estimator that can be written this way — as a linear function of the response vector — is called a <strong>linear smoother</strong>. This is a powerful unifying framework: OLS, kernel regression, smoothing splines, and many other methods are all linear smoothers.
       </p>
 
       <h3>7.2 Inference Using the Hat Matrix</h3>
       <p>
-        The hat matrix gives us the covariance structure of the fitted values directly: $\text{Cov}(\hat{\mathbf{Y}}) = \sigma_\varepsilon^2 SS^\top$. This allows us to compute pointwise standard errors and approximate confidence intervals. Under regularity conditions, $\hat{f}(x_i)$ is approximately normal:
+        The hat matrix gives us the covariance structure of the fitted values directly: \(\text{Cov}(\hat{\mathbf{Y}}) = \sigma_\varepsilon^2 SS^\top\). This allows us to compute pointwise standard errors and approximate confidence intervals. Under regularity conditions, \(\hat{f}(x_i)\) is approximately normal:
       </p>
       <div class="math-block">
-        $$\hat{f}(x_i) \pm 1.96 \cdot \hat{\sigma}_\varepsilon \sqrt{(SS^\top)_{ii}}$$
+        \[\hat{f}(x_i) \pm 1.96 \cdot \hat{\sigma}_\varepsilon \sqrt{(SS^\top)_{ii}}\]
       </div>
       <p>
-        gives approximate 95% pointwise confidence intervals for $\mathbb{E}[\hat{f}(x_i)]$. Note: these intervals cover $\mathbb{E}[\hat{f}(x_i)]$, not $f^*(x_i)$ directly — the distinction matters because of bias.
+        gives approximate 95% pointwise confidence intervals for \(\mathbb{E}[\hat{f}(x_i)]\). Note: these intervals cover \(\mathbb{E}[\hat{f}(x_i)]\), not \(f^*(x_i)\) directly — the distinction matters because of bias.
       </p>
 
       <h3>7.3 Degrees of Freedom</h3>
 
       <div class="callout-definition">
         <div class="callout-title">Definition — Degrees of Freedom</div>
-        <p>For a model with fitted values $\hat{Y}_i$ and $Y_i = \mu_i + \varepsilon_i$ with $\text{Var}(\varepsilon_i) = \sigma^2$, the degrees of freedom are:</p>
+        <p>For a model with fitted values \(\hat{Y}_i\) and \(Y_i = \mu_i + \varepsilon_i\) with \(\text{Var}(\varepsilon_i) = \sigma^2\), the degrees of freedom are:</p>
         <div class="math-block">
-          $$\text{df}(\hat{\mathbf{Y}}) = \frac{1}{\sigma^2}\sum_{i=1}^n \text{Cov}(\hat{Y}_i, Y_i).$$
+          \[\text{df}(\hat{\mathbf{Y}}) = \frac{1}{\sigma^2}\sum_{i=1}^n \text{Cov}(\hat{Y}_i, Y_i).\]
         </div>
       </div>
 
@@ -345,7 +345,7 @@
         Think of df as the <em>effective number of parameters</em> in your model — a single number that captures model complexity.
       </p>
       <p>
-        For linear smoothers where $\hat{\mathbf{Y}} = S\mathbf{Y}$, this simplifies beautifully to $\text{df} = \text{tr}(S)$. For OLS with $p$ parameters, $S = P = X(X^\top X)^{-1}X^\top$ is a projection matrix and $\text{tr}(P) = p$, recovering the familiar answer. Two extreme cases illustrate the concept: the identity estimator $\hat{Y}_i = Y_i$ has $\text{df} = n$ (maximally complex — just memorize the data), while the sample mean $\hat{Y}_i = \bar{Y}$ has $\text{df} = 1$ (simplest possible model).
+        For linear smoothers where \(\hat{\mathbf{Y}} = S\mathbf{Y}\), this simplifies beautifully to \(\text{df} = \text{tr}(S)\). For OLS with \(p\) parameters, \(S = P = X(X^\top X)^{-1}X^\top\) is a projection matrix and \(\text{tr}(P) = p\), recovering the familiar answer. Two extreme cases illustrate the concept: the identity estimator \(\hat{Y}_i = Y_i\) has \(\text{df} = n\) (maximally complex — just memorize the data), while the sample mean \(\hat{Y}_i = \bar{Y}\) has \(\text{df} = 1\) (simplest possible model).
       </p>
     </section>
 
@@ -354,22 +354,22 @@
       <h2>8. Local Polynomial Regression (§4.4)</h2>
 
       <p>
-        The Nadaraya–Watson estimator fits a local <em>constant</em>. A natural extension is to fit a local <em>polynomial</em> at each query point $x$. We solve:
+        The Nadaraya–Watson estimator fits a local <em>constant</em>. A natural extension is to fit a local <em>polynomial</em> at each query point \(x\). We solve:
       </p>
 
       <div class="callout-definition">
         <div class="callout-title">Definition — Local Polynomial Regression</div>
         <div class="math-block">
-          $$\hat{\beta}(x) = \arg\min_{\beta \in \mathbb{R}^p} \sum_{i=1}^n K\!\left(\frac{x - x_i}{h}\right)\big(Y_i - \beta_1 - \beta_2(x_i - x) - \cdots - \beta_p(x_i - x)^{p-1}\big)^2.$$
+          \[\hat{\beta}(x) = \arg\min_{\beta \in \mathbb{R}^p} \sum_{i=1}^n K\!\left(\frac{x - x_i}{h}\right)\big(Y_i - \beta_1 - \beta_2(x_i - x) - \cdots - \beta_p(x_i - x)^{p-1}\big)^2.\]
         </div>
-        <p>The function estimate at $x$ is the local intercept: $\hat{f}(x) = \hat{\beta}_1(x)$.</p>
+        <p>The function estimate at \(x\) is the local intercept: \(\hat{f}(x) = \hat{\beta}_1(x)\).</p>
       </div>
 
       <p>
-        Common choices are $p = 2$ (local linear) or $p = 4$. An important practical advantage of local polynomial regression is that it handles <strong>boundary effects</strong> better than the locally constant Nadaraya–Watson estimator. Because the polynomial can adapt its slope near the edges of the data, the bias at boundaries is reduced.
+        Common choices are \(p = 2\) (local linear) or \(p = 4\). An important practical advantage of local polynomial regression is that it handles <strong>boundary effects</strong> better than the locally constant Nadaraya–Watson estimator. Because the polynomial can adapt its slope near the edges of the data, the bias at boundaries is reduced.
       </p>
       <p>
-        A bonus: the local polynomial fit also gives estimates of the <em>derivatives</em> of the regression function, via $\hat{f}^{(r)}(x) = r!\,\hat{\beta}_{r+1}(x)$.
+        A bonus: the local polynomial fit also gives estimates of the <em>derivatives</em> of the regression function, via \(\hat{f}^{(r)}(x) = r!\,\hat{\beta}_{r+1}(x)\).
       </p>
     </section>
 
@@ -391,19 +391,19 @@
             <tr>
               <td>kNN</td>
               <td>Local averaging</td>
-              <td>$k$ (number of neighbors)</td>
-              <td>Average the $k$ nearest responses; adaptive bandwidth</td>
+              <td>\(k\) (number of neighbors)</td>
+              <td>Average the \(k\) nearest responses; adaptive bandwidth</td>
             </tr>
             <tr>
               <td>Nadaraya–Watson</td>
               <td>Local averaging / modeling</td>
-              <td>$h$ (bandwidth)</td>
+              <td>\(h\) (bandwidth)</td>
               <td>Kernel-weighted average; locally constant fit</td>
             </tr>
             <tr>
               <td>Local polynomial</td>
               <td>Local modeling</td>
-              <td>$h$ (bandwidth), $p$ (degree)</td>
+              <td>\(h\) (bandwidth), \(p\) (degree)</td>
               <td>Kernel-weighted local polynomial; better at boundaries</td>
             </tr>
           </tbody>
@@ -415,10 +415,10 @@
     <section>
       <h2>Key Takeaways</h2>
       <ul>
-        <li>The <strong>regression function</strong> $f^*(x) = \mathbb{E}(Y \mid X = x)$ is the optimal predictor under squared loss. Every method is trying to estimate this function.</li>
+        <li>The <strong>regression function</strong> \(f^*(x) = \mathbb{E}(Y \mid X = x)\) is the optimal predictor under squared loss. Every method is trying to estimate this function.</li>
         <li>The <strong>No Free Lunch</strong> principle tells us no single method dominates everywhere; we need structural assumptions (like smoothness) to get useful convergence rates.</li>
-        <li>The <strong>bias–variance tradeoff</strong> appears everywhere: choosing $k$, $h$, or $\lambda$ is always about balancing flexibility against stability. In parametric models, model bias can be a major contributor that does not decrease with more data.</li>
-        <li>All the nonparametric methods covered (kNN, kernel regression, local polynomial) are <strong>linear smoothers</strong> — meaning $\hat{\mathbf{Y}} = S\mathbf{Y}$ — and their complexity is measured by $\text{df} = \text{tr}(S)$.</li>
+        <li>The <strong>bias–variance tradeoff</strong> appears everywhere: choosing \(k\), \(h\), or \(\lambda\) is always about balancing flexibility against stability. In parametric models, model bias can be a major contributor that does not decrease with more data.</li>
+        <li>All the nonparametric methods covered (kNN, kernel regression, local polynomial) are <strong>linear smoothers</strong> — meaning \(\hat{\mathbf{Y}} = S\mathbf{Y}\) — and their complexity is measured by \(\text{df} = \text{tr}(S)\).</li>
         <li><strong>kNN</strong> is kernel regression with an adaptive box kernel; <strong>Nadaraya–Watson</strong> is a locally constant fit; <strong>local polynomial</strong> extends this to capture local slope and curvature, giving better boundary behavior.</li>
       </ul>
     </section>

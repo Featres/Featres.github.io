@@ -16,13 +16,13 @@
   <script>
       MathJax = {
         tex: {
-          inlineMath: [['$', '$'], ['\(', '\)']],
-          displayMath: [['$$', '$$'], ['\[', '\]']]
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          displayMath: [['$$', '$$'], ['\\[', '\\]']]
         },
-        svg: { fontCache: 'global' }
+        chtml: {}
       };
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
 </head>
 <body>
 <div class="topbar">
@@ -66,15 +66,15 @@
   <h2>1. Recap: Binary Classification Pipeline</h2>
 
   <p>
-    Before moving to multi-class, let's quickly recall the binary classification setup. We have training data $\{(x_i, y_i)\}$ with labels $y_i \in \{-1, +1\}$. We train a model $\hat{f}: \mathbb{R}^d \to \mathbb{R}$ and predict using the <strong>labeling function</strong>:
+    Before moving to multi-class, let's quickly recall the binary classification setup. We have training data \(\{(x_i, y_i)\}\) with labels \(y_i \in \{-1, +1\}\). We train a model \(\hat{f}: \mathbb{R}^d \to \mathbb{R}\) and predict using the <strong>labeling function</strong>:
   </p>
 
   <div class="math-block">
-    $$\hat{y}(x) = \text{sign}(\hat{f}(x)) = \begin{cases} +1 & \text{if } \hat{f}(x) > 0 \\ -1 & \text{if } \hat{f}(x) < 0 \end{cases}$$
+    \[\hat{y}(x) = \text{sign}(\hat{f}(x)) = \begin{cases} +1 & \text{if } \hat{f}(x) > 0 \\ -1 & \text{if } \hat{f}(x) < 0 \end{cases}\]
   </div>
 
   <p>
-    The set $\{x : \hat{f}(x) = 0\}$ is the <strong>decision boundary</strong>. For linear models this is a hyperplane $\{x : w^\top x = 0\}$. We train $\hat{f}$ by minimizing a surrogate loss (e.g., logistic loss) on the training data using gradient descent.
+    The set \(\{x : \hat{f}(x) = 0\}\) is the <strong>decision boundary</strong>. For linear models this is a hyperplane \(\{x : w^\top x = 0\}\). We train \(\hat{f}\) by minimizing a surrogate loss (e.g., logistic loss) on the training data using gradient descent.
   </p>
 </section>
 
@@ -85,45 +85,45 @@
   <h3>2.1 Prediction with Multiple Models</h3>
 
   <p>
-    When we have $K > 2$ classes (e.g., classifying images into cats, dogs, ships, etc.), we need $K$ separate functions $\hat{f}_1, \hat{f}_2, \ldots, \hat{f}_K$, one per class. The predicted class for an input $x$ is whichever function gives the highest value:
+    When we have \(K > 2\) classes (e.g., classifying images into cats, dogs, ships, etc.), we need \(K\) separate functions \(\hat{f}_1, \hat{f}_2, \ldots, \hat{f}_K\), one per class. The predicted class for an input \(x\) is whichever function gives the highest value:
   </p>
 
   <div class="callout-definition">
     <div class="callout-title">Multi-Class Prediction Rule</div>
-    <p>Given $K$ models $\hat{f}_1, \ldots, \hat{f}_K$, predict:</p>
+    <p>Given \(K\) models \(\hat{f}_1, \ldots, \hat{f}_K\), predict:</p>
     <div class="math-block">
-      $$\hat{y}(x) = \arg\max_{k=1,\ldots,K} \hat{f}_k(x)$$
+      \[\hat{y}(x) = \arg\max_{k=1,\ldots,K} \hat{f}_k(x)\]
     </div>
   </div>
 
   <p>
-    Think of it this way: each $\hat{f}_k(x)$ measures how "confident" we are that $x$ belongs to class $k$. We pick the class with the highest confidence score.
+    Think of it this way: each \(\hat{f}_k(x)\) measures how "confident" we are that \(x\) belongs to class \(k\). We pick the class with the highest confidence score.
   </p>
 
   <p>
-    For linear models (where $\hat{f}_k(x) = w_k^\top x$), this partitions the feature space into $K$ regions. The decision boundary between classes $i$ and $j$ is the set of points where $\hat{f}_i(x) = \hat{f}_j(x)$, which for linear models is again a hyperplane.
+    For linear models (where \(\hat{f}_k(x) = w_k^\top x\)), this partitions the feature space into \(K\) regions. The decision boundary between classes \(i\) and \(j\) is the set of points where \(\hat{f}_i(x) = \hat{f}_j(x)\), which for linear models is again a hyperplane.
   </p>
 
   <div class="callout-example">
     <div class="callout-title">Visualizing 3-Class Linear Classification</div>
     <p>
-      With $K = 3$ and 2D input $x$, each linear model $\hat{f}_k(x) = w_k^\top x$ defines a plane in 3D (the third axis being the function value). The feature space gets split into three colored regions. The solid boundaries where two planes cross determine which class is predicted.
+      With \(K = 3\) and 2D input \(x\), each linear model \(\hat{f}_k(x) = w_k^\top x\) defines a plane in 3D (the third axis being the function value). The feature space gets split into three colored regions. The solid boundaries where two planes cross determine which class is predicted.
     </p>
   </div>
 
   <h3>2.2 Training: One-vs-Rest Approach</h3>
 
   <p>
-    One straightforward way to train $K$ models is the <strong>one-vs-rest</strong> (OvR) strategy. For each class $k \in \{1, \ldots, K\}$:
+    One straightforward way to train \(K\) models is the <strong>one-vs-rest</strong> (OvR) strategy. For each class \(k \in \{1, \ldots, K\}\):
   </p>
 
   <ol>
-    <li>Relabel all data: points with label $y = k$ get new label $\tilde{y} = +1$, and all others get $\tilde{y} = -1$.</li>
-    <li>Train a standard binary classifier on this relabeled dataset to obtain $\hat{f}_k$.</li>
+    <li>Relabel all data: points with label \(y = k\) get new label \(\tilde{y} = +1\), and all others get \(\tilde{y} = -1\).</li>
+    <li>Train a standard binary classifier on this relabeled dataset to obtain \(\hat{f}_k\).</li>
   </ol>
 
   <p>
-    This is conceptually simple but requires solving $K$ separate binary classification problems, which can be slow when $K$ is large.
+    This is conceptually simple but requires solving \(K\) separate binary classification problems, which can be slow when \(K\) is large.
   </p>
 
   <pre><code>method = sklearn.linear_model.LogisticRegression(multi_class='ovr')
@@ -132,21 +132,21 @@ method.fit(X, y)</code></pre>
   <h3>2.3 Training: Cross-Entropy Loss (Simultaneous Approach)</h3>
 
   <p>
-    A more elegant and widely-used approach trains all $K$ models <em>simultaneously</em> by minimizing a single loss function — the <strong>cross-entropy loss</strong>:
+    A more elegant and widely-used approach trains all \(K\) models <em>simultaneously</em> by minimizing a single loss function — the <strong>cross-entropy loss</strong>:
   </p>
 
   <div class="callout-definition">
     <div class="callout-title">Definition — Cross-Entropy Loss</div>
-    <p>For a vector of model outputs $\hat{f}(x) = (\hat{f}_1(x), \ldots, \hat{f}_K(x))$ and true label $y \in \{1, \ldots, K\}$:</p>
+    <p>For a vector of model outputs \(\hat{f}(x) = (\hat{f}_1(x), \ldots, \hat{f}_K(x))\) and true label \(y \in \{1, \ldots, K\}\):</p>
     <div class="math-block">
-      $$\ell_{\text{CE}}(\hat{f}(x),\; y) = -\log \frac{e^{\hat{f}_y(x)}}{\sum_{k=1}^{K} e^{\hat{f}_k(x)}}$$
+      \[\ell_{\text{CE}}(\hat{f}(x),\; y) = -\log \frac{e^{\hat{f}_y(x)}}{\sum_{k=1}^{K} e^{\hat{f}_k(x)}}\]
     </div>
   </div>
 
   <h4>Why does this make sense?</h4>
 
   <p>
-    Consider a training point $(x, y)$ with true class $y = 1$. If $\hat{f}_1(x)$ is much larger than all other $\hat{f}_k(x)$, then the fraction $\frac{e^{\hat{f}_1(x)}}{\sum_k e^{\hat{f}_k(x)}}$ is close to 1, so the loss $-\log(\cdot)$ is close to 0 (which is good). Conversely, if the correct class gets a low score, that fraction is near 0 and the loss blows up. In short, the cross-entropy loss encourages $\hat{f}_y(x)$ to be the largest among all $K$ outputs.
+    Consider a training point \((x, y)\) with true class \(y = 1\). If \(\hat{f}_1(x)\) is much larger than all other \(\hat{f}_k(x)\), then the fraction \(\frac{e^{\hat{f}_1(x)}}{\sum_k e^{\hat{f}_k(x)}}\) is close to 1, so the loss \(-\log(\cdot)\) is close to 0 (which is good). Conversely, if the correct class gets a low score, that fraction is near 0 and the loss blows up. In short, the cross-entropy loss encourages \(\hat{f}_y(x)\) to be the largest among all \(K\) outputs.
   </p>
 
   <h4>The Softmax Connection</h4>
@@ -156,17 +156,17 @@ method.fit(X, y)</code></pre>
   </p>
 
   <div class="math-block">
-    $$[p(x)]_k := \text{softmax}(\hat{f}(x))_k = \frac{e^{\hat{f}_k(x)}}{\sum_{j=1}^{K} e^{\hat{f}_j(x)}}$$
+    \[[p(x)]_k := \text{softmax}(\hat{f}(x))_k = \frac{e^{\hat{f}_k(x)}}{\sum_{j=1}^{K} e^{\hat{f}_j(x)}}\]
   </div>
 
   <p>
-    This vector satisfies $[p(x)]_k \geq 0$ and $\sum_k [p(x)]_k = 1$, so it's a valid probability distribution. The largest probability corresponds to the predicted class $\hat{y}(x) = \arg\max_k \hat{f}_k(x)$. Training with gradient descent on the average cross-entropy loss pushes these "probabilities" toward concentrating mass on the correct class.
+    This vector satisfies \([p(x)]_k \geq 0\) and \(\sum_k [p(x)]_k = 1\), so it's a valid probability distribution. The largest probability corresponds to the predicted class \(\hat{y}(x) = \arg\max_k \hat{f}_k(x)\). Training with gradient descent on the average cross-entropy loss pushes these "probabilities" toward concentrating mass on the correct class.
   </p>
 
   <div class="callout-note">
     <div class="callout-title">Key Connection: Cross-Entropy Generalizes the Logistic Loss</div>
     <p>
-      For $K = 2$, the cross-entropy loss reduces exactly to the logistic loss from Lecture 7. The logistic/sigmoid function $\sigma(z) = \frac{e^z}{1 + e^z}$ is the $K = 2$ special case of the softmax. Training with $K = 2$ cross-entropy is sometimes called <em>logistic regression</em>, while the general $K$-class version is called <em>multinomial logistic regression</em>.
+      For \(K = 2\), the cross-entropy loss reduces exactly to the logistic loss from Lecture 7. The logistic/sigmoid function \(\sigma(z) = \frac{e^z}{1 + e^z}\) is the \(K = 2\) special case of the softmax. Training with \(K = 2\) cross-entropy is sometimes called <em>logistic regression</em>, while the general \(K\)-class version is called <em>multinomial logistic regression</em>.
     </p>
   </div>
 
@@ -185,15 +185,15 @@ method.fit(X, y)</code></pre>
   <h3>3.1 The Noise Model for Classification</h3>
 
   <p>
-    Just like in regression, real-world labels are noisy. We assume there exists a ground-truth labeling function $y^*(x)$ that gives the "true" class. However, the labels we actually observe are noisy versions modeled as:
+    Just like in regression, real-world labels are noisy. We assume there exists a ground-truth labeling function \(y^*(x)\) that gives the "true" class. However, the labels we actually observe are noisy versions modeled as:
   </p>
 
   <div class="math-block">
-    $$(y \mid x) = y^*(x) \cdot \varepsilon$$
+    \[(y \mid x) = y^*(x) \cdot \varepsilon\]
   </div>
 
   <p>
-    where $\varepsilon \in \{-1, +1\}$ is a random noise variable that can flip the label. This is a <em>multiplicative</em> noise model (in contrast to the additive noise $Y = f^*(X) + \varepsilon$ used in regression). Importantly, $\varepsilon$ can depend on $x$ — for instance, points near the decision boundary are more likely to have their labels flipped.
+    where \(\varepsilon \in \{-1, +1\}\) is a random noise variable that can flip the label. This is a <em>multiplicative</em> noise model (in contrast to the additive noise \(Y = f^*(X) + \varepsilon\) used in regression). Importantly, \(\varepsilon\) can depend on \(x\) — for instance, points near the decision boundary are more likely to have their labels flipped.
   </p>
 
   <h3>3.2 Generalization Error in Classification</h3>
@@ -205,17 +205,17 @@ method.fit(X, y)</code></pre>
   <div class="callout-definition">
     <div class="callout-title">Generalization Error (0-1 Loss)</div>
     <div class="math-block">
-      $$L(\hat{f};\; \mathbb{P}_{X,Y}) = \mathbb{E}_{X,Y}[\ell_{0\text{-}1}(\hat{y}, y)] = \mathbb{P}_{X,Y}(\hat{y} \neq y)$$
+      \[L(\hat{f};\; \mathbb{P}_{X,Y}) = \mathbb{E}_{X,Y}[\ell_{0\text{-}1}(\hat{y}, y)] = \mathbb{P}_{X,Y}(\hat{y} \neq y)\]
     </div>
     <p>This is the probability that our classifier misclassifies a randomly drawn test point.</p>
   </div>
 
   <p>
-    Since we don't know the true distribution $\mathbb{P}_{X,Y}$, we <strong>estimate</strong> this error on a held-out test set $D_{\text{test}}$:
+    Since we don't know the true distribution \(\mathbb{P}_{X,Y}\), we <strong>estimate</strong> this error on a held-out test set \(D_{\text{test}}\):
   </p>
 
   <div class="math-block">
-    $$\widehat{L} = \frac{1}{|D_{\text{test}}|} \sum_{(x,y) \in D_{\text{test}}} \mathbb{1}\{\hat{y}(x) \neq y\}$$
+    \[\widehat{L} = \frac{1}{|D_{\text{test}}|} \sum_{(x,y) \in D_{\text{test}}} \mathbb{1}\{\hat{y}(x) \neq y\}\]
   </div>
 
   <p>
@@ -230,7 +230,7 @@ method.fit(X, y)</code></pre>
   <h3>4.1 Distribution Shift</h3>
 
   <p>
-    In many real-world scenarios, the test distribution $\tilde{\mathbb{P}}$ differs from the training distribution $\mathbb{P}$. This can happen in two ways: (i) only the input distribution shifts (the relationship $x \to y$ stays the same), or (ii) the relationship itself changes.
+    In many real-world scenarios, the test distribution \(\tilde{\mathbb{P}}\) differs from the training distribution \(\mathbb{P}\). This can happen in two ways: (i) only the input distribution shifts (the relationship \(x \to y\) stays the same), or (ii) the relationship itself changes.
   </p>
 
   <div class="callout-example">
@@ -258,7 +258,7 @@ method.fit(X, y)</code></pre>
   </p>
 
   <div class="math-block">
-    $$\max\left\{\frac{1}{|g_1|}\sum_{(x,y) \in g_1} \mathbb{1}\{\hat{y}(x) \neq y\},\;\; \frac{1}{|g_2|}\sum_{(x,y) \in g_2} \mathbb{1}\{\hat{y}(x) \neq y\}\right\}$$
+    \[\max\left\{\frac{1}{|g_1|}\sum_{(x,y) \in g_1} \mathbb{1}\{\hat{y}(x) \neq y\},\;\; \frac{1}{|g_2|}\sum_{(x,y) \in g_2} \mathbb{1}\{\hat{y}(x) \neq y\}\right\}\]
   </div>
 
   <p>
@@ -268,7 +268,7 @@ method.fit(X, y)</code></pre>
   <h3>4.3 Fairness (Bonus)</h3>
 
   <p>
-    There are several formal notions of what it means for a classifier to be "fair" with respect to a sensitive group attribute $G$:
+    There are several formal notions of what it means for a classifier to be "fair" with respect to a sensitive group attribute \(G\):
   </p>
 
   <div class="table-wrapper">
@@ -281,22 +281,22 @@ method.fit(X, y)</code></pre>
       <tr>
         <td><strong>Equalized Odds</strong></td>
         <td>All groups have similar TPR and FPR</td>
-        <td>$\mathbb{P}(\hat{Y}=1 \mid Y=y, G=g)$ equal for all $g$, both $y \in \{-1,+1\}$</td>
+        <td>\(\mathbb{P}(\hat{Y}=1 \mid Y=y, G=g)\) equal for all \(g\), both \(y \in \{-1,+1\}\)</td>
       </tr>
       <tr>
         <td><strong>Demographic Parity</strong></td>
         <td>Equal % predicted positive across groups</td>
-        <td>$\mathbb{P}(\hat{Y}=1 \mid G=g)$ equal for all $g$</td>
+        <td>\(\mathbb{P}(\hat{Y}=1 \mid G=g)\) equal for all \(g\)</td>
       </tr>
       <tr>
         <td><strong>Equalized Opportunity</strong></td>
         <td>Same FNR (or TPR) across groups</td>
-        <td>$\mathbb{P}(\hat{Y}=1 \mid Y=1, G=g)$ equal for all $g$</td>
+        <td>\(\mathbb{P}(\hat{Y}=1 \mid Y=1, G=g)\) equal for all \(g\)</td>
       </tr>
       <tr>
         <td><strong>Worst-Group Error</strong></td>
         <td>Largest group error is small</td>
-        <td>$\sup_g \frac{1}{2}\sum_y \mathbb{P}(\hat{Y}=-y \mid Y=y, G=g)$ is small</td>
+        <td>\(\sup_g \frac{1}{2}\sum_y \mathbb{P}(\hat{Y}=-y \mid Y=y, G=g)\) is small</td>
       </tr>
     </table>
   </div>
@@ -323,9 +323,9 @@ method.fit(X, y)</code></pre>
   <div class="callout-definition">
     <div class="callout-title">Asymmetric Loss</div>
     <div class="math-block">
-      $$L_{\text{asym}}(\hat{y};\; \mathbb{P}) = c_{\text{FP}} \cdot \text{FPR}(\hat{y}) + c_{\text{FN}} \cdot \text{FNR}(\hat{y})$$
+      \[L_{\text{asym}}(\hat{y};\; \mathbb{P}) = c_{\text{FP}} \cdot \text{FPR}(\hat{y}) + c_{\text{FN}} \cdot \text{FNR}(\hat{y})\]
     </div>
-    <p>where $c_{\text{FP}}, c_{\text{FN}} \geq 0$ control how much we penalize each error type.</p>
+    <p>where \(c_{\text{FP}}, c_{\text{FN}} \geq 0\) control how much we penalize each error type.</p>
   </div>
 
   <h3>5.2 The Confusion Matrix and Error Rates</h3>
@@ -338,16 +338,16 @@ method.fit(X, y)</code></pre>
     <table>
       <tr>
         <th></th>
-        <th>True $y = -1$</th>
-        <th>True $y = +1$</th>
+        <th>True \(y = -1\)</th>
+        <th>True \(y = +1\)</th>
       </tr>
       <tr>
-        <td><strong>Predicted $\hat{y} = -1$</strong></td>
+        <td><strong>Predicted \(\hat{y} = -1\)</strong></td>
         <td>TN (True Negative)</td>
         <td>FN (False Negative) — Type II error</td>
       </tr>
       <tr>
-        <td><strong>Predicted $\hat{y} = +1$</strong></td>
+        <td><strong>Predicted \(\hat{y} = +1\)</strong></td>
         <td>FP (False Positive) — Type I error</td>
         <td>TP (True Positive)</td>
       </tr>
@@ -365,27 +365,27 @@ method.fit(X, y)</code></pre>
       </tr>
       <tr>
         <td><strong>FPR</strong> (False Positive Rate)</td>
-        <td>$\frac{\#\text{FP}}{\#\{y = -1\}}$</td>
+        <td>\(\frac{\#\text{FP}}{\#\{y = -1\}}\)</td>
         <td>Want small</td>
       </tr>
       <tr>
         <td><strong>FNR</strong> (False Negative Rate)</td>
-        <td>$\frac{\#\text{FN}}{\#\{y = +1\}}$</td>
+        <td>\(\frac{\#\text{FN}}{\#\{y = +1\}}\)</td>
         <td>Want small</td>
       </tr>
       <tr>
         <td><strong>TPR / Recall / Power</strong></td>
-        <td>$\frac{\#\text{TP}}{\#\{y = +1\}} = 1 - \text{FNR}$</td>
+        <td>\(\frac{\#\text{TP}}{\#\{y = +1\}} = 1 - \text{FNR}\)</td>
         <td>Want large</td>
       </tr>
       <tr>
         <td><strong>Precision</strong></td>
-        <td>$\frac{\#\text{TP}}{\#\{\hat{y} = +1\}}$</td>
+        <td>\(\frac{\#\text{TP}}{\#\{\hat{y} = +1\}}\)</td>
         <td>Want large</td>
       </tr>
       <tr>
         <td><strong>FDR</strong> (False Discovery Rate)</td>
-        <td>$\frac{\#\text{FP}}{\#\{\hat{y} = +1\}} = 1 - \text{Precision}$</td>
+        <td>\(\frac{\#\text{FP}}{\#\{\hat{y} = +1\}} = 1 - \text{Precision}\)</td>
         <td>Want small</td>
       </tr>
     </table>
@@ -403,30 +403,30 @@ method.fit(X, y)</code></pre>
   <h3>5.3 The Threshold Trick</h3>
 
   <p>
-    Rather than retraining the model with different cost weights, we can keep the same model $\hat{f}$ and simply change the <strong>decision threshold</strong> $\tau$:
+    Rather than retraining the model with different cost weights, we can keep the same model \(\hat{f}\) and simply change the <strong>decision threshold</strong> \(\tau\):
   </p>
 
   <div class="math-block">
-    $$\hat{y}_\tau(x) = \begin{cases} +1 & \text{if } \hat{f}(x) > \tau \\ -1 & \text{if } \hat{f}(x) < \tau \end{cases}$$
+    \[\hat{y}_\tau(x) = \begin{cases} +1 & \text{if } \hat{f}(x) > \tau \\ -1 & \text{if } \hat{f}(x) < \tau \end{cases}\]
   </div>
 
   <p>
-    Setting $\tau > 0$ means we require higher confidence before predicting $+1$, which reduces false positives but increases false negatives. Setting $\tau < 0$ does the reverse. The original classifier corresponds to $\tau = 0$.
+    Setting \(\tau > 0\) means we require higher confidence before predicting \(+1\), which reduces false positives but increases false negatives. Setting \(\tau < 0\) does the reverse. The original classifier corresponds to \(\tau = 0\).
   </p>
 
   <h3>5.4 ROC Curves</h3>
 
   <p>
-    The <strong>Receiver Operating Characteristic (ROC) curve</strong> visualizes the trade-off between TPR and FPR as we vary the threshold $\tau$. For each value of $\tau$, we compute FPR$(\hat{y}_\tau)$ and TPR$(\hat{y}_\tau)$ and plot TPR (y-axis) against FPR (x-axis).
+    The <strong>Receiver Operating Characteristic (ROC) curve</strong> visualizes the trade-off between TPR and FPR as we vary the threshold \(\tau\). For each value of \(\tau\), we compute FPR\((\hat{y}_\tau)\) and TPR\((\hat{y}_\tau)\) and plot TPR (y-axis) against FPR (x-axis).
   </p>
 
   <div class="callout-definition">
     <div class="callout-title">Reading an ROC Curve</div>
     <ul>
       <li><strong>Ideal classifier:</strong> top-left corner (TPR = 1, FPR = 0) — it gets everything right.</li>
-      <li><strong>Random guessing:</strong> the diagonal line TPR = FPR — the classifier doesn't use $x$ at all.</li>
+      <li><strong>Random guessing:</strong> the diagonal line TPR = FPR — the classifier doesn't use \(x\) at all.</li>
       <li><strong>Good model:</strong> curve bows toward the top-left, far above the diagonal.</li>
-      <li>As $\tau$ decreases (moving right along the curve), we classify more points as positive, so both TPR and FPR increase.</li>
+      <li>As \(\tau\) decreases (moving right along the curve), we classify more points as positive, so both TPR and FPR increase.</li>
     </ul>
   </div>
 
@@ -437,13 +437,13 @@ method.fit(X, y)</code></pre>
   <h3>5.5 Precision-Recall Trade-off and the F1-Score</h3>
 
   <p>
-    Sometimes we care specifically about performance on the positive class. We then look at the <strong>Precision-Recall curve</strong> (varying $\tau$) and summarize it with the <strong>F1-Score</strong>:
+    Sometimes we care specifically about performance on the positive class. We then look at the <strong>Precision-Recall curve</strong> (varying \(\tau\)) and summarize it with the <strong>F1-Score</strong>:
   </p>
 
   <div class="callout-definition">
     <div class="callout-title">Definition — F1-Score</div>
     <div class="math-block">
-      $$F_1 = \frac{2}{\frac{1}{\text{Precision}} + \frac{1}{\text{Recall}}}$$
+      \[F_1 = \frac{2}{\frac{1}{\text{Precision}} + \frac{1}{\text{Recall}}}\]
     </div>
     <p>This is the harmonic mean of precision and recall. It forces both to be large — if either is near zero, the F1-score is also near zero. This is deliberately stricter than a simple average, which could be gamed by having one metric be very high and the other very low.</p>
   </div>
@@ -453,11 +453,11 @@ method.fit(X, y)</code></pre>
 <section>
   <h2>6. Key Takeaways</h2>
   <ul>
-    <li><strong>Multi-class prediction</strong> uses $K$ models and picks the class with the highest score: $\hat{y}(x) = \arg\max_k \hat{f}_k(x)$.</li>
-    <li>Two training approaches exist: <strong>one-vs-rest</strong> (train $K$ binary classifiers independently) and <strong>cross-entropy</strong> (train all $K$ models jointly). Cross-entropy is the most popular approach and generalizes the logistic loss via the softmax function.</li>
-    <li>The <strong>generalization error</strong> for classification equals the probability of misclassification $\mathbb{P}(\hat{y} \neq y)$. In practice, we estimate it on a held-out test set.</li>
+    <li><strong>Multi-class prediction</strong> uses \(K\) models and picks the class with the highest score: \(\hat{y}(x) = \arg\max_k \hat{f}_k(x)\).</li>
+    <li>Two training approaches exist: <strong>one-vs-rest</strong> (train \(K\) binary classifiers independently) and <strong>cross-entropy</strong> (train all \(K\) models jointly). Cross-entropy is the most popular approach and generalizes the logistic loss via the softmax function.</li>
+    <li>The <strong>generalization error</strong> for classification equals the probability of misclassification \(\mathbb{P}(\hat{y} \neq y)\). In practice, we estimate it on a held-out test set.</li>
     <li><strong>Distribution shift</strong> (test ≠ train) and <strong>minority-group failure</strong> are real problems. Worst-group accuracy and fairness metrics address them.</li>
-    <li>When errors have different costs, use <strong>asymmetric losses</strong>. Instead of retraining, adjust the threshold $\tau$. Evaluate trade-offs via <strong>ROC curves</strong> (TPR vs. FPR), <strong>AUROC</strong>, and <strong>precision/recall/F1</strong>.</li>
+    <li>When errors have different costs, use <strong>asymmetric losses</strong>. Instead of retraining, adjust the threshold \(\tau\). Evaluate trade-offs via <strong>ROC curves</strong> (TPR vs. FPR), <strong>AUROC</strong>, and <strong>precision/recall/F1</strong>.</li>
   </ul>
 </section>
 

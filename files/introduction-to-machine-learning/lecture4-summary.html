@@ -16,13 +16,13 @@
   <script>
       MathJax = {
         tex: {
-          inlineMath: [['$', '$'], ['\(', '\)']],
-          displayMath: [['$$', '$$'], ['\[', '\]']]
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          displayMath: [['$$', '$$'], ['\\[', '\\]']]
         },
-        svg: { fontCache: 'global' }
+        chtml: {}
       };
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
 </head>
 <body>
 <div class="topbar">
@@ -68,58 +68,58 @@
 
   <h3>1.1 The Convergence Theorem</h3>
   <p>
-    Recall from Lecture 3 that the gradient descent update for the (modified) linear regression loss $L(w) = \tfrac{1}{2}\|y - Xw\|_2^2$ is $w^{t+1} = w^t - \eta\,\nabla L(w^t)$. The central question is: under what conditions does this sequence of iterates $w^0, w^1, w^2, \ldots$ actually converge to the optimal solution $\hat{w}$?
+    Recall from Lecture 3 that the gradient descent update for the (modified) linear regression loss \(L(w) = \tfrac{1}{2}\|y - Xw\|_2^2\) is \(w^{t+1} = w^t - \eta\,\nabla L(w^t)\). The central question is: under what conditions does this sequence of iterates \(w^0, w^1, w^2, \ldots\) actually converge to the optimal solution \(\hat{w}\)?
   </p>
 
   <div class="callout-definition">
     <div class="callout-title">Theorem 5.7 — Convergence of GD for Linear Regression</div>
-    <p>Consider the problem $\min_{w \in \mathbb{R}^d} L(w) = \tfrac{1}{2}\|y - Xw\|_2^2$. If $X^\top X$ is full-rank and the learning rate satisfies $\eta < \frac{2}{\lambda_{\max}(X^\top X)}$, then gradient descent converges <strong>linearly</strong> to $\hat{w} = \arg\min_w L(w)$.</p>
+    <p>Consider the problem \(\min_{w \in \mathbb{R}^d} L(w) = \tfrac{1}{2}\|y - Xw\|_2^2\). If \(X^\top X\) is full-rank and the learning rate satisfies \(\eta < \frac{2}{\lambda_{\max}(X^\top X)}\), then gradient descent converges <strong>linearly</strong> to \(\hat{w} = \arg\min_w L(w)\).</p>
   </div>
 
   <p>
-    "Linear convergence" is a somewhat confusing name from the optimisation literature. It actually means the error shrinks <em>exponentially</em> in the number of iterations — each step multiplies the distance to the optimum by a fixed factor $\rho < 1$:
+    "Linear convergence" is a somewhat confusing name from the optimisation literature. It actually means the error shrinks <em>exponentially</em> in the number of iterations — each step multiplies the distance to the optimum by a fixed factor \(\rho < 1\):
   </p>
   <div class="math-block">
-    $$\|w^{t} - \hat{w}\|_2 \;\leq\; \rho^{\,t}\;\|w^0 - \hat{w}\|_2$$
+    \[\|w^{t} - \hat{w}\|_2 \;\leq\; \rho^{\,t}\;\|w^0 - \hat{w}\|_2\]
   </div>
   <p>
-    where $\rho = \|I - \eta X^\top X\|_{\text{op}}$. The key assumption — $X^\top X$ full-rank — is equivalent to requiring $\lambda_{\min}(X^\top X) > 0$, which holds when $n > d$ and the data points are "different enough" (no perfect linear dependencies among columns of $X$).
+    where \(\rho = \|I - \eta X^\top X\|_{\text{op}}\). The key assumption — \(X^\top X\) full-rank — is equivalent to requiring \(\lambda_{\min}(X^\top X) > 0\), which holds when \(n > d\) and the data points are "different enough" (no perfect linear dependencies among columns of \(X\)).
   </p>
 
   <div class="callout-example">
     <div class="callout-title">Sketch of Proof Idea</div>
-    <p>Using the normal equations $X^\top X\hat{w} = X^\top y$, the update becomes:</p>
+    <p>Using the normal equations \(X^\top X\hat{w} = X^\top y\), the update becomes:</p>
     <div class="math-block">
-      $$w^{t+1} - \hat{w} = (I - \eta X^\top X)(w^t - \hat{w})$$
+      \[w^{t+1} - \hat{w} = (I - \eta X^\top X)(w^t - \hat{w})\]
     </div>
-    <p>Applying this recursively and taking norms gives $\|w^{t+1} - \hat{w}\|_2 \leq \rho^{t+1}\|w^0 - \hat{w}\|_2$ with $\rho = \|I - \eta X^\top X\|_{\text{op}}$. The eigenvalues of $I - \eta X^\top X$ are $1 - \eta\lambda_i$, so $\rho = \max\{|1 - \eta\lambda_{\min}|,\; |1 - \eta\lambda_{\max}|\}$. If $\eta < 2/\lambda_{\max}$, then $\rho < 1$ and convergence is guaranteed.</p>
+    <p>Applying this recursively and taking norms gives \(\|w^{t+1} - \hat{w}\|_2 \leq \rho^{t+1}\|w^0 - \hat{w}\|_2\) with \(\rho = \|I - \eta X^\top X\|_{\text{op}}\). The eigenvalues of \(I - \eta X^\top X\) are \(1 - \eta\lambda_i\), so \(\rho = \max\{|1 - \eta\lambda_{\min}|,\; |1 - \eta\lambda_{\max}|\}\). If \(\eta < 2/\lambda_{\max}\), then \(\rho < 1\) and convergence is guaranteed.</p>
   </div>
 
   <h3>1.2 Convergence Speed and the Condition Number</h3>
   <p>
-    Having established <em>that</em> GD converges, we now ask <em>how fast</em>. The contraction factor $\rho$ controls everything — the smaller $\rho$ is, the fewer iterations we need. The goal is to pick the learning rate $\eta$ that minimises $\rho$.
+    Having established <em>that</em> GD converges, we now ask <em>how fast</em>. The contraction factor \(\rho\) controls everything — the smaller \(\rho\) is, the fewer iterations we need. The goal is to pick the learning rate \(\eta\) that minimises \(\rho\).
   </p>
 
   <div class="callout-definition">
     <div class="callout-title">Optimal Learning Rate and Condition Number</div>
     <p>The optimal constant learning rate for linear regression GD is:</p>
     <div class="math-block">
-      $$\eta_{\text{opt}} = \frac{2}{\lambda_{\max} + \lambda_{\min}}$$
+      \[\eta_{\text{opt}} = \frac{2}{\lambda_{\max} + \lambda_{\min}}\]
     </div>
     <p>which yields the minimal contraction factor:</p>
     <div class="math-block">
-      $$\rho_{\min} = \frac{\lambda_{\max} - \lambda_{\min}}{\lambda_{\max} + \lambda_{\min}} = \frac{\kappa - 1}{\kappa + 1}$$
+      \[\rho_{\min} = \frac{\lambda_{\max} - \lambda_{\min}}{\lambda_{\max} + \lambda_{\min}} = \frac{\kappa - 1}{\kappa + 1}\]
     </div>
-    <p>where $\kappa := \lambda_{\max}/\lambda_{\min}$ is the <strong>condition number</strong> of $X^\top X$.</p>
+    <p>where \(\kappa := \lambda_{\max}/\lambda_{\min}\) is the <strong>condition number</strong> of \(X^\top X\).</p>
   </div>
 
   <p>
-    The condition number $\kappa$ has a beautiful geometric interpretation. The loss $L(w)$ is a quadratic function whose contour lines (level sets) are ellipsoids in parameter space. The condition number describes the "shape" of these ellipsoids:
+    The condition number \(\kappa\) has a beautiful geometric interpretation. The loss \(L(w)\) is a quadratic function whose contour lines (level sets) are ellipsoids in parameter space. The condition number describes the "shape" of these ellipsoids:
   </p>
 
   <ul>
-    <li><strong>$\kappa \approx 1$ (well-conditioned):</strong> the ellipsoids are nearly spherical. The gradient points almost directly toward the minimum, and GD converges quickly in just a few steps.</li>
-    <li><strong>$\kappa \gg 1$ (ill-conditioned):</strong> the ellipsoids are stretched and elongated. The gradient is nearly perpendicular to the direction of the minimum, causing GD to zigzag and converge very slowly.</li>
+    <li><strong>\(\kappa \approx 1\) (well-conditioned):</strong> the ellipsoids are nearly spherical. The gradient points almost directly toward the minimum, and GD converges quickly in just a few steps.</li>
+    <li><strong>\(\kappa \gg 1\) (ill-conditioned):</strong> the ellipsoids are stretched and elongated. The gradient is nearly perpendicular to the direction of the minimum, causing GD to zigzag and converge very slowly.</li>
   </ul>
 
   <figure>
@@ -151,20 +151,20 @@
 
   <div class="callout-note">
     <div class="callout-title">Practical Caveat</div>
-    <p>Computing $\lambda_{\max}$ and $\lambda_{\min}$ exactly is itself expensive — often comparable to solving the original problem. In practice, $\eta$ is treated as a <strong>hyperparameter</strong> that we tune (e.g., via cross-validation), rather than compute from eigenvalues.</p>
+    <p>Computing \(\lambda_{\max}\) and \(\lambda_{\min}\) exactly is itself expensive — often comparable to solving the original problem. In practice, \(\eta\) is treated as a <strong>hyperparameter</strong> that we tune (e.g., via cross-validation), rather than compute from eigenvalues.</p>
   </div>
 
   <h3>1.3 The Three Learning Rate Regimes</h3>
   <p>
-    The relationship between $\eta$ and the contraction factor $\rho$ is piecewise linear. There are three regimes to keep in mind:
+    The relationship between \(\eta\) and the contraction factor \(\rho\) is piecewise linear. There are three regimes to keep in mind:
   </p>
 
   <div class="table-wrapper">
     <table>
-      <tr><th>Learning Rate Range</th><th>Contraction $\rho$</th><th>Behaviour</th></tr>
-      <tr><td>$0 < \eta \leq \frac{1}{\lambda_{\max}}$</td><td>$1 - \eta\lambda_{\min}$</td><td>Converges, but may be slow</td></tr>
-      <tr><td>$\frac{1}{\lambda_{\max}} < \eta < \frac{2}{\lambda_{\max}}$</td><td>$\max\{1 - \eta\lambda_{\min},\; \eta\lambda_{\max} - 1\}$</td><td>Converges; sweet spot at $\eta_{\text{opt}}$</td></tr>
-      <tr><td>$\eta \geq \frac{2}{\lambda_{\max}}$</td><td>$\rho \geq 1$</td><td>No convergence guarantee; may diverge</td></tr>
+      <tr><th>Learning Rate Range</th><th>Contraction \(\rho\)</th><th>Behaviour</th></tr>
+      <tr><td>\(0 < \eta \leq \frac{1}{\lambda_{\max}}\)</td><td>\(1 - \eta\lambda_{\min}\)</td><td>Converges, but may be slow</td></tr>
+      <tr><td>\(\frac{1}{\lambda_{\max}} < \eta < \frac{2}{\lambda_{\max}}\)</td><td>\(\max\{1 - \eta\lambda_{\min},\; \eta\lambda_{\max} - 1\}\)</td><td>Converges; sweet spot at \(\eta_{\text{opt}}\)</td></tr>
+      <tr><td>\(\eta \geq \frac{2}{\lambda_{\max}}\)</td><td>\(\rho \geq 1\)</td><td>No convergence guarantee; may diverge</td></tr>
     </table>
   </div>
 </section>
@@ -181,26 +181,26 @@
     Inspired by physics, momentum methods add a fraction of the <em>previous step</em> to the current update. Think of a ball rolling downhill — it accumulates speed in consistent directions and dampens oscillations. The update rule is:
   </p>
   <div class="math-block">
-    $$w^{t+1} = w^t + \alpha(w^t - w^{t-1}) - \eta\,\nabla L(w^t)$$
+    \[w^{t+1} = w^t + \alpha(w^t - w^{t-1}) - \eta\,\nabla L(w^t)\]
   </div>
   <p>
-    where typically $\alpha = \beta \cdot \eta$ with $\beta \in [0, 1)$. By expanding the recurrence, you can see that the influence of past gradients decays exponentially. Setting $\beta = 0$ recovers plain GD. The effect is that momentum <strong>dampens the zigzag oscillations</strong> in ill-conditioned landscapes and speeds up progress along consistently descending directions.
+    where typically \(\alpha = \beta \cdot \eta\) with \(\beta \in [0, 1)\). By expanding the recurrence, you can see that the influence of past gradients decays exponentially. Setting \(\beta = 0\) recovers plain GD. The effect is that momentum <strong>dampens the zigzag oscillations</strong> in ill-conditioned landscapes and speeds up progress along consistently descending directions.
   </p>
 
   <h3>2.2 Adaptive Methods</h3>
   <p>
-    Adaptive methods use <strong>per-parameter learning rates</strong> that adjust based on the history of gradient updates for each coordinate. The intuition: if a coordinate has already changed a lot, use a smaller step; if it has barely moved, use a larger step. A basic version updates coordinate $i$ as:
+    Adaptive methods use <strong>per-parameter learning rates</strong> that adjust based on the history of gradient updates for each coordinate. The intuition: if a coordinate has already changed a lot, use a smaller step; if it has barely moved, use a larger step. A basic version updates coordinate \(i\) as:
   </p>
   <div class="math-block">
-    $$w_i^{t+1} = w_i^t - \frac{\eta}{\sqrt{\delta_i^t + \gamma}}\;\frac{\partial L}{\partial w_i}(w^t)$$
+    \[w_i^{t+1} = w_i^t - \frac{\eta}{\sqrt{\delta_i^t + \gamma}}\;\frac{\partial L}{\partial w_i}(w^t)\]
   </div>
   <p>
-    where $\delta_i^t = (w_i^t - w_i^{t-1})^2$ captures how much coordinate $i$ changed recently, and $\gamma > 0$ prevents division by zero. Popular refinements include <strong>Adam</strong>, <strong>AdaGrad</strong>, and <strong>RMSProp</strong>.
+    where \(\delta_i^t = (w_i^t - w_i^{t-1})^2\) captures how much coordinate \(i\) changed recently, and \(\gamma > 0\) prevents division by zero. Popular refinements include <strong>Adam</strong>, <strong>AdaGrad</strong>, and <strong>RMSProp</strong>.
   </p>
 
   <h3>2.3 Second-Order Methods</h3>
   <p>
-    A third class uses the <strong>Hessian</strong> (matrix of second derivatives) to get a richer picture of the local geometry. The Hessian tells us about curvature, letting us take smarter steps. However, computing the full $d \times d$ Hessian is $O(d^2)$ in storage and expensive to invert, so these methods are rarely used directly in large-scale ML.
+    A third class uses the <strong>Hessian</strong> (matrix of second derivatives) to get a richer picture of the local geometry. The Hessian tells us about curvature, letting us take smarter steps. However, computing the full \(d \times d\) Hessian is \(O(d^2)\) in storage and expensive to invert, so these methods are rarely used directly in large-scale ML.
   </p>
 </section>
 
@@ -210,45 +210,45 @@
 
   <h3>3.1 Motivation: Computational Cost</h3>
   <p>
-    In ML, the training loss is an average over $n$ data points: $L(w) = \frac{1}{n}\sum_{i=1}^n \ell(f_w(x_i), y_i)$. Each GD step computes the <strong>full gradient</strong> over all $n$ points, requiring $O(nd)$ memory and $O(n \times \text{cost of } \nabla_w \ell)$ computation per iteration. When $n$ is large (millions of images, say), this becomes prohibitive.
+    In ML, the training loss is an average over \(n\) data points: \(L(w) = \frac{1}{n}\sum_{i=1}^n \ell(f_w(x_i), y_i)\). Each GD step computes the <strong>full gradient</strong> over all \(n\) points, requiring \(O(nd)\) memory and \(O(n \times \text{cost of } \nabla_w \ell)\) computation per iteration. When \(n\) is large (millions of images, say), this becomes prohibitive.
   </p>
 
   <h3>3.2 The SGD Algorithm</h3>
   <p>
-    The key idea: instead of using all data points to compute the gradient, use a <strong>random subset</strong> (mini-batch) $S \subset \{1, \ldots, n\}$:
+    The key idea: instead of using all data points to compute the gradient, use a <strong>random subset</strong> (mini-batch) \(S \subset \{1, \ldots, n\}\):
   </p>
   <div class="math-block">
-    $$w^{t+1} = w^t - \eta\,\nabla L_S(w^t), \qquad \text{where } \nabla L_S(w) = \frac{1}{|S|}\sum_{i \in S} \nabla_w \ell(f_w(x_i), y_i)$$
+    \[w^{t+1} = w^t - \eta\,\nabla L_S(w^t), \qquad \text{where } \nabla L_S(w) = \frac{1}{|S|}\sum_{i \in S} \nabla_w \ell(f_w(x_i), y_i)\]
   </div>
   <p>
-    When $|S| = 1$ (a single random data point), this is "pure" SGD. In practice, we almost always use mini-batches with $|S| > 1$.
+    When \(|S| = 1\) (a single random data point), this is "pure" SGD. In practice, we almost always use mini-batches with \(|S| > 1\).
   </p>
 
   <div class="callout-definition">
     <div class="callout-title">Lemma 5.8 — SGD is Unbiased</div>
-    <p>If we select $k$ data points independently and uniformly at random from $\{1, \ldots, n\}$ to form $S$, then the expected value of the stochastic gradient equals the full gradient:</p>
+    <p>If we select \(k\) data points independently and uniformly at random from \(\{1, \ldots, n\}\) to form \(S\), then the expected value of the stochastic gradient equals the full gradient:</p>
     <div class="math-block">
-      $$\mathbb{E}_S[\nabla L_S(w)] = \nabla L(w)$$
+      \[\mathbb{E}_S[\nabla L_S(w)] = \nabla L(w)\]
     </div>
     <p>In other words, the stochastic gradient is an <strong>unbiased estimator</strong> of the true gradient. On average, SGD points in the right direction.</p>
   </div>
 
   <div class="callout-example">
     <div class="callout-title">Proof Sketch</div>
-    <p>Let $I_1, \ldots, I_k$ be the randomly sampled indices. By linearity of expectation and the fact that each $I_j$ is uniform over $\{1,\ldots,n\}$:</p>
+    <p>Let \(I_1, \ldots, I_k\) be the randomly sampled indices. By linearity of expectation and the fact that each \(I_j\) is uniform over \(\{1,\ldots,n\}\):</p>
     <div class="math-block">
-      $$\mathbb{E}_S[\nabla L_S(w)] = \frac{1}{k}\sum_{j=1}^k \mathbb{E}_{I_j}[\nabla_w \ell(f_w(x_{I_j}), y_{I_j})] = \frac{1}{k}\sum_{j=1}^k \frac{1}{n}\sum_{i=1}^n \nabla_w \ell(f_w(x_i), y_i) = \nabla L(w)$$
+      \[\mathbb{E}_S[\nabla L_S(w)] = \frac{1}{k}\sum_{j=1}^k \mathbb{E}_{I_j}[\nabla_w \ell(f_w(x_{I_j}), y_{I_j})] = \frac{1}{k}\sum_{j=1}^k \frac{1}{n}\sum_{i=1}^n \nabla_w \ell(f_w(x_i), y_i) = \nabla L(w)\]
     </div>
   </div>
 
   <h3>3.3 Batch Size and the Variance–Computation Trade-off</h3>
   <p>
-    Since SGD only sees a subset of data at each step, the update direction is noisy — the loss may <em>increase</em> at some iterations, and the iterates follow an erratic path (unlike the smooth trajectory of full GD). The batch size $|S|$ controls this trade-off:
+    Since SGD only sees a subset of data at each step, the update direction is noisy — the loss may <em>increase</em> at some iterations, and the iterates follow an erratic path (unlike the smooth trajectory of full GD). The batch size \(|S|\) controls this trade-off:
   </p>
   <ul>
     <li><strong>Larger batches</strong> → lower variance (the stochastic gradient is closer to the true gradient), but higher computational cost per step.</li>
     <li><strong>Smaller batches</strong> → higher variance (noisier updates), but much cheaper per step.</li>
-    <li><strong>Full batch ($|S| = n$)</strong> → zero variance, recovers standard GD.</li>
+    <li><strong>Full batch (\(|S| = n\))</strong> → zero variance, recovers standard GD.</li>
   </ul>
 
   <div class="callout-note">
@@ -258,7 +258,7 @@
 
   <h3>3.4 Practical Details: Epochs and Shuffling</h3>
   <p>
-    In practice, rather than sampling with replacement at every step, we <strong>partition</strong> the training set into mini-batches $S_1, \ldots, S_b$ and cycle through them. One pass through the entire dataset is called an <strong>epoch</strong>. The data is typically reshuffled at the start of each epoch to avoid convergence issues.
+    In practice, rather than sampling with replacement at every step, we <strong>partition</strong> the training set into mini-batches \(S_1, \ldots, S_b\) and cycle through them. One pass through the entire dataset is called an <strong>epoch</strong>. The data is typically reshuffled at the start of each epoch to avoid convergence issues.
   </p>
 </section>
 
@@ -266,18 +266,18 @@
 <section>
   <h2>4. Convexity</h2>
   <p>
-    Everything so far has been about <em>how</em> to optimise. We now turn to a fundamental question: even if GD converges to a stationary point (where $\nabla L = 0$), is that point actually a <em>global minimum</em>? For general functions, the answer is no — we could land on a saddle point or a local minimum. <strong>Convexity</strong> is the property that guarantees every stationary point is globally optimal.
+    Everything so far has been about <em>how</em> to optimise. We now turn to a fundamental question: even if GD converges to a stationary point (where \(\nabla L = 0\)), is that point actually a <em>global minimum</em>? For general functions, the answer is no — we could land on a saddle point or a local minimum. <strong>Convexity</strong> is the property that guarantees every stationary point is globally optimal.
   </p>
 
   <h3>4.1 Definition and Conditions for Convexity</h3>
 
   <div class="callout-definition">
     <div class="callout-title">Definition 5.9 — Convexity</div>
-    <p>A set $W \subseteq \mathbb{R}^d$ is <strong>convex</strong> if it contains the line segment between any two of its points. A function $f: W \to \mathbb{R}$ (defined on a convex set) is <strong>convex</strong> if for all $w, v \in W$ and all $\lambda \in [0,1]$:</p>
+    <p>A set \(W \subseteq \mathbb{R}^d\) is <strong>convex</strong> if it contains the line segment between any two of its points. A function \(f: W \to \mathbb{R}\) (defined on a convex set) is <strong>convex</strong> if for all \(w, v \in W\) and all \(\lambda \in [0,1]\):</p>
     <div class="math-block">
-      $$f(\lambda w + (1-\lambda)v) \;\leq\; \lambda\, f(w) + (1-\lambda)\,f(v)$$
+      \[f(\lambda w + (1-\lambda)v) \;\leq\; \lambda\, f(w) + (1-\lambda)\,f(v)\]
     </div>
-    <p>Geometrically: the line segment connecting any two points on the graph of $f$ lies <em>above or on</em> the graph.</p>
+    <p>Geometrically: the line segment connecting any two points on the graph of \(f\) lies <em>above or on</em> the graph.</p>
   </div>
 
   <p>
@@ -285,19 +285,19 @@
   </p>
 
   <p>
-    <strong>First-order condition:</strong> $f$ is convex if and only if the tangent line (linear approximation) at every point lies <em>below</em> the function. Formally, for all $w, v$:
+    <strong>First-order condition:</strong> \(f\) is convex if and only if the tangent line (linear approximation) at every point lies <em>below</em> the function. Formally, for all \(w, v\):
   </p>
   <div class="math-block">
-    $$f(v) \;\geq\; f(w) + \langle \nabla f(w),\; v - w\rangle$$
+    \[f(v) \;\geq\; f(w) + \langle \nabla f(w),\; v - w\rangle\]
   </div>
 
   <p>
-    <strong>Second-order condition:</strong> $f$ is convex if and only if its Hessian is positive semi-definite everywhere: $D^2 f(w) \succeq 0$ for all $w$. Intuitively, the function has non-negative curvature in every direction.
+    <strong>Second-order condition:</strong> \(f\) is convex if and only if its Hessian is positive semi-definite everywhere: \(D^2 f(w) \succeq 0\) for all \(w\). Intuitively, the function has non-negative curvature in every direction.
   </p>
 
   <div class="callout-example">
     <div class="callout-title">Example: Linear Regression Loss is Convex</div>
-    <p>For $L(w) = \|y - Xw\|_2^2$, the Hessian is $\nabla^2 L(w) = 2X^\top X$, which is always positive semi-definite (since $v^\top X^\top X v = \|Xv\|_2^2 \geq 0$ for any $v$). Therefore the squared loss for linear regression is convex for any design matrix $X$.</p>
+    <p>For \(L(w) = \|y - Xw\|_2^2\), the Hessian is \(\nabla^2 L(w) = 2X^\top X\), which is always positive semi-definite (since \(v^\top X^\top X v = \|Xv\|_2^2 \geq 0\) for any \(v\)). Therefore the squared loss for linear regression is convex for any design matrix \(X\).</p>
   </div>
 
   <h3>4.2 Useful Rules for Proving Convexity</h3>
@@ -305,10 +305,10 @@
     Rather than checking the definition from scratch every time, we can build convex functions from simpler ones using operations that preserve convexity:
   </p>
   <ul>
-    <li><strong>Non-negative weighted sums:</strong> if $f$ and $g$ are convex and $\alpha, \beta \geq 0$, then $\alpha f + \beta g$ is convex.</li>
-    <li><strong>Composition with affine functions:</strong> if $f$ is convex and $g$ is affine, then $f \circ g$ is convex.</li>
-    <li><strong>Composition with non-decreasing convex:</strong> if $f$ is convex and non-decreasing and $g$ is convex, then $f \circ g$ is convex.</li>
-    <li><strong>Pointwise maximum:</strong> if $f$ and $g$ are convex, then $\max(f, g)$ is convex.</li>
+    <li><strong>Non-negative weighted sums:</strong> if \(f\) and \(g\) are convex and \(\alpha, \beta \geq 0\), then \(\alpha f + \beta g\) is convex.</li>
+    <li><strong>Composition with affine functions:</strong> if \(f\) is convex and \(g\) is affine, then \(f \circ g\) is convex.</li>
+    <li><strong>Composition with non-decreasing convex:</strong> if \(f\) is convex and non-decreasing and \(g\) is convex, then \(f \circ g\) is convex.</li>
+    <li><strong>Pointwise maximum:</strong> if \(f\) and \(g\) are convex, then \(\max(f, g)\) is convex.</li>
   </ul>
 
   <h3>4.3 Optimality of Stationary Points</h3>
@@ -318,16 +318,16 @@
 
   <div class="callout-definition">
     <div class="callout-title">Theorem 5.14 — Stationary Points of Convex Functions Are Global Minima</div>
-    <p>Let $f: W \to \mathbb{R}$ be convex and differentiable on a convex open set $W$. If $w^*$ is a stationary point ($\nabla f(w^*) = 0$), then $w^*$ is a <strong>global minimum</strong> of $f$.</p>
+    <p>Let \(f: W \to \mathbb{R}\) be convex and differentiable on a convex open set \(W\). If \(w^*\) is a stationary point (\(\nabla f(w^*) = 0\)), then \(w^*\) is a <strong>global minimum</strong> of \(f\).</p>
   </div>
 
   <div class="callout-example">
     <div class="callout-title">Proof (short and elegant)</div>
-    <p>Since $\nabla f(w^*) = 0$, plug into the first-order convexity condition: for all $v \in W$,</p>
+    <p>Since \(\nabla f(w^*) = 0\), plug into the first-order convexity condition: for all \(v \in W\),</p>
     <div class="math-block">
-      $$f(v) \geq f(w^*) + \underbrace{\langle \nabla f(w^*), v - w^*\rangle}_{= 0} = f(w^*)$$
+      \[f(v) \geq f(w^*) + \underbrace{\langle \nabla f(w^*), v - w^*\rangle}_{= 0} = f(w^*)\]
     </div>
-    <p>So $f(v) \geq f(w^*)$ for every $v$ — that's exactly the definition of a global minimum.</p>
+    <p>So \(f(v) \geq f(w^*)\) for every \(v\) — that's exactly the definition of a global minimum.</p>
   </div>
 
   <div class="callout-note">
@@ -345,29 +345,29 @@
 
   <div class="callout-definition">
     <div class="callout-title">Definition 5.15 — Strong Convexity</div>
-    <p>A function $f: W \to \mathbb{R}$ is <strong>$m$-strongly convex</strong> (with $m > 0$) if for all $w, v \in W$ and $\lambda \in [0,1]$:</p>
+    <p>A function \(f: W \to \mathbb{R}\) is <strong>\(m\)-strongly convex</strong> (with \(m > 0\)) if for all \(w, v \in W\) and \(\lambda \in [0,1]\):</p>
     <div class="math-block">
-      $$f(\lambda w + (1-\lambda)v) \leq \lambda f(w) + (1-\lambda)f(v) - \frac{m}{2}\lambda(1-\lambda)\|w - v\|_2^2$$
+      \[f(\lambda w + (1-\lambda)v) \leq \lambda f(w) + (1-\lambda)f(v) - \frac{m}{2}\lambda(1-\lambda)\|w - v\|_2^2\]
     </div>
-    <p>Equivalently (and more intuitively): $f$ is $m$-strongly convex if and only if $f(w) - \frac{m}{2}\|w\|^2$ is convex. In words: $f$ is <em>at least as curved as a quadratic</em>.</p>
+    <p>Equivalently (and more intuitively): \(f\) is \(m\)-strongly convex if and only if \(f(w) - \frac{m}{2}\|w\|^2\) is convex. In words: \(f\) is <em>at least as curved as a quadratic</em>.</p>
   </div>
 
   <p>
     The equivalent conditions mirror those for regular convexity, with extra terms:
   </p>
   <ul>
-    <li><strong>First-order:</strong> $f(v) \geq f(w) + \nabla f(w)^\top(v-w) + \frac{m}{2}\|w-v\|^2$ — the function always sits above a <em>quadratic</em> lower bound, not just a tangent line.</li>
-    <li><strong>Second-order:</strong> $D^2 f(w) \succeq m I$ for all $w$ — all eigenvalues of the Hessian are at least $m > 0$. This rules out any "flat" regions.</li>
+    <li><strong>First-order:</strong> \(f(v) \geq f(w) + \nabla f(w)^\top(v-w) + \frac{m}{2}\|w-v\|^2\) — the function always sits above a <em>quadratic</em> lower bound, not just a tangent line.</li>
+    <li><strong>Second-order:</strong> \(D^2 f(w) \succeq m I\) for all \(w\) — all eigenvalues of the Hessian are at least \(m > 0\). This rules out any "flat" regions.</li>
   </ul>
 
   <div class="callout-definition">
     <div class="callout-title">Theorem 5.16 — Uniqueness of Global Minimum</div>
-    <p>If $f$ is strongly convex and differentiable, and $w^*$ is a stationary point, then $w^*$ is the <strong>unique global minimizer</strong>.</p>
+    <p>If \(f\) is strongly convex and differentiable, and \(w^*\) is a stationary point, then \(w^*\) is the <strong>unique global minimizer</strong>.</p>
   </div>
 
   <div class="callout-example">
     <div class="callout-title">Application to Linear Regression</div>
-    <p>For $L(w) = \|y - Xw\|_2^2$, the Hessian is $2X^\top X$. If $X^\top X$ is full rank (i.e., $\lambda_{\min}(X^\top X) > 0$), then $D^2 L(w) = 2X^\top X \succeq 2\lambda_{\min} I \succ 0$. So $L$ is strongly convex, and the least-squares solution $\hat{w}$ is the <em>unique</em> global minimum. This is the usual case when $n > d$ and the data are non-degenerate.</p>
+    <p>For \(L(w) = \|y - Xw\|_2^2\), the Hessian is \(2X^\top X\). If \(X^\top X\) is full rank (i.e., \(\lambda_{\min}(X^\top X) > 0\)), then \(D^2 L(w) = 2X^\top X \succeq 2\lambda_{\min} I \succ 0\). So \(L\) is strongly convex, and the least-squares solution \(\hat{w}\) is the <em>unique</em> global minimum. This is the usual case when \(n > d\) and the data are non-degenerate.</p>
   </div>
 
   <h3>5.1 The Big Picture: Stationary Points and Minima</h3>
@@ -377,7 +377,7 @@
 
   <div class="table-wrapper">
     <table>
-      <tr><th>Property of $f$</th><th>Stationary point $\nabla f = 0$ is…</th><th>Uniqueness?</th></tr>
+      <tr><th>Property of \(f\)</th><th>Stationary point \(\nabla f = 0\) is…</th><th>Uniqueness?</th></tr>
       <tr><td>General (no convexity)</td><td>Could be local min, local max, saddle point</td><td>No</td></tr>
       <tr><td>Convex</td><td>Always a global minimum</td><td>Not guaranteed</td></tr>
       <tr><td>Strongly convex</td><td>Always a global minimum</td><td>Yes — unique</td></tr>
@@ -389,12 +389,12 @@
 <section>
   <h2>Key Takeaways</h2>
   <ul>
-    <li><strong>GD converges for linear regression</strong> when the learning rate is below $2/\lambda_{\max}(X^\top X)$ and $X^\top X$ is full-rank. The convergence is "linear" (exponential decay of error with iterations).</li>
-    <li><strong>The condition number $\kappa = \lambda_{\max}/\lambda_{\min}$</strong> controls how fast GD converges. Well-conditioned problems ($\kappa \approx 1$) converge quickly; ill-conditioned problems ($\kappa \gg 1$) converge slowly due to zigzagging along elongated contours.</li>
+    <li><strong>GD converges for linear regression</strong> when the learning rate is below \(2/\lambda_{\max}(X^\top X)\) and \(X^\top X\) is full-rank. The convergence is "linear" (exponential decay of error with iterations).</li>
+    <li><strong>The condition number \(\kappa = \lambda_{\max}/\lambda_{\min}\)</strong> controls how fast GD converges. Well-conditioned problems (\(\kappa \approx 1\)) converge quickly; ill-conditioned problems (\(\kappa \gg 1\)) converge slowly due to zigzagging along elongated contours.</li>
     <li><strong>Momentum and adaptive methods</strong> address ill-conditioning by dampening oscillations (momentum) or using per-coordinate learning rates (Adam, AdaGrad). These are essential tools for practical optimisation.</li>
-    <li><strong>SGD trades exactness for speed:</strong> by computing gradients on random mini-batches instead of the full dataset, each step is much cheaper. The gradient is unbiased ($\mathbb{E}[\nabla L_S] = \nabla L$), but introduces variance. Larger batches reduce variance but cost more.</li>
+    <li><strong>SGD trades exactness for speed:</strong> by computing gradients on random mini-batches instead of the full dataset, each step is much cheaper. The gradient is unbiased (\(\mathbb{E}[\nabla L_S] = \nabla L\)), but introduces variance. Larger batches reduce variance but cost more.</li>
     <li><strong>Convexity guarantees that every stationary point is a global minimum.</strong> This is proven in one line using the first-order condition. The squared loss for linear regression is always convex.</li>
-    <li><strong>Strong convexity further guarantees uniqueness</strong> of the global minimum. It requires the function to curve at least as much as a quadratic (Hessian eigenvalues $\geq m > 0$), ruling out flat regions.</li>
+    <li><strong>Strong convexity further guarantees uniqueness</strong> of the global minimum. It requires the function to curve at least as much as a quadratic (Hessian eigenvalues \(\geq m > 0\)), ruling out flat regions.</li>
   </ul>
 </section>
 
